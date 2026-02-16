@@ -59,31 +59,42 @@ const initDB = async () => {
         platform TEXT,
         company TEXT
       );
+    `);
 
-      -- Seed the Master Admin for Ecom360 (forced update on conflict to ensure password matches)
+    // --- FORCE RESET ADMIN ---
+    // 1. Delete any existing user with this email to prevent conflicts
+    await pool.query("DELETE FROM users WHERE email = 'admin@ecom360.co'");
+    
+    // 2. Insert the Master Admin fresh
+    await pool.query(`
       INSERT INTO users (id, name, email, password, role, company, avatar)
       VALUES ('u1', 'Admin Master', 'admin@ecom360.co', 'Admin2026*', 'SUPER_ADMIN', 'Ecom360', '')
       ON CONFLICT (id) DO UPDATE SET
-      password = EXCLUDED.password,
-      role = EXCLUDED.role,
-      company = EXCLUDED.company,
-      email = EXCLUDED.email;
+      password = 'Admin2026*',
+      role = 'SUPER_ADMIN',
+      company = 'Ecom360',
+      email = 'admin@ecom360.co';
+    `);
 
-      -- Seed Demo Tasks for Ecom360 context (so the admin dashboard is not empty)
+    // Seed Demo Tasks for Ecom360 context (so the admin dashboard is not empty)
+    await pool.query(`
       INSERT INTO tasks (id, title, description, status, assignee, due_date, color, company)
       VALUES 
         ('t1', 'Revisar Roadmap Q4', 'Alinhar estratégias de marketing e produto para o final do ano.', 'PENDING', 'Admin Master', '2024-11-15', '#0d9488', 'Ecom360'),
         ('t2', 'Entrevista Tech Lead', 'Avaliar candidatos para a vaga de liderança técnica.', 'IN_PROGRESS', 'Admin Master', '2024-10-30', '#f97316', 'Ecom360'),
         ('t3', 'Atualizar Landing Page', 'Implementar nova seção de IA no site principal.', 'DONE', 'Admin Master', '2024-10-20', '#3b82f6', 'Ecom360')
       ON CONFLICT (id) DO NOTHING;
+    `);
 
-      -- Seed Demo Meeting for Ecom360
+    // Seed Demo Meeting for Ecom360
+    await pool.query(`
       INSERT INTO meetings (id, title, date, time, link, platform, company)
       VALUES 
         ('m1', 'Weekly Sync Global', 'Oct 25, 2024', '10:00 AM', 'https://meet.google.com/abc-defg-hij', 'Google Meet', 'Ecom360')
       ON CONFLICT (id) DO NOTHING;
     `);
-    console.log('Database tables initialized and Super Admin seeded/updated with demo data');
+
+    console.log('Database initialized. Super Admin (admin@ecom360.co) RESET successfully.');
   } catch (err) {
     console.error('Error initializing database', err);
   }
@@ -95,18 +106,29 @@ initDB();
 // LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
+  console.log(`[LOGIN ATTEMPT] Email: ${email}`);
+  
   try {
     // Simple query to find user by email
     const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1)', [email]);
     const user = result.rows[0];
 
-    // In production, use bcrypt.compare here. For this demo, simple string comparison.
-    if (user && user.password === password) {
-      res.json({ success: true, user });
+    if (user) {
+        console.log(`[LOGIN] User found: ${user.email}. Checking password...`);
+        // In production, use bcrypt.compare here. For this demo, simple string comparison.
+        if (user.password === password) {
+          console.log(`[LOGIN] Success.`);
+          res.json({ success: true, user });
+        } else {
+          console.log(`[LOGIN] Password mismatch. Expected: ${user.password}, Got: ${password}`);
+          res.status(401).json({ success: false, error: 'Senha incorreta.' });
+        }
     } else {
-      res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
+      console.log(`[LOGIN] User not found.`);
+      res.status(401).json({ success: false, error: 'Usuário não encontrado.' });
     }
   } catch (err) {
+    console.error(`[LOGIN ERROR]`, err);
     res.status(500).json({ error: err.message });
   }
 });
