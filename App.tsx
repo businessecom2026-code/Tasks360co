@@ -18,6 +18,7 @@ import Dashboard from './components/Dashboard';
 import KanbanBoard from './components/KanbanBoard';
 import MeetingRoom from './components/MeetingRoom';
 import ChatWindow from './components/ChatWindow';
+import LandingPage from './components/LandingPage';
 import { translations } from './i18n';
 
 // Initial Mock Data
@@ -33,6 +34,10 @@ const INITIAL_MEETINGS = [
 ];
 
 const App: React.FC = () => {
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // App State
   const [role, setRole] = useState<UserRole>('ADMIN');
   const [view, setView] = useState<ViewState>('DASHBOARD');
   const [language, setLanguage] = useState<Language>('pt');
@@ -50,6 +55,17 @@ const App: React.FC = () => {
         setApiKey((window as any).geminiApiKey);
     }
   }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    // Since we are logging in as admin@ecom360.co, ensure role is ADMIN
+    setRole('ADMIN'); 
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setView('DASHBOARD');
+  };
 
   const handleAddTask = (task: Task) => {
     setTasks(prev => [...prev, task]);
@@ -170,8 +186,14 @@ const App: React.FC = () => {
     }
   };
 
+  // If not authenticated, render landing page
+  if (!isAuthenticated) {
+    return <LandingPage onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // If authenticated, render main app
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-800 font-sans">
+    <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-800 font-sans animate-fade-in">
       
       {/* Sidebar - Dark Theme for Enterprise Feel */}
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-slate-900 border-r border-slate-800 transition-all duration-300 flex flex-col z-20 shadow-xl`}>
@@ -211,19 +233,13 @@ const App: React.FC = () => {
             </div>
             {isSidebarOpen && (
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">{t.sidebar.user}</p>
-                <select 
-                  value={role} 
-                  onChange={(e) => {
-                    setRole(e.target.value as UserRole);
-                    setView('DASHBOARD'); // Reset view on role change
-                  }}
-                  className="text-xs text-slate-400 bg-transparent border-none focus:ring-0 p-0 cursor-pointer hover:text-white transition-colors"
-                >
-                  <option value="ADMIN" className="text-black">Admin</option>
-                  <option value="COLLABORATOR" className="text-black">Collab</option>
-                  <option value="CLIENT" className="text-black">Client</option>
-                </select>
+                <p className="text-sm font-medium text-white truncate">Admin User</p>
+                <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500">Online</span>
+                    <button onClick={handleLogout} className="text-slate-500 hover:text-red-400 transition-colors" title="Logout">
+                        <LogOut size={14} />
+                    </button>
+                </div>
               </div>
             )}
           </div>
