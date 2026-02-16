@@ -43,6 +43,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
                 setError(data.error || 'Credenciais inválidas. Verifique e-mail e senha.');
             }
         } catch (err) {
+            console.error("Login Fetch Error:", err);
             setError('Erro de conexão ao tentar fazer login. Tente novamente.');
         } finally {
             setIsLoading(false);

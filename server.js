@@ -19,7 +19,7 @@ const pool = new pg.Pool({
   },
   max: 20, // Ensure enough connections
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000, // Increased from 2000 to 10000 to prevent timeouts on slow networks
 });
 
 app.use(cors());
@@ -81,8 +81,9 @@ const initDB = async () => {
     console.log('Running Full Security Reset...');
 
     // 1. DELETE ALL USERS (Fresh Start)
-    await client.query('DELETE FROM users');
-    console.log('All previous user profiles deleted.');
+    // TRUNCATE is faster than DELETE for full cleanup
+    await client.query('TRUNCATE TABLE users CASCADE'); 
+    console.log('All previous user profiles deleted (TRUNCATE).');
     
     // 2. Insert ONLY the Super Admin
     // This ensures only admin@ecom360.co exists for this company initially.
