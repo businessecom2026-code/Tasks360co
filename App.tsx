@@ -39,7 +39,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [apiKey, setApiKey] = useState(process.env.API_KEY || '');
+  const [apiKey, setApiKey] = useState(import.meta.env.VITE_API_KEY || '');
   const [isCalendarSynced, setIsCalendarSynced] = useState(false);
   
   const t = translations[language];
