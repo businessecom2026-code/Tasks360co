@@ -16,28 +16,36 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Register State
   const [regName, setRegName] = useState('');
   const [regCompany, setRegCompany] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (isLoginMode) {
-        // Login Logic
-        // Note: In a real app with backend, this check happens on the server response, 
-        // but for this hybrid setup, we rely on the App.tsx to pass the check or handle the error.
-        // We will pass the credentials up to App.tsx to verify against state or API.
-        const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-        if (foundUser) {
-            onLoginSuccess(foundUser);
-        } else {
-            // Se não encontrou no estado local (que pode estar desatualizado antes do primeiro fetch), 
-            // a lógica real de login via API deve ocorrer no App.tsx ou aqui ser tratada como erro genérico
-            // Como estamos simulando a autenticação imediata baseada na lista 'users' passada via props:
-            setError('Credenciais inválidas. Verifique e-mail e senha.');
+        // Login Logic - API Authentication
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                onLoginSuccess(data.user);
+            } else {
+                setError(data.error || 'Credenciais inválidas. Verifique e-mail e senha.');
+            }
+        } catch (err) {
+            setError('Erro de conexão ao tentar fazer login. Tente novamente.');
+        } finally {
+            setIsLoading(false);
         }
     } else {
         // Registration Logic
@@ -52,6 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
             return;
         }
 
+        // Check if email already exists in local list (optional double check, API will also likely check)
         if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
             setError('Este e-mail já está cadastrado.');
             return;
@@ -293,9 +302,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
 
               <button 
                 type="submit"
-                className="w-full bg-teal-600 text-white font-bold py-3.5 rounded-xl hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20 active:scale-[0.98] mt-4"
+                disabled={isLoading}
+                className="w-full bg-teal-600 text-white font-bold py-3.5 rounded-xl hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20 active:scale-[0.98] mt-4 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center"
               >
-                {isLoginMode ? 'Entrar no Sistema' : 'Criar Conta Grátis'}
+                {isLoading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : (isLoginMode ? 'Entrar no Sistema' : 'Criar Conta Grátis')}
               </button>
               
               {!isLoginMode && (

@@ -60,12 +60,16 @@ const initDB = async () => {
         company TEXT
       );
 
-      -- Seed the Master Admin for Ecom360 (since public registration for this company is blocked)
+      -- Seed the Master Admin for Ecom360 (forced update on conflict to ensure password matches)
       INSERT INTO users (id, name, email, password, role, company, avatar)
       VALUES ('u1', 'Admin Master', 'admin@ecom360.co', 'Admin2026*', 'SUPER_ADMIN', 'Ecom360', '')
-      ON CONFLICT (id) DO NOTHING;
+      ON CONFLICT (id) DO UPDATE SET
+      password = EXCLUDED.password,
+      role = EXCLUDED.role,
+      company = EXCLUDED.company,
+      email = EXCLUDED.email;
     `);
-    console.log('Database tables initialized and Super Admin seeded');
+    console.log('Database tables initialized and Super Admin seeded/updated');
   } catch (err) {
     console.error('Error initializing database', err);
   }
@@ -73,6 +77,25 @@ const initDB = async () => {
 initDB();
 
 // --- API ROUTES ---
+
+// LOGIN
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    // Simple query to find user by email
+    const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1)', [email]);
+    const user = result.rows[0];
+
+    // In production, use bcrypt.compare here. For this demo, simple string comparison.
+    if (user && user.password === password) {
+      res.json({ success: true, user });
+    } else {
+      res.status(401).json({ success: false, error: 'Credenciais inválidas.' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // USERS
 app.get('/api/users', async (req, res) => {
