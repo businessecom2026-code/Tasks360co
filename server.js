@@ -10,14 +10,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 8080;
+// Replit geralmente usa a porta 3000, mas define process.env.PORT
+const port = process.env.PORT || 3000;
+
+// Verificação de segurança para o Banco de Dados no Replit
+if (!process.env.DATABASE_URL) {
+  console.error("❌ ERRO: A variável DATABASE_URL não foi encontrada.");
+  console.error("👉 DICA: No Replit, vá na aba 'PostgreSQL' (barra lateral esquerda) e clique em 'Provision/Set up Database'.");
+}
 
 // Database Connection
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? {
+  // No Replit interno, SSL geralmente não é obrigatório, mas 'rejectUnauthorized: false' 
+  // previne erros caso eles usem conexão externa/segura.
+  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('replit') ? false : {
     rejectUnauthorized: false
-  } : false,
+  },
 });
 
 app.use(cors());
@@ -28,8 +37,12 @@ app.use(express.static(path.join(__dirname, 'dist')));
 
 // Initialize Tables and Seed Super Admin
 const initDB = async () => {
-  const client = await pool.connect();
+  // Evita crashar o app se o banco não estiver configurado no Replit
+  if (!process.env.DATABASE_URL) return;
+
+  let client;
   try {
+    client = await pool.connect();
     console.log('Initializing Database...');
     await client.query('BEGIN');
 
@@ -101,10 +114,10 @@ const initDB = async () => {
 
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) await client.query('ROLLBACK');
     console.error('Error initializing database:', err);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 };
 
@@ -220,6 +233,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(port, () => {
+// Replit precisa ouvir em 0.0.0.0
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 });

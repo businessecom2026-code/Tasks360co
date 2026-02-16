@@ -5,14 +5,20 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0',
-    port: 5173, // Porta padrão do Vite
+    host: '0.0.0.0', // Necessário para o Replit
+    port: 5173, 
     proxy: {
       '/api': {
-        target: 'http://localhost:8080', // Aponta para o servidor Express
+        // Em dev, aponta para a porta padrão do Node. 
+        // Em produção (npm start), o Express serve o frontend, então o proxy não é usado.
+        target: 'http://localhost:3000', 
         changeOrigin: true,
         secure: false,
       }
     }
   },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  }
 });

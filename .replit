@@ -1,0 +1,12 @@
+modules = ["nodejs-18"]
+
+run = "npm install && npm run build && npm start"
+
+entrypoint = "server.js"
+
+[nix]
+channel = "stable-23_05"
+
+[env]
+# Garante que o Replit use a timezone UTC ou configure conforme necessário
+TZ = "UTC"
