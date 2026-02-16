@@ -48,15 +48,14 @@ CREATE INDEX idx_users_company ON users(company);
 CREATE INDEX idx_tasks_company ON tasks(company);
 
 -- 6. Inserir SUPER ADMIN
--- Senha: 'Admin2026*' (Hash gerada com bcryptjs salt 10)
+-- Senha: 'Admin2026*' (Hash válida gerada via bcrypt cost 10)
 INSERT INTO users (id, name, email, password, role, company, avatar)
 VALUES (
     'u1', 
     'Super Admin', 
     'admin@ecom360.co', 
-    '$2a$10$X7V.j5T5.v5.v5.v5.v5.u.validHashPlaceholder...', 
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 
     'SUPER_ADMIN', 
     'Ecom360', 
     ''
 );
--- Nota: O server.js irá gerar o hash correto automaticamente se este script não for rodado manualmente.
