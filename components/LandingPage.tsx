@@ -54,12 +54,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
             return;
         }
         
-        // REGRA DE NEGÓCIO: Bloquear registro público na empresa Ecom360 e variações
+        // REGRA DE NEGÓCIO RIGOROSA: 
+        // Bloquear registro público para domínios @ecom360.co ou nome de empresa Ecom360.
+        // Apenas o admin logado pode criar novos usuários com esses critérios.
         const companyNormalized = regCompany.trim().toLowerCase();
-        const forbiddenNames = ['ecom360', 'ecom 360', 'ecom360.co', 'task360', 'task 360'];
+        const emailNormalized = email.trim().toLowerCase();
+        const forbiddenNames = ['ecom360', 'ecom 360', 'task360', 'task 360'];
         
-        if (forbiddenNames.some(name => companyNormalized.includes(name))) {
-            setError('Este Workspace é privado e restrito. Registre sua própria empresa.');
+        if (forbiddenNames.some(name => companyNormalized.includes(name)) || emailNormalized.endsWith('@ecom360.co')) {
+            setError('Restrito: Apenas o Super Admin pode criar contas Ecom360.co.');
             return;
         }
 

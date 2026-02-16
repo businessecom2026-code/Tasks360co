@@ -16,7 +16,10 @@ const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
-  }
+  },
+  max: 20, // Ensure enough connections
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
 app.use(cors());
@@ -27,8 +30,13 @@ app.use(express.static(path.join(__dirname, 'dist')));
 
 // Initialize Tables and Seed Super Admin + Demo Data
 const initDB = async () => {
+  const client = await pool.connect();
   try {
-    await pool.query(`
+    console.time('DB_INIT');
+    await client.query('BEGIN');
+
+    // Create Tables
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         name TEXT,
@@ -61,30 +69,30 @@ const initDB = async () => {
       );
     `);
 
-    // --- SECURITY CLEANUP & SEED ---
-    console.log('Running Security Cleanup for Ecom360...');
-
-    // 1. Delete ANY user associated with Ecom360 that is NOT the specific admin email.
-    // This removes unauthorized accounts created previously under this company name.
-    await pool.query(`
-      DELETE FROM users 
-      WHERE (company ILIKE 'Ecom360%' OR company ILIKE 'Ecom 360%' OR email ILIKE '%@ecom360.co')
-      AND email != 'admin@ecom360.co'
+    // Create Indexes for Performance
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_users_company ON users(company);
+      CREATE INDEX IF NOT EXISTS idx_tasks_company ON tasks(company);
+      CREATE INDEX IF NOT EXISTS idx_meetings_company ON meetings(company);
     `);
+
+    // --- SECURITY CLEANUP & SEED ---
+    console.log('Running Full Security Reset...');
+
+    // 1. DELETE ALL USERS (Fresh Start)
+    await client.query('DELETE FROM users');
+    console.log('All previous user profiles deleted.');
     
-    // 2. Ensure the Master Admin exists and has the correct role/company
-    await pool.query(`
+    // 2. Insert ONLY the Super Admin
+    // This ensures only admin@ecom360.co exists for this company initially.
+    await client.query(`
       INSERT INTO users (id, name, email, password, role, company, avatar)
       VALUES ('u1', 'Admin Master', 'admin@ecom360.co', 'Admin2026*', 'SUPER_ADMIN', 'Ecom360', '')
-      ON CONFLICT (id) DO UPDATE SET
-      password = 'Admin2026*',
-      role = 'SUPER_ADMIN',
-      company = 'Ecom360',
-      email = 'admin@ecom360.co';
     `);
 
     // Seed Demo Tasks for Ecom360 context (so the admin dashboard is not empty)
-    await pool.query(`
+    await client.query(`
       INSERT INTO tasks (id, title, description, status, assignee, due_date, color, company)
       VALUES 
         ('t1', 'Revisar Roadmap Q4', 'Alinhar estratégias de marketing e produto para o final do ano.', 'PENDING', 'Admin Master', '2024-11-15', '#0d9488', 'Ecom360'),
@@ -94,18 +102,25 @@ const initDB = async () => {
     `);
 
     // Seed Demo Meeting for Ecom360
-    await pool.query(`
+    await client.query(`
       INSERT INTO meetings (id, title, date, time, link, platform, company)
       VALUES 
         ('m1', 'Weekly Sync Global', 'Oct 25, 2024', '10:00 AM', 'https://meet.google.com/abc-defg-hij', 'Google Meet', 'Ecom360')
       ON CONFLICT (id) DO NOTHING;
     `);
 
-    console.log('Security Cleanup Complete. Only admin@ecom360.co remains for Ecom360.');
+    await client.query('COMMIT');
+    console.timeEnd('DB_INIT');
+    console.log('Database initialized. Only Super Admin exists.');
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Error initializing database', err);
+  } finally {
+    client.release();
   }
 };
+
+// Run init asynchronously but don't block server start, however login might wait for table locks if heavy
 initDB();
 
 // --- API ROUTES ---
@@ -113,25 +128,28 @@ initDB();
 // LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  console.log(`[LOGIN ATTEMPT] Email: ${email}`);
+  const start = Date.now();
+  console.log(`[LOGIN START] Email: ${email}`);
   
   try {
     // Simple query to find user by email
     const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1)', [email]);
+    const queryTime = Date.now() - start;
+    console.log(`[LOGIN QUERY] Took ${queryTime}ms`);
+
     const user = result.rows[0];
 
     if (user) {
-        console.log(`[LOGIN] User found: ${user.email}. Checking password...`);
         // In production, use bcrypt.compare here. For this demo, simple string comparison.
         if (user.password === password) {
-          console.log(`[LOGIN] Success.`);
+          console.log(`[LOGIN SUCCESS] User: ${user.email} (Total: ${Date.now() - start}ms)`);
           res.json({ success: true, user });
         } else {
-          console.log(`[LOGIN] Password mismatch. Expected: ${user.password}, Got: ${password}`);
+          console.log(`[LOGIN FAIL] Password mismatch (Total: ${Date.now() - start}ms)`);
           res.status(401).json({ success: false, error: 'Senha incorreta.' });
         }
     } else {
-      console.log(`[LOGIN] User not found.`);
+      console.log(`[LOGIN FAIL] User not found (Total: ${Date.now() - start}ms)`);
       res.status(401).json({ success: false, error: 'Usuário não encontrado.' });
     }
   } catch (err) {
