@@ -215,38 +215,38 @@ ${transcripts.map(t => `${t.isUser ? 'User' : 'AI'}: ${t.text}`).join('\n')}
             )}
           </div>
           <div>
-            <h3 className="font-bold text-lg">{t.residentTitle}</h3>
-            <p className="text-xs text-gray-400">
+            <h3 className="font-bold text-lg text-white">{t.residentTitle}</h3>
+            <p className="text-xs text-slate-300">
                 {isActive ? t.listening : t.ready}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-            <span className="text-xs bg-slate-800 px-3 py-1 rounded-full text-teal-300 border border-slate-700">
+            <span className="text-xs bg-slate-800 px-3 py-1 rounded-full text-teal-300 border border-slate-700 font-medium">
                 Integration: Google Meet
             </span>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">{t.close}</button>
+            <button onClick={onClose} className="text-slate-300 hover:text-white transition-colors">{t.close}</button>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
           {/* Left: Transcript / Live View */}
           <div className={`flex-1 flex flex-col border-r border-gray-100 ${report ? 'w-1/2' : 'w-full'}`}>
-            <div className="bg-gray-50 p-3 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wide flex justify-between">
+            <div className="bg-gray-50 p-3 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide flex justify-between">
                 <span>{t.transcript}</span>
-                {transcripts.length > 0 && <span className="text-teal-600">{transcripts.length} {t.turns}</span>}
+                {transcripts.length > 0 && <span className="text-teal-700">{transcripts.length} {t.turns}</span>}
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
                 {transcripts.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400 text-center p-8">
                         <BrainCircuit size={48} className="mb-4 text-teal-100" />
-                        <p>{t.waiting}</p>
-                        <p className="text-xs mt-2 max-w-xs">{t.waitingDesc}</p>
+                        <p className="text-gray-500 font-medium">{t.waiting}</p>
+                        <p className="text-xs mt-2 max-w-xs text-gray-400">{t.waitingDesc}</p>
                     </div>
                 )}
                 {transcripts.map((t, idx) => (
                 <div key={idx} className={`flex ${t.isUser ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3 rounded-xl text-sm ${t.isUser ? 'bg-teal-600 text-white rounded-tr-none shadow-md' : 'bg-gray-100 border border-gray-200 text-gray-800 rounded-tl-none'}`}>
+                    <div className={`max-w-[85%] p-3 rounded-xl text-sm font-medium ${t.isUser ? 'bg-teal-600 text-white rounded-tr-none shadow-md' : 'bg-gray-100 border border-gray-200 text-gray-900 rounded-tl-none'}`}>
                     {t.text}
                     </div>
                 </div>
@@ -257,38 +257,38 @@ ${transcripts.map(t => `${t.isUser ? 'User' : 'AI'}: ${t.text}`).join('\n')}
           {/* Right: Report View (Appears when report generated) */}
           {report && (
               <div className="w-1/2 flex flex-col bg-slate-50 animate-fade-in">
-                  <div className="bg-white p-3 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wide flex justify-between items-center">
+                  <div className="bg-white p-3 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide flex justify-between items-center">
                       <span>{t.reportTitle}</span>
-                      <button onClick={downloadReportText} className="text-teal-600 hover:text-teal-800 flex items-center gap-1">
+                      <button onClick={downloadReportText} className="text-teal-700 hover:text-teal-900 flex items-center gap-1">
                           <Download size={14} /> {t.export}
                       </button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-6 space-y-6">
                       <section>
-                          <h4 className="flex items-center gap-2 font-bold text-gray-800 mb-2">
-                              <List size={16} className="text-teal-500" /> {t.agenda}
+                          <h4 className="flex items-center gap-2 font-bold text-black mb-2">
+                              <List size={16} className="text-teal-600" /> {t.agenda}
                           </h4>
-                          <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                          <ul className="list-disc pl-5 text-sm text-gray-800 space-y-1">
                               {report.agenda.map((item, i) => <li key={i}>{item}</li>)}
                           </ul>
                       </section>
                       <section>
-                          <h4 className="flex items-center gap-2 font-bold text-gray-800 mb-2">
-                              <CheckCircle size={16} className="text-green-500" /> {t.decisions}
+                          <h4 className="flex items-center gap-2 font-bold text-black mb-2">
+                              <CheckCircle size={16} className="text-green-600" /> {t.decisions}
                           </h4>
-                          <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                          <ul className="list-disc pl-5 text-sm text-gray-800 space-y-1">
                               {report.decisions.map((item, i) => <li key={i}>{item}</li>)}
                           </ul>
                       </section>
                       <section>
-                          <h4 className="flex items-center gap-2 font-bold text-gray-800 mb-2">
-                              <CalendarCheck size={16} className="text-orange-500" /> {t.actionItems}
+                          <h4 className="flex items-center gap-2 font-bold text-black mb-2">
+                              <CalendarCheck size={16} className="text-orange-600" /> {t.actionItems}
                           </h4>
                           <div className="space-y-2">
                               {report.actionItems.map((item, i) => (
                                   <div key={i} className="bg-white p-3 rounded border border-gray-200 text-sm flex justify-between items-center shadow-sm">
-                                      <span className="text-gray-700">{item.task}</span>
-                                      <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600 font-medium">
+                                      <span className="text-gray-900 font-medium">{item.task}</span>
+                                      <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-800 font-bold">
                                           @{item.assignee || t.unassigned}
                                       </span>
                                   </div>
@@ -302,16 +302,16 @@ ${transcripts.map(t => `${t.isUser ? 'User' : 'AI'}: ${t.text}`).join('\n')}
 
       {/* Controls */}
       <div className="p-4 bg-white border-t border-gray-100 flex justify-center items-center gap-4 relative z-10">
-        {error && <div className="absolute top-[-50px] bg-red-100 text-red-600 px-4 py-2 rounded text-sm shadow">{error}</div>}
+        {error && <div className="absolute top-[-50px] bg-red-100 text-red-700 px-4 py-2 rounded text-sm shadow font-medium">{error}</div>}
         
         {isGeneratingReport ? (
-             <div className="flex items-center gap-2 text-teal-600 font-medium animate-pulse">
+             <div className="flex items-center gap-2 text-teal-700 font-medium animate-pulse">
                  <BrainCircuit size={20} /> {t.generating}
              </div>
         ) : (
             <button 
             onClick={toggleSession}
-            className={`h-14 px-8 rounded-full flex items-center gap-3 font-semibold transition-all shadow-lg ${isActive ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-slate-900 hover:bg-black text-white'}`}
+            className={`h-14 px-8 rounded-full flex items-center gap-3 font-bold transition-all shadow-lg ${isActive ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-black hover:bg-gray-900 text-white'}`}
             >
             {isActive ? (
                 <>

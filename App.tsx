@@ -11,111 +11,156 @@ import {
   Calendar,
   RefreshCw,
   Plus,
-  Globe
+  Globe,
+  Users
 } from 'lucide-react';
-import { UserRole, ViewState, Task, TaskStatus, Language } from './types';
+import { UserRole, ViewState, Task, TaskStatus, Language, User, Meeting } from './types';
 import Dashboard from './components/Dashboard';
 import KanbanBoard from './components/KanbanBoard';
 import MeetingRoom from './components/MeetingRoom';
 import ChatWindow from './components/ChatWindow';
 import LandingPage from './components/LandingPage';
+import UserManagement from './components/UserManagement';
 import { translations } from './i18n';
 
 // Initial Mock Data
-const INITIAL_TASKS: Task[] = [
-  { id: '1', title: 'Design Landing Page', status: TaskStatus.DONE, description: 'Figma mockups', dueDate: '2023-10-15' },
-  { id: '2', title: 'Integrate Gemini API', status: TaskStatus.IN_PROGRESS, description: 'Use Live API for meetings', dueDate: '2023-10-20' },
-  { id: '3', title: 'Client Review', status: TaskStatus.PENDING, description: 'Weekly sync with client', dueDate: '2023-10-22' },
+const INITIAL_USERS: User[] = [
+    { 
+        id: 'u1', 
+        name: 'Admin Master', 
+        email: 'admin@ecom360.co', 
+        password: 'Admin2026*', 
+        role: 'SUPER_ADMIN', 
+        company: 'Ecom360', 
+        avatar: '' 
+    }
 ];
 
-const INITIAL_MEETINGS = [
-    { id: 1, title: 'Weekly Product Sync', date: 'Oct 24, 2023', time: '10:00 AM', platform: 'Google Meet', link: 'https://meet.google.com/abc-defg-hij' },
-    { id: 2, title: 'Client Onboarding', date: 'Oct 25, 2023', time: '02:30 PM', platform: 'Google Meet', link: 'https://meet.google.com/xyz-uvwx-yz' }
+const INITIAL_TASKS: Task[] = [
+  { id: '1', title: 'Design Landing Page', status: TaskStatus.DONE, description: 'Figma mockups', dueDate: '2023-10-15', company: 'Ecom360' },
+  { id: '2', title: 'Integrate Gemini API', status: TaskStatus.IN_PROGRESS, description: 'Use Live API for meetings', dueDate: '2023-10-20', company: 'Ecom360' },
+  { id: '3', title: 'Client Review', status: TaskStatus.PENDING, description: 'Weekly sync with client', dueDate: '2023-10-22', company: 'Client Corp' },
+];
+
+const INITIAL_MEETINGS: Meeting[] = [
+    { id: 1, title: 'Weekly Product Sync', date: 'Oct 24, 2023', time: '10:00 AM', platform: 'Google Meet', link: 'https://meet.google.com/abc-defg-hij', company: 'Ecom360' },
+    { id: 2, title: 'Client Onboarding', date: 'Oct 25, 2023', time: '02:30 PM', platform: 'Google Meet', link: 'https://meet.google.com/xyz-uvwx-yz', company: 'Client Corp' }
 ];
 
 const App: React.FC = () => {
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
 
   // App State
-  const [role, setRole] = useState<UserRole>('ADMIN');
   const [view, setView] = useState<ViewState>('DASHBOARD');
   const [language, setLanguage] = useState<Language>('pt');
+  
+  // Data State
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [meetings, setMeetings] = useState(INITIAL_MEETINGS);
+  const [meetings, setMeetings] = useState<Meeting[]>(INITIAL_MEETINGS);
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [apiKey, setApiKey] = useState(process.env.API_KEY || '');
   const [isCalendarSynced, setIsCalendarSynced] = useState(false);
   
   const t = translations[language];
 
-  // Try to get key from window if env not working (for demo purposes if needed)
   useEffect(() => {
     if (!apiKey && (window as any).geminiApiKey) {
         setApiKey((window as any).geminiApiKey);
     }
   }, []);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (user: User) => {
+    setCurrentUser(user);
     setIsAuthenticated(true);
-    // Since we are logging in as admin@ecom360.co, ensure role is ADMIN
-    setRole('ADMIN'); 
+    setView('DASHBOARD');
+  };
+
+  const handleRegister = (name: string, email: string, pass: string, company: string) => {
+      const newUser: User = {
+          id: Date.now().toString(),
+          name,
+          email,
+          password: pass,
+          company,
+          role: 'ADMIN', // Default to Admin of their own company
+          avatar: ''
+      };
+      setUsers(prev => [...prev, newUser]);
+      handleLoginSuccess(newUser);
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
     setView('DASHBOARD');
   };
 
   const handleAddTask = (task: Task) => {
-    setTasks(prev => [...prev, task]);
-  };
-
-  const handleConnectCalendar = () => {
-      // Simulate connection
-      setIsCalendarSynced(true);
-      alert("Google Calendar Successfully Connected!");
+    const taskWithCompany = { ...task, company: currentUser?.company };
+    setTasks(prev => [...prev, taskWithCompany]);
   };
 
   const handleCreateMeeting = () => {
       const title = prompt("Meeting Title:");
       if (title) {
-          const newMeeting = {
-              id: Date.now(),
+          const newMeeting: Meeting = {
+              id: Date.now().toString(),
               title: title,
               date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
               time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
               platform: 'Google Meet',
-              link: `https://meet.google.com/${Math.random().toString(36).substring(7)}` // Mock link
+              link: `https://meet.google.com/${Math.random().toString(36).substring(7)}`,
+              company: currentUser?.company
           };
           setMeetings(prev => [newMeeting, ...prev]);
       }
   };
 
+  // Filter Data based on Company (Multi-tenancy)
+  const getFilteredTasks = () => {
+      if (!currentUser) return [];
+      if (currentUser.role === 'SUPER_ADMIN') return tasks;
+      return tasks.filter(t => t.company === currentUser.company || !t.company); // !t.company allows legacy/demo items if needed
+  };
+
+  const getFilteredMeetings = () => {
+      if (!currentUser) return [];
+      if (currentUser.role === 'SUPER_ADMIN') return meetings;
+      return meetings.filter(m => m.company === currentUser.company || !m.company);
+  };
+
   const navItems = [
-    { id: 'DASHBOARD', label: t.sidebar.dashboard, icon: LayoutDashboard, roles: ['ADMIN', 'COLLABORATOR'] },
-    { id: 'KANBAN', label: t.sidebar.tasks, icon: CheckSquare, roles: ['ADMIN', 'COLLABORATOR'] },
-    { id: 'MEETINGS', label: t.sidebar.meetings, icon: Video, roles: ['ADMIN', 'COLLABORATOR', 'CLIENT'] },
-    { id: 'CHAT', label: t.sidebar.chat, icon: MessageSquare, roles: ['ADMIN', 'COLLABORATOR', 'CLIENT'] },
+    { id: 'DASHBOARD', label: t.sidebar.dashboard, icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'ADMIN', 'COLLABORATOR'] },
+    { id: 'KANBAN', label: t.sidebar.tasks, icon: CheckSquare, roles: ['SUPER_ADMIN', 'ADMIN', 'COLLABORATOR'] },
+    { id: 'MEETINGS', label: t.sidebar.meetings, icon: Video, roles: ['SUPER_ADMIN', 'ADMIN', 'COLLABORATOR', 'CLIENT'] },
+    { id: 'CHAT', label: t.sidebar.chat, icon: MessageSquare, roles: ['SUPER_ADMIN', 'ADMIN', 'COLLABORATOR', 'CLIENT'] },
+    { id: 'USER_MANAGEMENT', label: 'Gestão de Usuários', icon: Users, roles: ['SUPER_ADMIN'] },
   ];
 
   const renderContent = () => {
+    if (!currentUser) return null;
+
     switch (view) {
-      case 'DASHBOARD': return <Dashboard tasks={tasks} role={role} language={language} />;
-      case 'KANBAN': return <KanbanBoard tasks={tasks} setTasks={setTasks} role={role} language={language} />;
+      case 'DASHBOARD': return <Dashboard tasks={getFilteredTasks()} role={currentUser.role} language={language} />;
+      case 'KANBAN': return <KanbanBoard tasks={getFilteredTasks()} setTasks={setTasks} role={currentUser.role} language={language} />;
+      case 'USER_MANAGEMENT': return <UserManagement users={users} setUsers={setUsers} />;
       case 'MEETINGS': 
         return (
           <div className="p-6 space-y-6">
              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-800">{t.meetings.title}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t.meetings.title}</h2>
                 <div className="flex gap-2">
                     <button 
                         onClick={handleCreateMeeting}
-                        className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition shadow-sm flex items-center gap-2"
+                        className="bg-white border border-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition shadow-sm flex items-center gap-2"
                     >
                        <Plus size={16} /> {t.meetings.schedule}
                     </button>
-                    <button onClick={() => setView('LIVE_MEETING')} className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition shadow-sm flex items-center gap-2">
+                    <button onClick={() => setView('LIVE_MEETING')} className="bg-teal-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-teal-700 transition shadow-sm flex items-center gap-2">
                        <Video size={16} /> {t.meetings.startAI}
                     </button>
                 </div>
@@ -128,18 +173,18 @@ const App: React.FC = () => {
                          <Calendar size={24} />
                      </div>
                      <div>
-                         <h4 className="font-bold text-gray-800">{t.meetings.integrationTitle}</h4>
-                         <p className="text-sm text-gray-500">
+                         <h4 className="font-bold text-gray-900">{t.meetings.integrationTitle}</h4>
+                         <p className="text-sm text-gray-600">
                              {isCalendarSynced ? t.meetings.synced : t.meetings.connect}
                          </p>
                      </div>
                  </div>
                  {isCalendarSynced ? (
-                     <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium">
+                     <div className="flex items-center gap-2 text-green-700 bg-green-50 px-3 py-1 rounded-full text-sm font-bold">
                          <RefreshCw size={14} /> Synced
                      </div>
                  ) : (
-                     <button onClick={handleConnectCalendar} className="text-sm font-medium text-teal-600 hover:text-teal-800 border border-teal-200 bg-teal-50 px-4 py-2 rounded-lg transition-colors">
+                     <button onClick={() => setIsCalendarSynced(true)} className="text-sm font-bold text-teal-700 hover:text-teal-900 border border-teal-200 bg-teal-50 px-4 py-2 rounded-lg transition-colors">
                          {t.meetings.connectBtn}
                      </button>
                  )}
@@ -147,29 +192,34 @@ const App: React.FC = () => {
 
              {/* Meeting List */}
              <div className="space-y-4">
-               <h3 className="font-semibold text-gray-700">{t.meetings.upcoming}</h3>
+               <h3 className="font-bold text-gray-800">{t.meetings.upcoming}</h3>
                <div className="grid gap-4">
-                 {meetings.map(m => (
+                 {getFilteredMeetings().map(m => (
                    <div key={m.id} className="bg-white p-5 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow group">
                       <div className="flex items-start gap-4">
                           <div className="bg-slate-100 p-3 rounded-lg text-center min-w-[60px]">
-                              <div className="text-xs text-slate-500 uppercase font-bold">{m.date.split(' ')[0]}</div>
-                              <div className="text-xl font-bold text-slate-800">{m.date.split(' ')[1].replace(',', '')}</div>
+                              <div className="text-xs text-slate-600 uppercase font-bold">{m.date.split(' ')[0]}</div>
+                              <div className="text-xl font-bold text-slate-900">{m.date.split(' ')[1].replace(',', '')}</div>
                           </div>
                           <div>
-                            <h4 className="font-bold text-gray-800 group-hover:text-teal-600 transition-colors">{m.title}</h4>
-                            <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                            <h4 className="font-bold text-gray-900 group-hover:text-teal-700 transition-colors">{m.title}</h4>
+                            <p className="text-sm text-gray-600 flex items-center gap-2 mt-1 font-medium">
                                 <span>{m.time}</span>
                                 <span>•</span>
                                 <span className="flex items-center gap-1"><Video size={12} /> {m.platform}</span>
                             </p>
+                            {currentUser.role === 'SUPER_ADMIN' && (
+                                <span className="text-xs text-purple-700 bg-purple-50 px-2 py-0.5 rounded mt-1 inline-block font-medium">
+                                    {m.company}
+                                </span>
+                            )}
                           </div>
                       </div>
                       <div className="flex gap-3">
-                          <a href={m.link} target="_blank" rel="noreferrer" className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                          <a href={m.link} target="_blank" rel="noreferrer" className="text-sm font-bold text-gray-700 bg-gray-100 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors">
                               {t.meetings.copyLink}
                           </a>
-                          <a href={m.link} target="_blank" rel="noreferrer" className="text-sm font-medium text-white bg-teal-600 px-3 py-2 rounded-lg hover:bg-teal-700 transition-colors shadow-sm">
+                          <a href={m.link} target="_blank" rel="noreferrer" className="text-sm font-bold text-white bg-teal-600 px-3 py-2 rounded-lg hover:bg-teal-700 transition-colors shadow-sm">
                               {t.meetings.join}
                           </a>
                       </div>
@@ -187,13 +237,13 @@ const App: React.FC = () => {
   };
 
   // If not authenticated, render landing page
-  if (!isAuthenticated) {
-    return <LandingPage onLoginSuccess={handleLoginSuccess} />;
+  if (!isAuthenticated || !currentUser) {
+    return <LandingPage onLoginSuccess={handleLoginSuccess} onRegister={handleRegister} users={users} />;
   }
 
   // If authenticated, render main app
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-800 font-sans animate-fade-in">
+    <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-900 font-sans animate-fade-in">
       
       {/* Sidebar - Dark Theme for Enterprise Feel */}
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-slate-900 border-r border-slate-800 transition-all duration-300 flex flex-col z-20 shadow-xl`}>
@@ -209,18 +259,18 @@ const App: React.FC = () => {
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
-          {navItems.filter(item => item.roles.includes(role)).map(item => (
+          {navItems.filter(item => item.roles.includes(currentUser.role)).map(item => (
             <button
               key={item.id}
               onClick={() => setView(item.id as ViewState)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                 view === item.id 
                   ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/50' 
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
               <item.icon size={20} />
-              {isSidebarOpen && <span className="font-medium text-sm">{item.label}</span>}
+              {isSidebarOpen && <span className="font-bold text-sm">{item.label}</span>}
             </button>
           ))}
         </nav>
@@ -228,16 +278,16 @@ const App: React.FC = () => {
         {/* User Profile / Role Switcher */}
         <div className="p-4 border-t border-slate-800">
           <div className={`flex items-center gap-3 ${!isSidebarOpen && 'justify-center'}`}>
-            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400">
-              <UserCircle size={20} />
+            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400 font-bold overflow-hidden">
+              {currentUser.avatar ? <img src={currentUser.avatar} alt="Me" /> : <UserCircle size={20} />}
             </div>
             {isSidebarOpen && (
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">Admin User</p>
-                <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-500">Online</span>
-                    <button onClick={handleLogout} className="text-slate-500 hover:text-red-400 transition-colors" title="Logout">
-                        <LogOut size={14} />
+                <p className="text-sm font-bold text-white truncate" title={currentUser.name}>{currentUser.name}</p>
+                <div className="flex flex-col">
+                    <span className="text-xs text-teal-500 truncate font-medium">{currentUser.company}</span>
+                    <button onClick={handleLogout} className="text-xs text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1 mt-1 font-medium">
+                        <LogOut size={10} /> Sair
                     </button>
                 </div>
               </div>
@@ -249,18 +299,18 @@ const App: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f8fafc]">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-500 hover:text-gray-800 transition-colors">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-500 hover:text-black transition-colors">
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           
           <div className="flex items-center gap-6">
              {/* Language Selector */}
              <div className="flex items-center gap-2">
-                <Globe size={16} className="text-gray-400" />
+                <Globe size={16} className="text-gray-500" />
                 <select 
                     value={language} 
                     onChange={(e) => setLanguage(e.target.value as Language)}
-                    className="text-sm text-gray-600 bg-transparent border-none focus:ring-0 cursor-pointer hover:text-teal-600 transition-colors"
+                    className="text-sm text-gray-700 font-medium bg-transparent border-none focus:ring-0 cursor-pointer hover:text-black transition-colors"
                 >
                     <option value="pt">Português</option>
                     <option value="en">English</option>
@@ -270,9 +320,9 @@ const App: React.FC = () => {
              </div>
 
              {!apiKey && (
-                 <span className="text-xs text-red-500 bg-red-50 px-3 py-1 rounded-full border border-red-100">{t.common.apiKeyMissing}</span>
+                 <span className="text-xs text-red-600 bg-red-50 px-3 py-1 rounded-full border border-red-200 font-bold">{t.common.apiKeyMissing}</span>
              )}
-             <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase bg-gray-100 px-2 py-1 rounded">{role} {t.sidebar.view}</span>
+             <span className="text-xs font-bold tracking-wider text-gray-500 uppercase bg-gray-100 px-2 py-1 rounded">{currentUser.role}</span>
           </div>
         </header>
 

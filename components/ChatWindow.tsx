@@ -46,7 +46,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ apiKey, language }) => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
-      <div className="bg-teal-600 p-4 text-white font-semibold flex items-center gap-2 shadow-md">
+      <div className="bg-teal-600 p-4 text-white font-bold flex items-center gap-2 shadow-md">
         <Bot size={20} />
         {t.header}
       </div>
@@ -54,21 +54,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ apiKey, language }) => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.map((m, i) => (
             <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] p-3 rounded-lg text-sm ${m.sender === 'user' ? 'bg-teal-600 text-white shadow-md' : 'bg-white border border-gray-200 text-gray-700 shadow-sm'}`}>
+                <div className={`max-w-[70%] p-3 rounded-lg text-sm font-medium ${m.sender === 'user' ? 'bg-teal-600 text-white shadow-md' : 'bg-white border border-gray-200 text-gray-900 shadow-sm'}`}>
                     {m.text}
                 </div>
             </div>
         ))}
-        {loading && <div className="text-xs text-gray-400 text-center">{t.typing}</div>}
+        {loading && <div className="text-xs text-gray-500 text-center font-medium">{t.typing}</div>}
       </div>
 
-      <div className="p-4 border-t border-gray-100 flex gap-2 bg-white">
+      <div className="p-4 border-t border-gray-200 flex gap-2 bg-white">
         <input 
             type="text" 
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && sendMessage()}
-            className="flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all placeholder:text-gray-400"
             placeholder={t.placeholder}
         />
         <button onClick={sendMessage} className="bg-teal-600 hover:bg-teal-700 text-white p-2 rounded-lg transition-colors">
