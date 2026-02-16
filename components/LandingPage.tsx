@@ -27,10 +27,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
 
     if (isLoginMode) {
         // Login Logic
+        // Note: In a real app with backend, this check happens on the server response, 
+        // but for this hybrid setup, we rely on the App.tsx to pass the check or handle the error.
+        // We will pass the credentials up to App.tsx to verify against state or API.
         const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
         if (foundUser) {
             onLoginSuccess(foundUser);
         } else {
+            // Se não encontrou no estado local (que pode estar desatualizado antes do primeiro fetch), 
+            // a lógica real de login via API deve ocorrer no App.tsx ou aqui ser tratada como erro genérico
+            // Como estamos simulando a autenticação imediata baseada na lista 'users' passada via props:
             setError('Credenciais inválidas. Verifique e-mail e senha.');
         }
     } else {
@@ -39,6 +45,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
             setError('Todos os campos são obrigatórios.');
             return;
         }
+        
+        // REGRA DE NEGÓCIO: Bloquear registro público na empresa Ecom360
+        if (regCompany.trim().toLowerCase() === 'ecom360' || regCompany.trim().toLowerCase() === 'ecom 360') {
+            setError('O workspace "Ecom360" é reservado. Por favor, registre sua própria empresa.');
+            return;
+        }
+
         if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
             setError('Este e-mail já está cadastrado.');
             return;
@@ -94,19 +107,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
           <p className="text-xl text-slate-800 max-w-2xl mx-auto leading-relaxed font-medium">
             Task 360.co centraliza gestão de tarefas, reuniões inteligentes com transcrição em tempo real e comunicação de equipe em uma única plataforma segura.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <button 
-              onClick={() => openModal('REGISTER')}
-              className="w-full sm:w-auto px-8 py-4 bg-teal-600 text-white rounded-xl font-bold text-lg hover:bg-teal-700 transition-all shadow-xl shadow-teal-600/20 flex items-center justify-center gap-2"
-            >
-              Começar Agora <ChevronRight size={20} />
-            </button>
-            <button 
-                onClick={() => openModal('LOGIN')}
-                className="w-full sm:w-auto px-8 py-4 bg-white text-black border border-gray-300 rounded-xl font-bold text-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-            >
-              Fazer Login
-            </button>
+          <div className="flex flex-col items-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button 
+                onClick={() => openModal('REGISTER')}
+                className="w-full sm:w-auto px-8 py-4 bg-teal-600 text-white rounded-xl font-bold text-lg hover:bg-teal-700 transition-all shadow-xl shadow-teal-600/20 flex items-center justify-center gap-2"
+              >
+                Começar Agora <ChevronRight size={20} />
+              </button>
+              <button 
+                  onClick={() => openModal('LOGIN')}
+                  className="w-full sm:w-auto px-8 py-4 bg-white text-black border border-gray-300 rounded-xl font-bold text-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+              >
+                Fazer Login
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-slate-800 mt-2">
+               O acesso é gratuito. <span className="font-normal italic text-slate-600">*o plano free é limitado a 1 ações por 30 dias.</span>
+            </p>
           </div>
         </div>
       </header>
@@ -279,6 +297,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
               >
                 {isLoginMode ? 'Entrar no Sistema' : 'Criar Conta Grátis'}
               </button>
+              
+              {!isLoginMode && (
+                  <p className="text-xs text-center text-slate-500 mt-2 italic">
+                      *o plano free é limitado a 1 ações por 30 dias.
+                  </p>
+              )}
 
               <div className="text-center pt-2">
                   <button type="button" onClick={() => setShowModal(false)} className="text-sm text-gray-500 hover:text-black font-medium">

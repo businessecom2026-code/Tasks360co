@@ -25,7 +25,7 @@ app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
 // Serve static files from Vite build
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Initialize Tables
+// Initialize Tables and Seed Super Admin
 const initDB = async () => {
   try {
     await pool.query(`
@@ -59,8 +59,13 @@ const initDB = async () => {
         platform TEXT,
         company TEXT
       );
+
+      -- Seed the Master Admin for Ecom360 (since public registration for this company is blocked)
+      INSERT INTO users (id, name, email, password, role, company, avatar)
+      VALUES ('u1', 'Admin Master', 'admin@ecom360.co', 'Admin2026*', 'SUPER_ADMIN', 'Ecom360', '')
+      ON CONFLICT (id) DO NOTHING;
     `);
-    console.log('Database tables initialized');
+    console.log('Database tables initialized and Super Admin seeded');
   } catch (err) {
     console.error('Error initializing database', err);
   }
