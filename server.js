@@ -78,12 +78,12 @@ const initDB = async () => {
     `);
 
     // --- SECURITY CLEANUP & SEED ---
-    console.log('Running Full Security Reset...');
+    console.log('Running Full Security Reset & Database Wipe...');
 
-    // 1. DELETE ALL USERS (Fresh Start)
-    // TRUNCATE is faster than DELETE for full cleanup
-    await client.query('TRUNCATE TABLE users CASCADE'); 
-    console.log('All previous user profiles deleted (TRUNCATE).');
+    // 1. CLEAR ALL DATA (Fresh Start)
+    // Wipe Users, Tasks, and Meetings to ensure a completely clean state
+    await client.query('TRUNCATE TABLE users, tasks, meetings CASCADE');
+    console.log('Database cleaned: All users, tasks, and meetings deleted.');
     
     // 2. Insert ONLY the Super Admin
     // This ensures only admin@ecom360.co exists for this company initially.
@@ -112,7 +112,7 @@ const initDB = async () => {
 
     await client.query('COMMIT');
     console.timeEnd('DB_INIT');
-    console.log('Database initialized. Only Super Admin exists.');
+    console.log('Database initialized. Fresh Start.');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error initializing database', err);
