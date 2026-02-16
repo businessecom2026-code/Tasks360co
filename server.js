@@ -3,6 +3,7 @@ import pg from 'pg';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,43 +15,40 @@ const port = process.env.PORT || 8080;
 // Database Connection
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
+  ssl: process.env.DATABASE_URL ? {
     rejectUnauthorized: false
-  },
-  max: 20, // Ensure enough connections
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000, // Increased from 2000 to 10000 to prevent timeouts on slow networks
+  } : false,
 });
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
+app.use(express.json({ limit: '50mb' }));
 
 // Serve static files from Vite build
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Initialize Tables and Seed Super Admin + Demo Data
+// Initialize Tables and Seed Super Admin
 const initDB = async () => {
   const client = await pool.connect();
   try {
-    console.time('DB_INIT');
+    console.log('Initializing Database...');
     await client.query('BEGIN');
 
     // Create Tables
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
-        name TEXT,
-        email TEXT,
-        password TEXT,
-        role TEXT,
-        company TEXT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL,
+        company TEXT NOT NULL,
         avatar TEXT
       );
       CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
-        title TEXT,
+        title TEXT NOT NULL,
         description TEXT,
-        status TEXT,
+        status TEXT NOT NULL DEFAULT 'PENDING',
         assignee TEXT,
         due_date TEXT,
         image TEXT,
@@ -59,7 +57,7 @@ const initDB = async () => {
       );
       CREATE TABLE IF NOT EXISTS meetings (
         id TEXT PRIMARY KEY,
-        title TEXT,
+        title TEXT NOT NULL,
         date TEXT,
         time TEXT,
         participants TEXT[],
@@ -69,100 +67,81 @@ const initDB = async () => {
       );
     `);
 
-    // Create Indexes for Performance
-    await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-      CREATE INDEX IF NOT EXISTS idx_users_company ON users(company);
-      CREATE INDEX IF NOT EXISTS idx_tasks_company ON tasks(company);
-      CREATE INDEX IF NOT EXISTS idx_meetings_company ON meetings(company);
-    `);
-
-    // --- SECURITY CLEANUP & SEED ---
-    console.log('Running Full Security Reset & Database Wipe...');
-
-    // 1. CLEAR ALL DATA (Fresh Start)
-    // Wipe Users, Tasks, and Meetings to ensure a completely clean state
-    await client.query('TRUNCATE TABLE users, tasks, meetings CASCADE');
-    console.log('Database cleaned: All users, tasks, and meetings deleted.');
+    // Check if Super Admin exists
+    const adminCheck = await client.query("SELECT * FROM users WHERE email = 'admin@ecom360.co'");
     
-    // 2. Insert ONLY the Super Admin
-    // This ensures only admin@ecom360.co exists for this company initially.
-    await client.query(`
-      INSERT INTO users (id, name, email, password, role, company, avatar)
-      VALUES ('u1', 'Admin Master', 'admin@ecom360.co', 'Admin2026*', 'SUPER_ADMIN', 'Ecom360', '')
-    `);
+    if (adminCheck.rows.length === 0) {
+        console.log('Seeding Super Admin...');
+        const hashedPassword = await bcrypt.hash('Admin2026*', 10);
+        
+        await client.query(`
+            INSERT INTO users (id, name, email, password, role, company, avatar)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `, ['u1', 'Super Admin', 'admin@ecom360.co', hashedPassword, 'SUPER_ADMIN', 'Ecom360', '']);
 
-    // Seed Demo Tasks for Ecom360 context (so the admin dashboard is not empty)
-    await client.query(`
-      INSERT INTO tasks (id, title, description, status, assignee, due_date, color, company)
-      VALUES 
-        ('t1', 'Revisar Roadmap Q4', 'Alinhar estratégias de marketing e produto para o final do ano.', 'PENDING', 'Admin Master', '2024-11-15', '#0d9488', 'Ecom360'),
-        ('t2', 'Entrevista Tech Lead', 'Avaliar candidatos para a vaga de liderança técnica.', 'IN_PROGRESS', 'Admin Master', '2024-10-30', '#f97316', 'Ecom360'),
-        ('t3', 'Atualizar Landing Page', 'Implementar nova seção de IA no site principal.', 'DONE', 'Admin Master', '2024-10-20', '#3b82f6', 'Ecom360')
-      ON CONFLICT (id) DO NOTHING;
-    `);
+        // Seed Demo Tasks
+        await client.query(`
+            INSERT INTO tasks (id, title, description, status, assignee, due_date, color, company)
+            VALUES 
+                ('t1', 'Revisar Roadmap Q4', 'Alinhar estratégias.', 'PENDING', 'Super Admin', '2024-11-15', '#0d9488', 'Ecom360'),
+                ('t2', 'Entrevista Tech Lead', 'Avaliar candidatos.', 'IN_PROGRESS', 'Super Admin', '2024-10-30', '#f97316', 'Ecom360')
+            ON CONFLICT (id) DO NOTHING;
+        `);
 
-    // Seed Demo Meeting for Ecom360
-    await client.query(`
-      INSERT INTO meetings (id, title, date, time, link, platform, company)
-      VALUES 
-        ('m1', 'Weekly Sync Global', 'Oct 25, 2024', '10:00 AM', 'https://meet.google.com/abc-defg-hij', 'Google Meet', 'Ecom360')
-      ON CONFLICT (id) DO NOTHING;
-    `);
+        // Seed Demo Meetings
+        await client.query(`
+             INSERT INTO meetings (id, title, date, time, link, platform, company)
+             VALUES ('m1', 'Weekly Sync', 'Oct 25, 2024', '10:00 AM', 'https://meet.google.com/abc', 'Google Meet', 'Ecom360')
+             ON CONFLICT (id) DO NOTHING;
+        `);
+        console.log('Super Admin & Demo Data Created.');
+    } else {
+        console.log('Super Admin already exists. Skipping seed.');
+    }
 
     await client.query('COMMIT');
-    console.timeEnd('DB_INIT');
-    console.log('Database initialized. Fresh Start.');
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Error initializing database', err);
+    console.error('Error initializing database:', err);
   } finally {
     client.release();
   }
 };
 
-// Run init asynchronously but don't block server start, however login might wait for table locks if heavy
 initDB();
 
 // --- API ROUTES ---
 
-// LOGIN
+// LOGIN (With Bcrypt)
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  const start = Date.now();
-  console.log(`[LOGIN START] Email: ${email}`);
   
   try {
-    // Simple query to find user by email
     const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1)', [email]);
-    const queryTime = Date.now() - start;
-    console.log(`[LOGIN QUERY] Took ${queryTime}ms`);
-
     const user = result.rows[0];
 
     if (user) {
-        // In production, use bcrypt.compare here. For this demo, simple string comparison.
-        if (user.password === password) {
-          console.log(`[LOGIN SUCCESS] User: ${user.email} (Total: ${Date.now() - start}ms)`);
-          res.json({ success: true, user });
+        const match = await bcrypt.compare(password, user.password);
+        if (match) {
+          // Don't send password back
+          const { password: _, ...userSafe } = user;
+          res.json({ success: true, user: userSafe });
         } else {
-          console.log(`[LOGIN FAIL] Password mismatch (Total: ${Date.now() - start}ms)`);
           res.status(401).json({ success: false, error: 'Senha incorreta.' });
         }
     } else {
-      console.log(`[LOGIN FAIL] User not found (Total: ${Date.now() - start}ms)`);
       res.status(401).json({ success: false, error: 'Usuário não encontrado.' });
     }
   } catch (err) {
-    console.error(`[LOGIN ERROR]`, err);
-    res.status(500).json({ error: err.message });
+    console.error(`Login Error:`, err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // USERS
 app.get('/api/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM users');
+    const result = await pool.query('SELECT id, name, email, role, company, avatar FROM users');
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -170,9 +149,11 @@ app.get('/api/users', async (req, res) => {
 app.post('/api/users', async (req, res) => {
   const { id, name, email, password, role, company, avatar } = req.body;
   try {
+    // Hash password for new users
+    const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query(
       'INSERT INTO users (id, name, email, password, role, company, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING',
-      [id, name, email, password, role, company, avatar || '']
+      [id, name, email, hashedPassword, role, company, avatar || '']
     );
     res.json({ message: 'User created' });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -188,8 +169,7 @@ app.delete('/api/users/:id', async (req, res) => {
 // TASKS
 app.get('/api/tasks', async (req, res) => {
   try {
-    // Map due_date back to dueDate for frontend
-    const result = await pool.query('SELECT id, title, description, status, assignee, due_date as "dueDate", image, color, company FROM tasks');
+    const result = await pool.query('SELECT id, title, description, status, assignee, due_date as "dueDate", image, color, company FROM tasks ORDER BY id');
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -219,7 +199,7 @@ app.delete('/api/tasks/:id', async (req, res) => {
 // MEETINGS
 app.get('/api/meetings', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM meetings');
+    const result = await pool.query('SELECT * FROM meetings ORDER BY id DESC');
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -235,7 +215,7 @@ app.post('/api/meetings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Catch-all for React Router
+// Catch-all
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });

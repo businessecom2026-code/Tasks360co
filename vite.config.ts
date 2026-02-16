@@ -6,19 +6,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    port: Number(process.env.PORT) || 8080,
-    strictPort: true,
-    allowedHosts: true,
+    port: 5173, // Porta padrão do Vite
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8080', // Aponta para o servidor Express
         changeOrigin: true,
+        secure: false,
       }
     }
-  },
-  preview: {
-    host: '0.0.0.0',
-    port: Number(process.env.PORT) || 8080,
-    allowedHosts: true,
   },
 });
