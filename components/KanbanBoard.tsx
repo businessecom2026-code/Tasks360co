@@ -37,6 +37,27 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
     { id: 'DONE', title: t.done }
   ]);
 
+  // Sync Data Helper
+  const syncTask = async (task: Task) => {
+      try {
+          await fetch('/api/tasks', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(task)
+          });
+      } catch (e) {
+          console.error("Failed to sync task", e);
+      }
+  };
+
+  const removeTask = async (id: string) => {
+      try {
+          await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      } catch (e) {
+          console.error("Failed to delete task", e);
+      }
+  };
+
   useEffect(() => {
     setColumns(prev => prev.map(col => {
       if (col.id === 'PENDING') return { ...col, title: t.pending };
@@ -57,9 +78,14 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
   const deleteColumn = (columnId: string) => {
     if (confirm("Are you sure? Tasks in this column will be moved to the first column.")) {
         const fallbackCol = columns.find(c => c.id !== columnId) || { id: 'PENDING', title: 'Pending' };
-        setTasks(prev => prev.map(task => 
-            task.status === columnId ? { ...task, status: fallbackCol.id } : task
-        ));
+        setTasks(prev => prev.map(task => {
+            if (task.status === columnId) {
+                const updated = { ...task, status: fallbackCol.id };
+                syncTask(updated); // Sync changes
+                return updated;
+            }
+            return task;
+        }));
         setColumns(columns.filter(c => c.id !== columnId));
     }
   };
@@ -86,7 +112,14 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
   };
 
   const moveTask = (taskId: string, newStatus: string) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    setTasks(prev => prev.map(t => {
+        if (t.id === taskId) {
+            const updated = { ...t, status: newStatus };
+            syncTask(updated);
+            return updated;
+        }
+        return t;
+    }));
   };
 
   const addTask = (status: string) => {
@@ -97,7 +130,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
       status,
       description: '',
       dueDate: new Date().toISOString().split('T')[0],
-      color: COLORS[6]
+      color: COLORS[6],
+      company: tasks.length > 0 ? tasks[0].company : undefined // Inherit current context company if possible
     };
     setEditingTask(newTask);
   };
@@ -113,12 +147,14 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
               return [...prev, editingTask];
           }
       });
+      syncTask(editingTask);
       setEditingTask(null);
   };
 
   const deleteTask = (id: string) => {
       if (confirm("Delete this task?")) {
           setTasks(prev => prev.filter(t => t.id !== id));
+          removeTask(id);
           setEditingTask(null);
       }
   };

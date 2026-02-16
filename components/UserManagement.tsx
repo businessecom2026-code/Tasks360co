@@ -17,21 +17,43 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, setUsers }) => {
     company: ''
   });
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     const user: User = {
       id: Math.random().toString(36).substr(2, 9),
       avatar: '',
       ...newUser
     };
+    
+    // Optimistic Update
     setUsers([...users, user]);
     setShowForm(false);
     setNewUser({ name: '', email: '', password: '', role: 'ADMIN', company: '' });
+
+    // API Call
+    try {
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      });
+    } catch (err) {
+      console.error("Failed to add user", err);
+      // Rollback logic could go here
+    }
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (confirm('Tem certeza que deseja remover este usuário?')) {
+      // Optimistic Update
       setUsers(users.filter(u => u.id !== id));
+      
+      // API Call
+      try {
+        await fetch(`/api/users/${id}`, { method: 'DELETE' });
+      } catch (err) {
+        console.error("Failed to delete user", err);
+      }
     }
   };
 

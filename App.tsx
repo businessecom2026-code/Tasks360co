@@ -14,7 +14,7 @@ import {
   Globe,
   Users
 } from 'lucide-react';
-import { UserRole, ViewState, Task, TaskStatus, Language, User, Meeting } from './types';
+import { UserRole, ViewState, Task, Language, User, Meeting } from './types';
 import Dashboard from './components/Dashboard';
 import KanbanBoard from './components/KanbanBoard';
 import MeetingRoom from './components/MeetingRoom';
@@ -23,43 +23,20 @@ import LandingPage from './components/LandingPage';
 import UserManagement from './components/UserManagement';
 import { translations } from './i18n';
 
-// Initial Mock Data
-const INITIAL_USERS: User[] = [
-    { 
-        id: 'u1', 
-        name: 'Admin Master', 
-        email: 'admin@ecom360.co', 
-        password: 'Admin2026*', 
-        role: 'SUPER_ADMIN', 
-        company: 'Ecom360', 
-        avatar: '' 
-    }
-];
-
-const INITIAL_TASKS: Task[] = [
-  { id: '1', title: 'Design Landing Page', status: TaskStatus.DONE, description: 'Figma mockups', dueDate: '2023-10-15', company: 'Ecom360' },
-  { id: '2', title: 'Integrate Gemini API', status: TaskStatus.IN_PROGRESS, description: 'Use Live API for meetings', dueDate: '2023-10-20', company: 'Ecom360' },
-  { id: '3', title: 'Client Review', status: TaskStatus.PENDING, description: 'Weekly sync with client', dueDate: '2023-10-22', company: 'Client Corp' },
-];
-
-const INITIAL_MEETINGS: Meeting[] = [
-    { id: 1, title: 'Weekly Product Sync', date: 'Oct 24, 2023', time: '10:00 AM', platform: 'Google Meet', link: 'https://meet.google.com/abc-defg-hij', company: 'Ecom360' },
-    { id: 2, title: 'Client Onboarding', date: 'Oct 25, 2023', time: '02:30 PM', platform: 'Google Meet', link: 'https://meet.google.com/xyz-uvwx-yz', company: 'Client Corp' }
-];
-
 const App: React.FC = () => {
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
-
+  
   // App State
   const [view, setView] = useState<ViewState>('DASHBOARD');
   const [language, setLanguage] = useState<Language>('pt');
   
   // Data State
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [meetings, setMeetings] = useState<Meeting[]>(INITIAL_MEETINGS);
+  const [users, setUsers] = useState<User[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [apiKey, setApiKey] = useState(process.env.API_KEY || '');
@@ -67,7 +44,27 @@ const App: React.FC = () => {
   
   const t = translations[language];
 
+  // Fetch Initial Data
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersRes, tasksRes, meetingsRes] = await Promise.all([
+          fetch('/api/users'),
+          fetch('/api/tasks'),
+          fetch('/api/meetings')
+        ]);
+        
+        if (usersRes.ok) setUsers(await usersRes.json());
+        if (tasksRes.ok) setTasks(await tasksRes.json());
+        if (meetingsRes.ok) setMeetings(await meetingsRes.json());
+      } catch (err) {
+        console.error("Failed to load data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+
     if (!apiKey && (window as any).geminiApiKey) {
         setApiKey((window as any).geminiApiKey);
     }
@@ -79,18 +76,31 @@ const App: React.FC = () => {
     setView('DASHBOARD');
   };
 
-  const handleRegister = (name: string, email: string, pass: string, company: string) => {
+  const handleRegister = async (name: string, email: string, pass: string, company: string) => {
       const newUser: User = {
           id: Date.now().toString(),
           name,
           email,
           password: pass,
           company,
-          role: 'ADMIN', // Default to Admin of their own company
+          role: 'ADMIN',
           avatar: ''
       };
+
+      // Optimistic update
       setUsers(prev => [...prev, newUser]);
       handleLoginSuccess(newUser);
+
+      // Persist
+      try {
+        await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newUser)
+        });
+      } catch (e) {
+        console.error("Failed to save user", e);
+      }
   };
 
   const handleLogout = () => {
@@ -99,12 +109,19 @@ const App: React.FC = () => {
     setView('DASHBOARD');
   };
 
-  const handleAddTask = (task: Task) => {
+  const handleAddTask = async (task: Task) => {
     const taskWithCompany = { ...task, company: currentUser?.company };
+    
     setTasks(prev => [...prev, taskWithCompany]);
+    
+    await fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(taskWithCompany)
+    });
   };
 
-  const handleCreateMeeting = () => {
+  const handleCreateMeeting = async () => {
       const title = prompt("Meeting Title:");
       if (title) {
           const newMeeting: Meeting = {
@@ -116,7 +133,14 @@ const App: React.FC = () => {
               link: `https://meet.google.com/${Math.random().toString(36).substring(7)}`,
               company: currentUser?.company
           };
+          
           setMeetings(prev => [newMeeting, ...prev]);
+
+          await fetch('/api/meetings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newMeeting)
+          });
       }
   };
 
@@ -124,7 +148,7 @@ const App: React.FC = () => {
   const getFilteredTasks = () => {
       if (!currentUser) return [];
       if (currentUser.role === 'SUPER_ADMIN') return tasks;
-      return tasks.filter(t => t.company === currentUser.company || !t.company); // !t.company allows legacy/demo items if needed
+      return tasks.filter(t => t.company === currentUser.company || !t.company);
   };
 
   const getFilteredMeetings = () => {
@@ -235,6 +259,10 @@ const App: React.FC = () => {
       default: return <div className="p-6">Select a module</div>;
     }
   };
+
+  if (loading) {
+      return <div className="flex h-screen items-center justify-center bg-gray-50"><div className="animate-spin text-teal-600"><RefreshCw size={32} /></div></div>;
+  }
 
   // If not authenticated, render landing page
   if (!isAuthenticated || !currentUser) {
