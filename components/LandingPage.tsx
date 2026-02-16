@@ -54,9 +54,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
             return;
         }
         
-        // REGRA DE NEGÓCIO: Bloquear registro público na empresa Ecom360
-        if (regCompany.trim().toLowerCase() === 'ecom360' || regCompany.trim().toLowerCase() === 'ecom 360') {
-            setError('O workspace "Ecom360" é reservado. Por favor, registre sua própria empresa.');
+        // REGRA DE NEGÓCIO: Bloquear registro público na empresa Ecom360 e variações
+        const companyNormalized = regCompany.trim().toLowerCase();
+        const forbiddenNames = ['ecom360', 'ecom 360', 'ecom360.co', 'task360', 'task 360'];
+        
+        if (forbiddenNames.some(name => companyNormalized.includes(name))) {
+            setError('Este Workspace é privado e restrito. Registre sua própria empresa.');
             return;
         }
 

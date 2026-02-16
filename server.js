@@ -61,11 +61,18 @@ const initDB = async () => {
       );
     `);
 
-    // --- FORCE RESET ADMIN ---
-    // 1. Delete any existing user with this email to prevent conflicts
-    await pool.query("DELETE FROM users WHERE email = 'admin@ecom360.co'");
+    // --- SECURITY CLEANUP & SEED ---
+    console.log('Running Security Cleanup for Ecom360...');
+
+    // 1. Delete ANY user associated with Ecom360 that is NOT the specific admin email.
+    // This removes unauthorized accounts created previously under this company name.
+    await pool.query(`
+      DELETE FROM users 
+      WHERE (company ILIKE 'Ecom360%' OR company ILIKE 'Ecom 360%' OR email ILIKE '%@ecom360.co')
+      AND email != 'admin@ecom360.co'
+    `);
     
-    // 2. Insert the Master Admin fresh
+    // 2. Ensure the Master Admin exists and has the correct role/company
     await pool.query(`
       INSERT INTO users (id, name, email, password, role, company, avatar)
       VALUES ('u1', 'Admin Master', 'admin@ecom360.co', 'Admin2026*', 'SUPER_ADMIN', 'Ecom360', '')
@@ -94,7 +101,7 @@ const initDB = async () => {
       ON CONFLICT (id) DO NOTHING;
     `);
 
-    console.log('Database initialized. Super Admin (admin@ecom360.co) RESET successfully.');
+    console.log('Security Cleanup Complete. Only admin@ecom360.co remains for Ecom360.');
   } catch (err) {
     console.error('Error initializing database', err);
   }
