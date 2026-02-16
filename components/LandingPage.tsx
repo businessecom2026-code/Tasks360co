@@ -123,7 +123,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
               </button>
             </div>
             <p className="text-sm font-semibold text-slate-800 mt-2">
-               O acesso é gratuito. <span className="font-normal italic text-slate-600">*o plano free é limitado a 1 ações por 30 dias.</span>
+               O acesso é gratuito. <span className="font-normal italic text-slate-600">*o plano free é limitado a 1000 ações.</span>
             </p>
           </div>
         </div>
@@ -300,7 +300,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
               
               {!isLoginMode && (
                   <p className="text-xs text-center text-slate-500 mt-2 italic">
-                      *o plano free é limitado a 1 ações por 30 dias.
+                      *o plano free é limitado a 1000 ações.
                   </p>
               )}
 
