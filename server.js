@@ -25,7 +25,7 @@ app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
 // Serve static files from Vite build
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Initialize Tables and Seed Super Admin
+// Initialize Tables and Seed Super Admin + Demo Data
 const initDB = async () => {
   try {
     await pool.query(`
@@ -68,8 +68,22 @@ const initDB = async () => {
       role = EXCLUDED.role,
       company = EXCLUDED.company,
       email = EXCLUDED.email;
+
+      -- Seed Demo Tasks for Ecom360 context (so the admin dashboard is not empty)
+      INSERT INTO tasks (id, title, description, status, assignee, due_date, color, company)
+      VALUES 
+        ('t1', 'Revisar Roadmap Q4', 'Alinhar estratégias de marketing e produto para o final do ano.', 'PENDING', 'Admin Master', '2024-11-15', '#0d9488', 'Ecom360'),
+        ('t2', 'Entrevista Tech Lead', 'Avaliar candidatos para a vaga de liderança técnica.', 'IN_PROGRESS', 'Admin Master', '2024-10-30', '#f97316', 'Ecom360'),
+        ('t3', 'Atualizar Landing Page', 'Implementar nova seção de IA no site principal.', 'DONE', 'Admin Master', '2024-10-20', '#3b82f6', 'Ecom360')
+      ON CONFLICT (id) DO NOTHING;
+
+      -- Seed Demo Meeting for Ecom360
+      INSERT INTO meetings (id, title, date, time, link, platform, company)
+      VALUES 
+        ('m1', 'Weekly Sync Global', 'Oct 25, 2024', '10:00 AM', 'https://meet.google.com/abc-defg-hij', 'Google Meet', 'Ecom360')
+      ON CONFLICT (id) DO NOTHING;
     `);
-    console.log('Database tables initialized and Super Admin seeded/updated');
+    console.log('Database tables initialized and Super Admin seeded/updated with demo data');
   } catch (err) {
     console.error('Error initializing database', err);
   }
