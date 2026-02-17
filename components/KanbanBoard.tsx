@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Task, UserRole, Language, Column } from '../types';
-import { Plus, MoreVertical, Calendar, List, Layout, Trash2, Edit2, ArrowLeft, ArrowRight, CheckCircle2, Image as ImageIcon, X, ChevronDown } from 'lucide-react';
+import { Task, UserRole, Language, Column, User } from '../types';
+import { Plus, MoreVertical, Calendar, List, Layout, Trash2, Edit2, ArrowLeft, ArrowRight, CheckCircle2, Image as ImageIcon, X, ChevronDown, UserCircle } from 'lucide-react';
 import { translations } from '../i18n';
 
 interface KanbanBoardProps {
@@ -8,6 +8,7 @@ interface KanbanBoardProps {
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   role: UserRole;
   language: Language;
+  users?: User[]; // Optional to prevent breaking if not passed immediately, but logic uses it
 }
 
 const COLORS = [
@@ -20,7 +21,7 @@ const COLORS = [
   '#64748b'  // Slate (Default)
 ];
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, language }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, language, users = [] }) => {
   const t = translations[language].kanban;
   
   // View State
@@ -181,6 +182,10 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
     return 'bg-gray-50 text-gray-800 border-gray-200';
   };
 
+  // Filter users by company (if current user has company) for assignment
+  // For simplicity, we assume 'users' prop is already filtered or we just show all available
+  const assignableUsers = users; 
+
   return (
     <div className="p-4 md:p-6 h-full overflow-hidden flex flex-col relative bg-gray-50/50">
       {/* Edit Modal */}
@@ -243,6 +248,24 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
                             onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
                             className="w-full border border-gray-300 rounded-xl px-4 py-3 text-black focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none h-28 resize-none transition-shadow bg-white"
                           />
+                      </div>
+
+                      {/* Meta: Assignee */}
+                      <div>
+                          <label className="block text-sm font-bold text-gray-800 mb-1">{t.columns.assignee}</label>
+                          <div className="relative">
+                            <select 
+                                value={editingTask.assignee || ''} 
+                                onChange={(e) => setEditingTask({...editingTask, assignee: e.target.value})}
+                                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-black focus:ring-2 focus:ring-teal-500 outline-none appearance-none bg-white"
+                            >
+                                <option value="">{t.unassigned}</option>
+                                {assignableUsers.map(u => (
+                                    <option key={u.id} value={u.name}>{u.name} ({u.role})</option>
+                                ))}
+                            </select>
+                            <UserCircle size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
+                          </div>
                       </div>
 
                       {/* Meta: Date & Color */}
@@ -379,6 +402,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
                     </div>
                     {task.description && <p className="text-sm text-gray-700 mb-3 line-clamp-2">{task.description}</p>}
                     
+                    {/* Assignee Mini Badge */}
+                    {task.assignee && (
+                        <div className="flex items-center gap-1 text-xs text-gray-600 font-bold mb-3 bg-gray-50 w-fit px-2 py-0.5 rounded-md border border-gray-100">
+                             <UserCircle size={12} /> {task.assignee}
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
                         <div className="flex items-center text-xs font-bold text-gray-500 gap-1.5" title={t.syncedGCal}>
                             <Calendar size={14} className={task.dueDate ? "text-teal-600" : ""} />

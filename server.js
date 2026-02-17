@@ -19,21 +19,24 @@ if (!process.env.DATABASE_URL) {
   console.error("👉 DICA: No Replit, vá na aba 'PostgreSQL' (barra lateral esquerda) e clique em 'Provision/Set up Database'.");
 }
 
-// Database Connection
+// Database Connection - Otimizado para performance
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  // No Replit interno, SSL geralmente não é obrigatório, mas 'rejectUnauthorized: false' 
-  // previne erros caso eles usem conexão externa/segura.
   ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('replit') ? false : {
     rejectUnauthorized: false
   },
+  // Aumenta o tempo que a conexão pode ficar ociosa antes de fechar (evita reconexões frequentes)
+  idleTimeoutMillis: 60000, 
+  // Aumenta o tempo limite de conexão inicial
+  connectionTimeoutMillis: 10000,
+  // Limite de conexões simultâneas
+  max: 10
 });
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Serve static files from Vite build
-app.use(express.static(path.join(__dirname, 'dist')));
+// --- Mover arquivos estáticos para depois da API para evitar I/O desnecessário ---
 
 // Initialize Tables and Seed Super Admin
 const initDB = async () => {
@@ -80,6 +83,11 @@ const initDB = async () => {
       );
     `);
 
+    // Create Performance Indexes (Crucial for Login Speed)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(lower(email));`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_users_company ON users(company);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_tasks_company ON tasks(company);`);
+
     // Check if Super Admin exists
     const adminCheck = await client.query("SELECT * FROM users WHERE email = 'admin@ecom360.co'");
     
@@ -109,7 +117,7 @@ const initDB = async () => {
         `);
         console.log('Super Admin & Demo Data Created.');
     } else {
-        console.log('Super Admin already exists. Skipping seed.');
+        console.log('Database ready.');
     }
 
     await client.query('COMMIT');
@@ -129,12 +137,22 @@ initDB();
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
+  // Timer Logs para Debug
+  console.time('Login Total');
+  
   try {
-    const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1)', [email]);
+    console.time('DB Query');
+    // Adicionado LIMIT 1 para performance
+    const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1) LIMIT 1', [email]);
+    console.timeEnd('DB Query');
+    
     const user = result.rows[0];
 
     if (user) {
+        console.time('Bcrypt Compare');
         const match = await bcrypt.compare(password, user.password);
+        console.timeEnd('Bcrypt Compare');
+        
         if (match) {
           // Don't send password back
           const { password: _, ...userSafe } = user;
@@ -148,6 +166,8 @@ app.post('/api/login', async (req, res) => {
   } catch (err) {
     console.error(`Login Error:`, err);
     res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    console.timeEnd('Login Total');
   }
 });
 
@@ -227,6 +247,9 @@ app.post('/api/meetings', async (req, res) => {
     res.json({ message: 'Meeting created' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// Serve static files AFTER API routes to ensure API priority and speed
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // Catch-all
 app.get('*', (req, res) => {
