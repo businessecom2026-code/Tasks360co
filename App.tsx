@@ -220,8 +220,16 @@ const App: React.FC = () => {
 
     switch (view) {
       case 'DASHBOARD': return <Dashboard tasks={getFilteredTasks()} role={currentUser.role} language={language} />;
-      // PASSAR USERS PARA O KANBAN
-      case 'KANBAN': return <KanbanBoard tasks={getFilteredTasks()} setTasks={setTasks} role={currentUser.role} language={language} users={users} />;
+      case 'KANBAN': return (
+        <KanbanBoard 
+          tasks={getFilteredTasks()} 
+          setTasks={setTasks} 
+          role={currentUser.role} 
+          language={language} 
+          users={users} 
+          currentCompany={currentUser.company} 
+        />
+      );
       case 'USER_MANAGEMENT': return <UserManagement users={users} setUsers={setUsers} />;
       case 'MEETINGS': 
         return (

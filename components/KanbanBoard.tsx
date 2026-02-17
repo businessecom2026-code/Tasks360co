@@ -8,7 +8,8 @@ interface KanbanBoardProps {
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   role: UserRole;
   language: Language;
-  users?: User[]; // Optional to prevent breaking if not passed immediately, but logic uses it
+  users?: User[]; 
+  currentCompany: string; // Nova prop para garantir integridade dos dados
 }
 
 const COLORS = [
@@ -21,7 +22,7 @@ const COLORS = [
   '#64748b'  // Slate (Default)
 ];
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, language, users = [] }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, language, users = [], currentCompany }) => {
   const t = translations[language].kanban;
   
   // View State
@@ -132,7 +133,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
       description: '',
       dueDate: new Date().toISOString().split('T')[0],
       color: COLORS[6],
-      company: tasks.length > 0 ? tasks[0].company : undefined // Inherit current context company if possible
+      company: currentCompany // Use explicit company context
     };
     setEditingTask(newTask);
   };
@@ -182,9 +183,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
     return 'bg-gray-50 text-gray-800 border-gray-200';
   };
 
-  // Filter users by company (if current user has company) for assignment
-  // For simplicity, we assume 'users' prop is already filtered or we just show all available
-  const assignableUsers = users; 
+  const assignableUsers = users || []; 
 
   return (
     <div className="p-4 md:p-6 h-full overflow-hidden flex flex-col relative bg-gray-50/50">
