@@ -43,7 +43,5 @@ run = ["node", "server.js"]
 build = ["npm", "run", "build"]
 publicDir = "dist/public"
 
-[userenv]
-
 [userenv.production]
 PORT = "5000"
