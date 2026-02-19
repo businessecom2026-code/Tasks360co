@@ -84,10 +84,10 @@ export class GeminiLiveClient {
                 name: 'update_kanban_board',
                 description: 'Add a new task to the Kanban board',
                 parameters: {
-                  type: 'OBJECT',
+                  type: ('OBJECT' as any),
                   properties: {
-                    title: { type: 'STRING', description: 'Title of the task' },
-                    column: { type: 'STRING', description: 'Column to add to (PENDING, IN_PROGRESS, DONE)' }
+                    title: { type: ('STRING' as any), description: 'Title of the task' },
+                    column: { type: ('STRING' as any), description: 'Column to add to (PENDING, IN_PROGRESS, DONE)' }
                   },
                   required: ['title', 'column']
                 }

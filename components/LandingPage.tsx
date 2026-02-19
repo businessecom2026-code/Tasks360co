@@ -5,10 +5,10 @@ import { User } from '../types';
 interface LandingPageProps {
   onLoginSuccess: (user: User) => void;
   onRegister: (name: string, email: string, pass: string, company: string) => void;
-  users: User[];
+  // removed users prop
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, users }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister }) => {
   const [showModal, setShowModal] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
   
@@ -67,11 +67,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess, onRegister, u
             return;
         }
 
-        // Check if email already exists in local list (optional double check, API will also likely check)
-        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-            setError('Este e-mail já está cadastrado.');
-            return;
-        }
+        // Duplicate email check is now handled by the server (DB unique constraint)
         onRegister(regName, email, password, regCompany);
     }
   };

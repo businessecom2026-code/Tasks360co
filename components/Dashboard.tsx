@@ -30,11 +30,11 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks, role, language }) => {
   }
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="p-4 md:p-6 space-y-6 animate-fade-in">
       <h2 className="text-2xl font-bold text-gray-800">{t.title}</h2>
       
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
           <p className="text-sm font-medium text-gray-500 mb-1">{t.pending}</p>
@@ -54,7 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks, role, language }) => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-80">
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 h-64 md:h-80">
           <h3 className="text-lg font-semibold mb-4 text-gray-700">{t.velocity}</h3>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={productivityData}>
@@ -71,7 +71,7 @@ const Dashboard: React.FC<DashboardProps> = ({ tasks, role, language }) => {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-80">
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 h-64 md:h-80">
           <h3 className="text-lg font-semibold mb-4 text-gray-700">{t.focus}</h3>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={productivityData}>

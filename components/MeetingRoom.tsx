@@ -203,9 +203,9 @@ ${transcripts.map(t => `${t.isUser ? 'User' : 'AI'}: ${t.text}`).join('\n')}
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px] w-full max-w-5xl mx-auto my-8 animate-fade-in relative">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[calc(100vh-140px)] md:h-[600px] w-full max-w-5xl mx-auto my-2 md:my-8 animate-fade-in relative">
       {/* Header */}
-      <div className="bg-slate-900 p-4 flex justify-between items-center text-white">
+      <div className="bg-slate-900 p-4 flex justify-between items-center text-white shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-slate-800 rounded-lg border border-slate-700">
             {isActive ? (
@@ -215,28 +215,29 @@ ${transcripts.map(t => `${t.isUser ? 'User' : 'AI'}: ${t.text}`).join('\n')}
             )}
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white">{t.residentTitle}</h3>
+            <h3 className="font-bold text-lg text-white leading-tight">{t.residentTitle}</h3>
             <p className="text-xs text-slate-300">
                 {isActive ? t.listening : t.ready}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-            <span className="text-xs bg-slate-800 px-3 py-1 rounded-full text-teal-300 border border-slate-700 font-medium">
-                Integration: Google Meet
+            <span className="hidden md:inline-block text-xs bg-slate-800 px-3 py-1 rounded-full text-teal-300 border border-slate-700 font-medium">
+                Google Meet
             </span>
             <button onClick={onClose} className="text-slate-300 hover:text-white transition-colors">{t.close}</button>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main Content Area - Stacked on Mobile, Row on Desktop */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           {/* Left: Transcript / Live View */}
-          <div className={`flex-1 flex flex-col border-r border-gray-100 ${report ? 'w-1/2' : 'w-full'}`}>
-            <div className="bg-gray-50 p-3 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide flex justify-between">
+          <div className={`flex flex-col border-b lg:border-b-0 lg:border-r border-gray-100 flex-1 overflow-hidden ${report ? 'lg:w-1/2 h-1/2 lg:h-auto' : 'w-full h-full'}`}>
+            <div className="bg-gray-50 p-3 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide flex justify-between shrink-0">
                 <span>{t.transcript}</span>
                 {transcripts.length > 0 && <span className="text-teal-700">{transcripts.length} {t.turns}</span>}
             </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-white">
                 {transcripts.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400 text-center p-8">
                         <BrainCircuit size={48} className="mb-4 text-teal-100" />
@@ -256,14 +257,14 @@ ${transcripts.map(t => `${t.isUser ? 'User' : 'AI'}: ${t.text}`).join('\n')}
 
           {/* Right: Report View (Appears when report generated) */}
           {report && (
-              <div className="w-1/2 flex flex-col bg-slate-50 animate-fade-in">
-                  <div className="bg-white p-3 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide flex justify-between items-center">
+              <div className="flex flex-col bg-slate-50 animate-fade-in flex-1 overflow-hidden lg:w-1/2 h-1/2 lg:h-auto">
+                  <div className="bg-white p-3 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wide flex justify-between items-center shrink-0">
                       <span>{t.reportTitle}</span>
                       <button onClick={downloadReportText} className="text-teal-700 hover:text-teal-900 flex items-center gap-1">
                           <Download size={14} /> {t.export}
                       </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                       <section>
                           <h4 className="flex items-center gap-2 font-bold text-black mb-2">
                               <List size={16} className="text-teal-600" /> {t.agenda}
@@ -301,7 +302,7 @@ ${transcripts.map(t => `${t.isUser ? 'User' : 'AI'}: ${t.text}`).join('\n')}
       </div>
 
       {/* Controls */}
-      <div className="p-4 bg-white border-t border-gray-100 flex justify-center items-center gap-4 relative z-10">
+      <div className="p-4 bg-white border-t border-gray-100 flex justify-center items-center gap-4 relative z-10 shrink-0">
         {error && <div className="absolute top-[-50px] bg-red-100 text-red-700 px-4 py-2 rounded text-sm shadow font-medium">{error}</div>}
         
         {isGeneratingReport ? (

@@ -28,6 +28,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, setUsers }) => {
     // Optimistic Update
     setUsers([...users, user]);
     setShowForm(false);
+    // Reset form properly
     setNewUser({ name: '', email: '', password: '', role: 'ADMIN', company: '' });
 
     // API Call
@@ -86,7 +87,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ users, setUsers }) => {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-1">Senha Provisória</label>
-              <input required type="text" className="w-full border border-gray-300 rounded-lg p-2 text-black" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+              <input required type="password" className="w-full border border-gray-300 rounded-lg p-2 text-black" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-900 mb-1">Empresa (Tenant)</label>

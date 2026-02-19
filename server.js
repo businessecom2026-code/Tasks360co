@@ -8,28 +8,42 @@ import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Database Connection
+// Verificação de segurança para o Banco de Dados no Replit
+if (!process.env.DATABASE_URL) {
+  console.error("❌ ERRO: A variável DATABASE_URL não foi encontrada.");
+  console.error("👉 DICA: No Replit, vá na aba 'PostgreSQL' (barra lateral esquerda) e clique em 'Provision/Set up Database'.");
+}
+
+// Database Connection - Otimizado para performance
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? {
+  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('replit') ? false : {
     rejectUnauthorized: false
-  } : false,
+  },
+  // Aumenta o tempo que a conexão pode ficar ociosa antes de fechar (evita reconexões frequentes)
+  idleTimeoutMillis: 60000, 
+  // Aumenta o tempo limite de conexão inicial
+  connectionTimeoutMillis: 10000,
+  // Limite de conexões simultâneas
+  max: 10
 });
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Serve static files from Vite build
-app.use(express.static(path.join(__dirname, 'dist')));
+// --- Mover arquivos estáticos para depois da API para evitar I/O desnecessário ---
 
 // Initialize Tables and Seed Super Admin
 const initDB = async () => {
-  const client = await pool.connect();
+  // Evita crashar o app se o banco não estiver configurado no Replit
+  if (!process.env.DATABASE_URL) return;
+
+  let client;
   try {
+    client = await pool.connect();
     console.log('Initializing Database...');
     await client.query('BEGIN');
 
@@ -67,6 +81,11 @@ const initDB = async () => {
       );
     `);
 
+    // Create Performance Indexes (Crucial for Login Speed)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(lower(email));`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_users_company ON users(company);`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_tasks_company ON tasks(company);`);
+
     // Check if Super Admin exists
     const adminCheck = await client.query("SELECT * FROM users WHERE email = 'admin@ecom360.co'");
     
@@ -96,15 +115,15 @@ const initDB = async () => {
         `);
         console.log('Super Admin & Demo Data Created.');
     } else {
-        console.log('Super Admin already exists. Skipping seed.');
+        console.log('Database ready.');
     }
 
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) await client.query('ROLLBACK');
     console.error('Error initializing database:', err);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 };
 
@@ -116,12 +135,22 @@ initDB();
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
+  // Timer Logs para Debug
+  console.time('Login Total');
+  
   try {
-    const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1)', [email]);
+    console.time('DB Query');
+    // Adicionado LIMIT 1 para performance
+    const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1) LIMIT 1', [email]);
+    console.timeEnd('DB Query');
+    
     const user = result.rows[0];
 
     if (user) {
+        console.time('Bcrypt Compare');
         const match = await bcrypt.compare(password, user.password);
+        console.timeEnd('Bcrypt Compare');
+        
         if (match) {
           // Don't send password back
           const { password: _, ...userSafe } = user;
@@ -135,6 +164,8 @@ app.post('/api/login', async (req, res) => {
   } catch (err) {
     console.error(`Login Error:`, err);
     res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    console.timeEnd('Login Total');
   }
 });
 
@@ -215,11 +246,15 @@ app.post('/api/meetings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Serve static files AFTER API routes to ensure API priority and speed
+app.use(express.static(path.join(__dirname, 'dist')));
+
 // Catch-all
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-app.listen(port, () => {
+// Replit precisa ouvir em 0.0.0.0
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 });
