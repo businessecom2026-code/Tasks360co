@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserPlus, Trash2, Search } from 'lucide-react';
 
 // Tipos de Dados
-type UserRole = 'SUPER_ADMIN' | 'Admin da Empresa';
+type UserRole = 'SUPER_ADMIN' | 'Admin da Empresa' | 'Usuário';
 interface User {
   id: string;
   full_name: string;
@@ -22,8 +22,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
   // Estado do Formulário
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('Admin da Empresa');
+  const [role, setRole] = useState<UserRole>('Usuário');
   const [companyTenant, setCompanyTenant] = useState(currentUser.email === 'admin@ecom360.co' ? '' : currentUser.company_tenant);
 
   const isSuperAdmin = currentUser.email === 'admin@ecom360.co';
@@ -45,8 +44,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica para POST /api/users
-    // A senha é enviada para o backend para hashing, nunca logada.
+    // A senha seria enviada para o backend para hashing, nunca armazenada ou logada no frontend.
     const newUser: User = { 
         id: `user_${Date.now()}`,
         full_name: fullName, 
@@ -56,7 +54,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
     };
     setUsers(prev => [...prev, newUser]);
     // Limpa o formulário
-    setFullName(''); setEmail(''); setPassword('');
+    setFullName(''); setEmail('');
     if (isSuperAdmin) setCompanyTenant('');
   };
 
@@ -64,9 +62,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
     const roles = {
       SUPER_ADMIN: { label: 'SUPER ADMIN', className: 'bg-purple-100 text-purple-700' },
       'Admin da Empresa': { label: 'Admin da Empresa', className: 'bg-blue-100 text-blue-700' },
+      'Usuário': { label: 'Usuário', className: 'bg-green-100 text-green-700' },
     };
-    const { label, className } = roles[role];
-    return <span className={`px-2 py-1 text-xs font-bold rounded-full ${className}`}>{label}</span>;
+    const roleInfo = roles[role] || { label: 'N/A', className: 'bg-gray-100 text-gray-700' };
+    return <span className={`px-2 py-1 text-xs font-bold rounded-full ${roleInfo.className}`}>{roleInfo.label}</span>;
   };
 
   return (
@@ -77,11 +76,12 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
         <form onSubmit={handleAddUser} className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Nome Completo" className="w-full p-2 border rounded-lg" required />
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" className="w-full p-2 border rounded-lg" required />
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Senha Provisória" className="w-full p-2 border rounded-lg" required />
+            <input type="password" placeholder="Senha Provisória" className="w-full p-2 border rounded-lg" required />
             <input type="text" value={companyTenant} onChange={e => setCompanyTenant(e.target.value)} placeholder="Empresa (Tenant)" disabled={!isSuperAdmin} className="w-full p-2 border rounded-lg disabled:bg-gray-100" required />
             <select value={role} onChange={e => setRole(e.target.value as UserRole)} className="w-full p-2 border rounded-lg bg-white">
                 {isSuperAdmin && <option>SUPER_ADMIN</option>}
                 <option>Admin da Empresa</option>
+                <option>Usuário</option>
             </select>
             <button type="submit" className="w-full bg-teal-600 text-white font-bold py-2 rounded-lg hover:bg-teal-700 transition">Adicionar</button>
         </form>
