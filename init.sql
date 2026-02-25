@@ -48,7 +48,7 @@ CREATE INDEX idx_users_company ON users(company);
 CREATE INDEX idx_tasks_company ON tasks(company);
 
 -- 6. Inserir SUPER ADMIN
--- Senha: 'Admin2026*' (Hash válida gerada via bcrypt cost 10)
+-- Senha gerada via bcrypt cost 10
 INSERT INTO users (id, name, email, password, role, company, avatar)
 VALUES (
     'u1', 
