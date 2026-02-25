@@ -54,7 +54,7 @@ VALUES (
     'u1', 
     'Super Admin', 
     'admin@ecom360.co', 
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 
+    '', 
     'SUPER_ADMIN', 
     'Ecom360', 
     ''
