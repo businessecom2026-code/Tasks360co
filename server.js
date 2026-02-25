@@ -316,7 +316,9 @@ app.post('/api/tasks', async (req, res) => {
     );
   } else {
     const idx = mockTasks.findIndex(t => t.id === task.id);
-    if (idx !== -1) mockTasks[idx] = task;
+    if (idx > -1 && mockTasks[idx]) {
+      mockTasks[idx] = task;
+    }
     else mockTasks.push(task);
   }
   res.json({ message: 'Saved' });

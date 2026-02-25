@@ -138,7 +138,9 @@ async function startServer() {
       // await db.query('UPDATE tasks SET title = $1, description = $2, status = $3, due_date = $4, members = $5, tags = $6, checklist = $7 WHERE id = $8', 
       // [updatedTask.title, updatedTask.description, updatedTask.status, updatedTask.dueDate, JSON.stringify(updatedTask.members), JSON.stringify(updatedTask.tags), JSON.stringify(updatedTask.checklist), id]);
       
-      tasks[index] = updatedTask;
+      if (tasks[index]) {
+        tasks[index] = updatedTask;
+      }
       res.json(updatedTask);
     } else {
       res.status(404).json({ error: 'Task not found' });
