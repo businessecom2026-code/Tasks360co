@@ -214,7 +214,6 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       mockResets[email] = { token: pin, expiresAt };
     }
 
-    console.log(`🔑 RESET PIN for ${email}: ${pin}`);
     res.json({ success: true, message: 'Código enviado (verifique console).' });
   } catch(err) {
     res.status(500).json({ error: 'Erro no reset.' });
