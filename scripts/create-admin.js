@@ -16,10 +16,10 @@ async function createAdmin() {
   let email, password;
 
   await new Promise((resolve) => {
-    rl.question('Digite o e-mail do novo SUPER_ADMIN: ', (answer) => {
-      email = answer;
-      if (!email || !email.includes('@')) {
-        console.error('E-mail inválido.');
+    rl.question('Digite o e-mail para o novo SUPER_ADMIN: ', (answer) => {
+      email = answer.trim();
+      if (!email.includes('@')) {
+        console.error('Formato de e-mail inválido.');
         process.exit(1);
       }
       resolve();
@@ -30,7 +30,7 @@ async function createAdmin() {
     rl.question(`Digite a senha para ${email}: `, (answer) => {
       password = answer;
       if (!password) {
-        console.error('A senha não pode estar em branco.');
+        console.error('A senha não pode ser vazia.');
         process.exit(1);
       }
       rl.close();
@@ -54,10 +54,10 @@ async function createAdmin() {
 
     await pool.query(query, ['Super Admin', email, hashedPassword, 'SUPER_ADMIN', 'Ecom360']);
     
-    console.log(`\nUsuário SUPER_ADMIN '${email}' criado/atualizado com sucesso!`);
+    console.log(`\nUsuário SUPER_ADMIN '${email}' foi criado/atualizado com sucesso!`);
 
   } catch (error) {
-    console.error('Erro ao criar admin:', error);
+    console.error('Erro ao executar o script de criação do admin:', error);
   } finally {
     await pool.end();
   }

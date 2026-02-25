@@ -132,6 +132,7 @@ const DroppableColumn = ({ column, tasks, children }: { column: Column, tasks: T
 };
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, language, users = [], currentCompany }) => {
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const t = translations[language].kanban;
   
   // View State
@@ -465,25 +466,33 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, langua
             <div key={col.id} className="w-72 shrink-0 max-h-full flex flex-col bg-[#f1f2f4] rounded-xl shadow-lg">
                 {/* Column Header */}
                 <div className="p-3 pl-4 pr-2 font-semibold text-sm text-[#172b4d] flex justify-between items-center shrink-0 cursor-pointer group">
-                    <div className="flex items-center gap-2 w-full" onClick={() => role === 'ADMIN' && renameColumn(col.id)}>
+                    <div className="flex items-center gap-2 w-full">
                         <span className="truncate">{col.title}</span>
                         <span className="text-xs text-gray-500 font-normal">{tasks.filter(t => t.status === col.id).length}</span>
                     </div>
                     {role === 'ADMIN' && (
-                        <div className="relative group">
-                            <button className="p-1.5 hover:bg-gray-300 rounded text-gray-600 transition-colors">
+                        <div className="relative">
+                            <button 
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === col.id ? null : col.id); }} 
+                                className="p-1.5 hover:bg-gray-300 rounded text-gray-600 transition-colors"
+                            >
                                 <MoreHorizontal size={16} />
                             </button>
-                            {/* Dropdown Menu Simulation */}
-                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded shadow-xl border border-gray-200 hidden group-hover:block z-20 py-1">
-                                <button onClick={() => deleteColumn(col.id)} className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm">Excluir lista</button>
-                                <div className="border-t border-gray-100 my-1"></div>
-                                <div className="px-4 py-1 text-xs text-gray-400">Mover lista</div>
-                                <div className="flex justify-between px-2">
-                                    <button disabled={index === 0} onClick={() => moveColumn(index, 'left')} className="p-2 hover:bg-gray-100 rounded disabled:opacity-30"><ArrowLeft size={14}/></button>
-                                    <button disabled={index === columns.length - 1} onClick={() => moveColumn(index, 'right')} className="p-2 hover:bg-gray-100 rounded disabled:opacity-30"><ArrowRight size={14}/></button>
+                            {openMenuId === col.id && (
+                                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded shadow-xl border border-gray-200 z-20 py-1">
+                                    <button onClick={(e) => { e.stopPropagation(); addTask(col.id); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm flex items-center gap-2">
+                                        <Plus size={14} /> Adicionar nova tarefa
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); renameColumn(col.id); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm flex items-center gap-2">
+                                        <Edit2 size={14} /> Renomear coluna
+                                    </button>
+                                    <div className="border-t border-gray-100 my-1"></div>
+                                    <button onClick={(e) => { e.stopPropagation(); deleteColumn(col.id); setOpenMenuId(null); }} className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm flex items-center gap-2">
+                                        <Trash2 size={14} /> Deletar a coluna
+                                    </button>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     )}
                 </div>
