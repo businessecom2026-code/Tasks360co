@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserPlus, Trash2, Search } from 'lucide-react';
 
 // Tipos de Dados
-type UserRole = 'SUPER_ADMIN' | 'Admin da Empresa' | 'Usuário';
+type UserRole = 'SUPER_ADMIN' | 'Admin da Empresa';
 interface User {
   id: string;
   full_name: string;
@@ -17,39 +17,44 @@ interface UserManagementProps {
 
 const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
   const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Estado do Formulário
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('Usuário');
+  const [role, setRole] = useState<UserRole>('Admin da Empresa');
   const [companyTenant, setCompanyTenant] = useState(currentUser.email === 'admin@ecom360.co' ? '' : currentUser.company_tenant);
 
   const isSuperAdmin = currentUser.email === 'admin@ecom360.co';
 
-  // Efeito para buscar e filtrar usuários
+  // Simulação de busca de dados
   useEffect(() => {
-    // Simula a busca de dados da API
-    const allUsers: User[] = []; // Em um app real, viria de um fetch('/api/users')
-    
-    const filtered = allUsers.filter(user => {
-      const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      if (isSuperAdmin) {
-        return matchesSearch;
-      }
-      return user.company_tenant === currentUser.company_tenant && matchesSearch;
-    });
-    setUsers(allUsers);
-    setFilteredUsers(filtered);
-  }, [searchTerm, currentUser.company_tenant, isSuperAdmin]);
+    // Em um app real, esta seria uma chamada fetch('/api/users')
+    const mockUsers: User[] = []; // Inicialmente vazio
+    setUsers(mockUsers);
+  }, []);
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    if (isSuperAdmin) {
+      return matchesSearch;
+    }
+    return user.company_tenant === currentUser.company_tenant && matchesSearch;
+  });
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica para POST /api/users
     // A senha é enviada para o backend para hashing, nunca logada.
-    console.log('Novo usuário adicionado (simulação).');
+    const newUser: User = { 
+        id: `user_${Date.now()}`,
+        full_name: fullName, 
+        email, 
+        role, 
+        company_tenant: companyTenant 
+    };
+    setUsers(prev => [...prev, newUser]);
     // Limpa o formulário
     setFullName(''); setEmail(''); setPassword('');
     if (isSuperAdmin) setCompanyTenant('');
@@ -59,7 +64,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
     const roles = {
       SUPER_ADMIN: { label: 'SUPER ADMIN', className: 'bg-purple-100 text-purple-700' },
       'Admin da Empresa': { label: 'Admin da Empresa', className: 'bg-blue-100 text-blue-700' },
-      'Usuário': { label: 'Usuário', className: 'bg-green-100 text-green-700' },
     };
     const { label, className } = roles[role];
     return <span className={`px-2 py-1 text-xs font-bold rounded-full ${className}`}>{label}</span>;
@@ -78,7 +82,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
             <select value={role} onChange={e => setRole(e.target.value as UserRole)} className="w-full p-2 border rounded-lg bg-white">
                 {isSuperAdmin && <option>SUPER_ADMIN</option>}
                 <option>Admin da Empresa</option>
-                <option>Usuário</option>
             </select>
             <button type="submit" className="w-full bg-teal-600 text-white font-bold py-2 rounded-lg hover:bg-teal-700 transition">Adicionar</button>
         </form>
