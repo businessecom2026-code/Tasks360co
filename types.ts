@@ -8,6 +8,12 @@ export enum TaskStatus {
   DONE = 'DONE'
 }
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -15,9 +21,12 @@ export interface Task {
   status: string;
   assignee?: string;
   dueDate?: string;
-  image?: string; // Base64 ou URL para preview
-  color?: string; // Hex code para etiqueta/status visual
-  company?: string; // Multi-tenancy
+  image?: string;
+  color?: string;
+  company?: string;
+  members?: string[]; // Array de nomes ou IDs de usuários
+  tags?: string[]; // Array de strings (ex: 'Urgente', 'Design')
+  checklist?: ChecklistItem[];
 }
 
 export interface Meeting {
@@ -46,6 +55,7 @@ export interface User {
 export interface Column {
   id: string;
   title: string;
+  color?: string;
 }
 
 export type ViewState = 'DASHBOARD' | 'KANBAN' | 'MEETINGS' | 'CHAT' | 'LIVE_MEETING' | 'USER_MANAGEMENT';

@@ -5,125 +5,159 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import 'dotenv/config';
+import { createServer as createViteServer } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const app = express();
-const port = process.env.PORT || 3001;
 
-// Verificação de segurança para o Banco de Dados no Replit
-if (!process.env.DATABASE_URL) {
-  console.error("❌ ERRO: A variável DATABASE_URL não foi encontrada.");
-  console.error("👉 DICA: No Replit, vá na aba 'PostgreSQL' (barra lateral esquerda) e clique em 'Provision/Set up Database'.");
+async function startServer() {
+  const app = express();
+  const port = process.env.PORT || 3000;
+
+  app.use(cors());
+  app.use(express.json({ limit: '50mb' }));
+
+  // --- DATABASE CONFIGURATION & FALLBACK ---
+
+let pool = null;
+let isUsingPostgres = false;
+
+// Mock Data Stores (Fallback when no DB provided)
+const mockUsers = [];
+const mockTasks = [];
+const mockMeetings = [];
+const mockResets = {}; // { email: { token, expires_at } }
+
+if (process.env.DATABASE_URL) {
+  pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL.includes('replit') ? false : { rejectUnauthorized: false },
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+  isUsingPostgres = true;
+  console.log("✅ PostgreSQL Database URL found. Attempting connection...");
+} else {
+  console.log("⚠️  NO DATABASE_URL FOUND. Switching to IN-MEMORY mode.");
+  console.log("👉 Data will be lost when server restarts.");
 }
 
-// Database Connection - Otimizado para performance
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('replit') ? false : {
-    rejectUnauthorized: false
-  },
-  // Aumenta o tempo que a conexão pode ficar ociosa antes de fechar (evita reconexões frequentes)
-  idleTimeoutMillis: 60000, 
-  // Aumenta o tempo limite de conexão inicial
-  connectionTimeoutMillis: 10000,
-  // Limite de conexões simultâneas
-  max: 10
-});
+// --- HELPER FUNCTIONS (DB ABSTRACTION) ---
 
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-
-// --- Mover arquivos estáticos para depois da API para evitar I/O desnecessário ---
-
-// Initialize Tables and Seed Super Admin
+// Initialize DB (Create tables or Seed mock data)
 const initDB = async () => {
-  // Evita crashar o app se o banco não estiver configurado no Replit
-  if (!process.env.DATABASE_URL) return;
+  const adminEmail = 'admin@ecom360.co';
+  const adminPass = 'Admin2026*';
+  const hashedAdminPass = await bcrypt.hash(adminPass, 10);
 
-  let client;
-  try {
-    client = await pool.connect();
-    console.log('Initializing Database...');
-    await client.query('BEGIN');
+  if (isUsingPostgres && pool) {
+    let client;
+    try {
+      client = await pool.connect();
+      console.log('Initializing PostgreSQL Tables...');
+      await client.query('BEGIN');
 
-    // Create Tables
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        role TEXT NOT NULL,
-        company TEXT NOT NULL,
-        avatar TEXT
-      );
-      CREATE TABLE IF NOT EXISTS tasks (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT,
-        status TEXT NOT NULL DEFAULT 'PENDING',
-        assignee TEXT,
-        due_date TEXT,
-        image TEXT,
-        color TEXT,
-        company TEXT
-      );
-      CREATE TABLE IF NOT EXISTS meetings (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        date TEXT,
-        time TEXT,
-        participants TEXT[],
-        link TEXT,
-        platform TEXT,
-        company TEXT
-      );
-    `);
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          role TEXT NOT NULL,
+          company TEXT NOT NULL,
+          avatar TEXT
+        );
+        CREATE TABLE IF NOT EXISTS tasks (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT,
+          status TEXT NOT NULL DEFAULT 'PENDING',
+          assignee TEXT,
+          due_date TEXT,
+          image TEXT,
+          color TEXT,
+          company TEXT
+        );
+        CREATE TABLE IF NOT EXISTS meetings (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          date TEXT,
+          time TEXT,
+          participants TEXT[],
+          link TEXT,
+          platform TEXT,
+          company TEXT
+        );
+        CREATE TABLE IF NOT EXISTS password_resets (
+          email TEXT PRIMARY KEY,
+          token TEXT NOT NULL,
+          expires_at TIMESTAMP NOT NULL
+        );
+      `);
 
-    // Create Performance Indexes (Crucial for Login Speed)
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(lower(email));`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_users_company ON users(company);`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_tasks_company ON tasks(company);`);
-
-    // Check if Super Admin exists
-    const adminCheck = await client.query("SELECT * FROM users WHERE email = 'admin@ecom360.co'");
-    
-    if (adminCheck.rows.length === 0) {
-        console.log('Seeding Super Admin...');
-        const hashedPassword = await bcrypt.hash('Admin2026*', 10);
-        
+      // Seed Admin if not exists, OR update password if exists
+      const res = await client.query("SELECT * FROM users WHERE email = $1", [adminEmail]);
+      if (res.rows.length === 0) {
         await client.query(`
             INSERT INTO users (id, name, email, password, role, company, avatar)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `, ['u1', 'Super Admin', 'admin@ecom360.co', hashedPassword, 'SUPER_ADMIN', 'Ecom360', '']);
-
-        // Seed Demo Tasks
+        `, ['u1', 'Super Admin', adminEmail, hashedAdminPass, 'SUPER_ADMIN', 'Ecom360', '']);
+        
+        // Seed Demo Task
         await client.query(`
             INSERT INTO tasks (id, title, description, status, assignee, due_date, color, company)
-            VALUES 
-                ('t1', 'Revisar Roadmap Q4', 'Alinhar estratégias.', 'PENDING', 'Super Admin', '2024-11-15', '#0d9488', 'Ecom360'),
-                ('t2', 'Entrevista Tech Lead', 'Avaliar candidatos.', 'IN_PROGRESS', 'Super Admin', '2024-10-30', '#f97316', 'Ecom360')
+            VALUES ('t1', 'Revisar Roadmap', 'Alinhar Q4.', 'PENDING', 'Super Admin', '2024-11-15', '#0d9488', 'Ecom360')
             ON CONFLICT (id) DO NOTHING;
         `);
-
-        // Seed Demo Meetings
-        await client.query(`
-             INSERT INTO meetings (id, title, date, time, link, platform, company)
-             VALUES ('m1', 'Weekly Sync', 'Oct 25, 2024', '10:00 AM', 'https://meet.google.com/abc', 'Google Meet', 'Ecom360')
-             ON CONFLICT (id) DO NOTHING;
-        `);
-        console.log('Super Admin & Demo Data Created.');
-    } else {
-        console.log('Database ready.');
+        console.log("✅ Admin user created.");
+      } else {
+        // Force update password to ensure login works
+        await client.query("UPDATE users SET password = $1 WHERE email = $2", [hashedAdminPass, adminEmail]);
+        console.log("✅ Admin password enforced/reset.");
+      }
+      
+      await client.query('COMMIT');
+      console.log("✅ Database Initialized.");
+    } catch (err) {
+      console.error("❌ Postgres Initialization Failed:", err);
+      console.log("⚠️  Falling back to In-Memory mode due to connection error.");
+      isUsingPostgres = false; 
+      pool = null;
+      // Re-run init to seed mock data
+      await initDB();
+    } finally {
+      if (client) client.release();
     }
-
-    await client.query('COMMIT');
-  } catch (err) {
-    if (client) await client.query('ROLLBACK');
-    console.error('Error initializing database:', err);
-  } finally {
-    if (client) client.release();
+  } 
+  
+  if (!isUsingPostgres) {
+    // Initialize Mock Data
+    const adminUser = mockUsers.find(u => u.email === adminEmail);
+    if (!adminUser) {
+      mockUsers.push({
+        id: 'u1',
+        name: 'Super Admin',
+        email: adminEmail,
+        password: hashedAdminPass,
+        role: 'SUPER_ADMIN',
+        company: 'Ecom360',
+        avatar: ''
+      });
+      mockTasks.push({
+        id: 't1',
+        title: 'Check In-Memory Mode',
+        description: 'System is running in memory mode.',
+        status: 'PENDING',
+        assignee: 'Super Admin',
+        dueDate: '2024-12-31',
+        color: '#f97316',
+        company: 'Ecom360'
+      });
+      console.log("✅ In-Memory Data Seeded (Super Admin created).");
+    } else {
+      adminUser.password = hashedAdminPass;
+      console.log("✅ In-Memory Admin password reset.");
+    }
   }
 };
 
@@ -131,28 +165,23 @@ initDB();
 
 // --- API ROUTES ---
 
-// LOGIN (With Bcrypt)
+// LOGIN
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
-  // Timer Logs para Debug
-  console.time('Login Total');
-  
   try {
-    console.time('DB Query');
-    // Adicionado LIMIT 1 para performance
-    const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1) LIMIT 1', [email]);
-    console.timeEnd('DB Query');
-    
-    const user = result.rows[0];
+    let user;
+
+    if (isUsingPostgres && pool) {
+      const result = await pool.query('SELECT * FROM users WHERE lower(email) = lower($1) LIMIT 1', [email]);
+      user = result.rows[0];
+    } else {
+      user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    }
 
     if (user) {
-        console.time('Bcrypt Compare');
         const match = await bcrypt.compare(password, user.password);
-        console.timeEnd('Bcrypt Compare');
-        
         if (match) {
-          // Don't send password back
           const { password: _, ...userSafe } = user;
           res.json({ success: true, user: userSafe });
         } else {
@@ -163,98 +192,237 @@ app.post('/api/login', async (req, res) => {
     }
   } catch (err) {
     console.error(`Login Error:`, err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  } finally {
-    console.timeEnd('Login Total');
+    res.status(500).json({ success: false, error: 'Erro interno no servidor.' });
   }
 });
 
-// USERS
-app.get('/api/users', async (req, res) => {
+// PASSWORD RESET
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  const pin = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
   try {
-    const result = await pool.query('SELECT id, name, email, role, company, avatar FROM users');
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+    if (isUsingPostgres && pool) {
+      await pool.query(`
+        INSERT INTO password_resets (email, token, expires_at)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (email) DO UPDATE 
+        SET token = EXCLUDED.token, expires_at = EXCLUDED.expires_at
+      `, [email, pin, expiresAt]);
+    } else {
+      mockResets[email] = { token: pin, expiresAt };
+    }
+
+    console.log(`🔑 RESET PIN for ${email}: ${pin}`);
+    res.json({ success: true, message: 'Código enviado (verifique console).' });
+  } catch(err) {
+    res.status(500).json({ error: 'Erro no reset.' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email, pin, newPassword } = req.body;
+  
+  try {
+    let valid = false;
+    
+    if (isUsingPostgres && pool) {
+       const r = await pool.query('SELECT * FROM password_resets WHERE lower(email) = lower($1) AND token = $2', [email, pin]);
+       if (r.rows.length > 0 && new Date() < new Date(r.rows[0].expires_at)) valid = true;
+    } else {
+       const resetData = mockResets[email];
+       if (resetData && resetData.token === pin && new Date() < resetData.expiresAt) valid = true;
+    }
+
+    if (!valid) return res.status(400).json({ success: false, error: 'Token inválido ou expirado.' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    
+    if (isUsingPostgres && pool) {
+      await pool.query('UPDATE users SET password = $1 WHERE lower(email) = lower($2)', [hashed, email]);
+      await pool.query('DELETE FROM password_resets WHERE lower(email) = lower($1)', [email]);
+    } else {
+      const u = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (u) u.password = hashed;
+      delete mockResets[email];
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao alterar senha.' });
+  }
+});
+
+// USERS CRUD
+app.get('/api/users', async (req, res) => {
+  if (isUsingPostgres && pool) {
+    const r = await pool.query('SELECT id, name, email, role, company, avatar FROM users');
+    res.json(r.rows);
+  } else {
+    res.json(mockUsers.map(({password, ...u}) => u));
+  }
 });
 
 app.post('/api/users', async (req, res) => {
   const { id, name, email, password, role, company, avatar } = req.body;
   try {
-    // Hash password for new users
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query(
-      'INSERT INTO users (id, name, email, password, role, company, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING',
-      [id, name, email, hashedPassword, role, company, avatar || '']
-    );
+    const hashed = await bcrypt.hash(password, 10);
+    
+    if (isUsingPostgres && pool) {
+      await pool.query(
+        'INSERT INTO users (id, name, email, password, role, company, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [id, name, email, hashed, role, company, avatar || '']
+      );
+    } else {
+      if (mockUsers.find(u => u.email === email)) return res.status(409).json({ error: 'Email já existe.' });
+      mockUsers.push({ id, name, email, password: hashed, role, company, avatar });
+    }
     res.json({ message: 'User created' });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.delete('/api/users/:id', async (req, res) => {
-  try {
+  if (isUsingPostgres && pool) {
     await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
-    res.json({ message: 'User deleted' });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } else {
+    const idx = mockUsers.findIndex(u => u.id === req.params.id);
+    if (idx !== -1) mockUsers.splice(idx, 1);
+  }
+  res.json({ message: 'Deleted' });
 });
 
-// TASKS
+// TASKS CRUD
 app.get('/api/tasks', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT id, title, description, status, assignee, due_date as "dueDate", image, color, company FROM tasks ORDER BY id');
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  if (isUsingPostgres && pool) {
+    const r = await pool.query('SELECT id, title, description, status, assignee, due_date as "dueDate", image, color, company FROM tasks');
+    res.json(r.rows);
+  } else {
+    res.json(mockTasks);
+  }
 });
 
 app.post('/api/tasks', async (req, res) => {
-  const { id, title, description, status, assignee, dueDate, image, color, company } = req.body;
-  try {
+  const task = req.body;
+  if (isUsingPostgres && pool) {
     await pool.query(
       `INSERT INTO tasks (id, title, description, status, assignee, due_date, image, color, company) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        ON CONFLICT (id) DO UPDATE SET 
        title = EXCLUDED.title, description = EXCLUDED.description, status = EXCLUDED.status, 
        assignee = EXCLUDED.assignee, due_date = EXCLUDED.due_date, image = EXCLUDED.image, color = EXCLUDED.color`,
-      [id, title, description, status, assignee, dueDate, image, color, company]
+      [task.id, task.title, task.description, task.status, task.assignee, task.dueDate, task.image, task.color, task.company]
     );
-    res.json({ message: 'Task saved' });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } else {
+    const idx = mockTasks.findIndex(t => t.id === task.id);
+    if (idx !== -1) mockTasks[idx] = task;
+    else mockTasks.push(task);
+  }
+  res.json({ message: 'Saved' });
 });
 
 app.delete('/api/tasks/:id', async (req, res) => {
-  try {
+  if (isUsingPostgres && pool) {
     await pool.query('DELETE FROM tasks WHERE id = $1', [req.params.id]);
-    res.json({ message: 'Task deleted' });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } else {
+    const idx = mockTasks.findIndex(t => t.id === req.params.id);
+    if (idx !== -1) mockTasks.splice(idx, 1);
+  }
+  res.json({ message: 'Deleted' });
 });
 
-// MEETINGS
+// MEETINGS CRUD
 app.get('/api/meetings', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM meetings ORDER BY id DESC');
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  if (isUsingPostgres && pool) {
+    const r = await pool.query('SELECT * FROM meetings ORDER BY id DESC');
+    res.json(r.rows);
+  } else {
+    res.json(mockMeetings);
+  }
 });
 
 app.post('/api/meetings', async (req, res) => {
-  const { id, title, date, time, link, platform, company } = req.body;
-  try {
+  const m = req.body;
+  if (isUsingPostgres && pool) {
     await pool.query(
       'INSERT INTO meetings (id, title, date, time, link, platform, company) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [id, title, date, time, link, platform, company]
+      [m.id, m.title, m.date, m.time, m.link, m.platform, m.company]
     );
-    res.json({ message: 'Meeting created' });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } else {
+    mockMeetings.unshift(m);
+  }
+  res.json({ message: 'Created' });
 });
 
-// Serve static files AFTER API routes to ensure API priority and speed
-app.use(express.static(path.join(__dirname, 'dist')));
+// REVOLUT WEBHOOK
+app.post('/api/webhooks/revolut', async (req, res) => {
+  const event = req.body;
+  
+  // Em produção, você deve validar a assinatura do webhook enviada pelo Revolut
+  // const signature = req.headers['revolut-signature'];
+  
+  try {
+    // Validando se o pagamento foi concluído
+    if (event.event === 'ORDER_COMPLETED' || event.status === 'COMPLETED') {
+      // O email geralmente vem nos metadados do pedido ou nos dados do cliente
+      const userEmail = event.customer?.email || event.metadata?.email;
+      
+      if (!userEmail) {
+        return res.status(400).json({ error: 'Email do cliente não encontrado no payload do webhook.' });
+      }
 
-// Catch-all
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+      const updatedData = {
+        role: 'GESTOR',
+        subscription_id: 'PRO_PLAN',
+        welcome_message: 'Olá! Bem-vindo ao Task 360 PRO. Seu ambiente de gestão avançada está pronto. Aproveite o Kanban Ilimitado e a Integração com Google Calendar!'
+      };
+
+      if (isUsingPostgres && pool) {
+        // Atualiza a role do usuário no banco de dados
+        await pool.query('UPDATE users SET role = $1 WHERE lower(email) = lower($2)', ['GESTOR', userEmail]);
+        // Nota: Para salvar o subscription_id, seria necessário adicionar essa coluna na tabela users
+      } else {
+        const u = mockUsers.find(u => u.email.toLowerCase() === userEmail.toLowerCase());
+        if (u) {
+          u.role = 'GESTOR';
+          u.subscription_id = 'PRO_PLAN';
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Webhook processado com sucesso.',
+        user_update: updatedData
+      });
+    }
+
+    // Retorna 200 para outros eventos para que o Revolut não fique reenviando
+    res.status(200).json({ received: true, status: 'ignored' });
+  } catch (err) {
+    console.error('Erro no Webhook Revolut:', err);
+    res.status(500).json({ error: 'Erro interno ao processar webhook.' });
+  }
 });
 
-// Replit precisa ouvir em 0.0.0.0
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
-});
+// Serve Frontend
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    app.use(express.static(path.join(__dirname, 'dist')));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    });
+  }
+
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+startServer();

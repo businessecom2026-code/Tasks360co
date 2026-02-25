@@ -2,6 +2,27 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Task, UserRole, Language, Column, User } from '../types';
 import { Plus, MoreHorizontal, Calendar, List, Layout, Trash2, Edit2, ArrowLeft, ArrowRight, Clock, AlignLeft, Image as ImageIcon, X, ChevronDown, UserCircle } from 'lucide-react';
 import { translations } from '../i18n';
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragOverEvent,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useDroppable } from '@dnd-kit/core';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -24,6 +45,91 @@ const COLORS = [
   '#6cc3e0', // Sky
   '#8590a2', // Gray
 ];
+
+const SortableTask = ({ task, onClick }: { task: Task, onClick: (t: Task) => void }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id, data: { type: 'Task', task } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={() => onClick(task)}
+      className={`group relative bg-slate-800 rounded-xl shadow-sm border border-slate-700 hover:border-slate-600 cursor-grab active:cursor-grabbing z-0 overflow-hidden hover:shadow-md transition-all ${isDragging ? 'shadow-2xl ring-2 ring-teal-500 z-50' : ''}`}
+    >
+        {/* Cover Image */}
+        {task.image && (
+            <div className="h-32 w-full">
+                <img src={task.image} alt="cover" className="w-full h-full object-cover" />
+            </div>
+        )}
+
+        <div className="p-3">
+            {/* Labels */}
+            {task.color && (
+                <div className="mb-2">
+                    <div className="h-2 w-10 rounded-full" style={{ backgroundColor: task.color }}></div>
+                </div>
+            )}
+
+            {/* Title */}
+            <div className="text-white text-sm font-medium mb-2 leading-snug break-words">
+                {task.title}
+            </div>
+
+            {/* Badges */}
+            <div className="flex flex-wrap gap-3 text-slate-400 text-[11px] items-center">
+                {task.dueDate && (
+                    <div className={`flex items-center gap-1 rounded px-1.5 py-0.5 ${new Date(task.dueDate) < new Date() ? 'bg-red-500/20 text-red-400' : 'bg-slate-700/50'}`}>
+                        <Clock size={12} />
+                        <span>{new Date(task.dueDate).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>
+                    </div>
+                )}
+                {task.description && <AlignLeft size={12} />}
+                {task.assignee && (
+                    <div className="ml-auto flex items-center" title={`Assigned to ${task.assignee}`}>
+                        <div className="w-6 h-6 rounded-full bg-teal-600 flex items-center justify-center text-[10px] font-bold text-white border-2 border-slate-800">
+                            {task.assignee.charAt(0).toUpperCase()}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+  );
+};
+
+const DroppableColumn = ({ column, tasks, children }: { column: Column, tasks: Task[], children: React.ReactNode }) => {
+  const { setNodeRef } = useDroppable({
+    id: column.id,
+    data: {
+      type: 'Column',
+      column,
+    },
+  });
+
+  return (
+    <div ref={setNodeRef} className="flex-1 overflow-y-auto px-2 py-2 space-y-3 custom-scrollbar min-h-[150px]">
+      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        {children}
+      </SortableContext>
+    </div>
+  );
+};
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ tasks, setTasks, role, language, users = [], currentCompany }) => {
   const t = translations[language].kanban;

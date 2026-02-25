@@ -14,11 +14,13 @@ import {
   Globe,
   Users,
   Bell,
-  AlertCircle
+  AlertCircle,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { UserRole, ViewState, Task, Language, User, Meeting } from './types';
 import Dashboard from './components/Dashboard';
-import KanbanBoard from './components/KanbanBoard';
+import { KanbanBoard } from './components/kanban/KanbanBoard';
 import MeetingRoom from './components/MeetingRoom';
 import ChatWindow from './components/ChatWindow';
 import LandingPage from './components/LandingPage';
@@ -34,18 +36,37 @@ const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('DASHBOARD');
   const [language, setLanguage] = useState<Language>('pt');
   
+  // Theme State
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') as 'light' | 'dark' || 'light';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+  
   // Data State
   const [users, setUsers] = useState<User[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
-  // Changed default loading to false to show Landing Page immediately
   const [loading, setLoading] = useState(false);
   
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  // @ts-ignore
-  const [apiKey, setApiKey] = useState(import.meta.env.VITE_API_KEY || '');
-
+  // Sidebar logic
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
+  const [apiKey, setApiKey] = useState(process.env.API_KEY || '');
   const [isCalendarSynced, setIsCalendarSynced] = useState(false);
 
   // Notification State
@@ -65,7 +86,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) {
-        // Desktop: Restore expanded state if desired, or keep user preference
+        // Desktop: Restore expanded state if desired
       } else {
         setIsSidebarOpen(false); // Mobile: Always collapse on resize to small
       }
@@ -97,7 +118,6 @@ const App: React.FC = () => {
     setCurrentUser(user);
     setIsAuthenticated(true);
     setView('DASHBOARD');
-    // Fetch data only after successful login
     fetchAppData();
   };
 
@@ -107,7 +127,6 @@ const App: React.FC = () => {
       const myPending = tasks.filter(t => t.assignee === currentUser.name && t.status !== 'DONE');
       if (myPending.length > 0) {
         setShowPopup(true);
-        // Auto hide popup after 5 seconds
         const timer = setTimeout(() => setShowPopup(false), 8000);
         return () => clearTimeout(timer);
       }
@@ -126,18 +145,21 @@ const App: React.FC = () => {
       };
 
       try {
-        // Persist first
-        await fetch('/api/users', {
+        const res = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newUser)
         });
 
-        // Then login and fetch fresh data
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Erro no registro');
+        }
+
         handleLoginSuccess(newUser);
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to save user", e);
-        alert("Erro ao criar conta. Tente novamente.");
+        alert(e.message || "Erro ao criar conta. Email pode já estar em uso.");
       }
   };
 
@@ -145,7 +167,6 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
     setView('DASHBOARD');
-    // Clear data on logout
     setTasks([]);
     setMeetings([]);
     setUsers([]);
@@ -153,9 +174,7 @@ const App: React.FC = () => {
 
   const handleAddTask = async (task: Task) => {
     const taskWithCompany = { ...task, company: currentUser?.company };
-    
     setTasks(prev => [...prev, taskWithCompany]);
-    
     await fetch('/api/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -175,9 +194,7 @@ const App: React.FC = () => {
               link: `https://meet.google.com/${Math.random().toString(36).substring(7)}`,
               company: currentUser?.company
           };
-          
           setMeetings(prev => [newMeeting, ...prev]);
-
           await fetch('/api/meetings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -186,7 +203,6 @@ const App: React.FC = () => {
       }
   };
 
-  // Filter Data based on Company (Multi-tenancy)
   const getFilteredTasks = () => {
       if (!currentUser) return [];
       if (currentUser.role === 'SUPER_ADMIN') return tasks;
@@ -199,7 +215,6 @@ const App: React.FC = () => {
       return meetings.filter(m => m.company === currentUser.company || !m.company);
   };
 
-  // Get My Notifications
   const myPendingTasks = currentUser 
       ? getFilteredTasks().filter(t => t.assignee === currentUser.name && t.status !== 'DONE') 
       : [];
@@ -209,19 +224,13 @@ const App: React.FC = () => {
     { id: 'KANBAN', label: t.sidebar.tasks, icon: CheckSquare, roles: ['SUPER_ADMIN', 'ADMIN', 'COLLABORATOR'] },
     { id: 'MEETINGS', label: t.sidebar.meetings, icon: Video, roles: ['SUPER_ADMIN', 'ADMIN', 'COLLABORATOR', 'CLIENT'] },
     { id: 'CHAT', label: t.sidebar.chat, icon: MessageSquare, roles: ['SUPER_ADMIN', 'ADMIN', 'COLLABORATOR', 'CLIENT'] },
-    { id: 'USER_MANAGEMENT', label: 'Gestão de Usuários', icon: Users, roles: ['SUPER_ADMIN'] },
+    { id: 'USER_MANAGEMENT', label: 'Gestão de Usuários', icon: Users, roles: ['SUPER_ADMIN', 'ADMIN'] },
   ];
 
   const renderContent = () => {
     if (!currentUser) return null;
-    
-    // Show spinner ONLY when logged in and waiting for data
-    if (loading) {
-      return <div className="flex h-full items-center justify-center bg-gray-50"><div className="animate-spin text-teal-600"><RefreshCw size={32} /></div></div>;
-    }
-
     switch (view) {
-      case 'DASHBOARD': return <Dashboard tasks={getFilteredTasks()} role={currentUser.role} language={language} />;
+      case 'DASHBOARD': return <Dashboard tasks={getFilteredTasks()} role={currentUser.role} language={language} isLoading={loading} />;
       case 'KANBAN': return (
         <KanbanBoard 
           tasks={getFilteredTasks()} 
@@ -230,9 +239,10 @@ const App: React.FC = () => {
           language={language} 
           users={users} 
           currentCompany={currentUser.company} 
+          currentUser={currentUser}
         />
       );
-      case 'USER_MANAGEMENT': return <UserManagement users={users} setUsers={setUsers} />;
+      case 'USER_MANAGEMENT': return <UserManagement users={users} setUsers={setUsers} currentUser={currentUser} />;
       case 'MEETINGS': 
         return (
           <div className="p-4 md:p-6 space-y-6">
@@ -251,7 +261,6 @@ const App: React.FC = () => {
                 </div>
              </div>
 
-             {/* Integration Status Card */}
              <div className="bg-white p-4 md:p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                  <div className="flex items-center gap-4">
                      <div className="p-3 bg-teal-50 rounded-full text-teal-600">
@@ -275,10 +284,14 @@ const App: React.FC = () => {
                  )}
              </div>
 
-             {/* Meeting List */}
              <div className="space-y-4">
                <h3 className="font-bold text-gray-800">{t.meetings.upcoming}</h3>
-               <div className="grid gap-4">
+               {loading && getFilteredMeetings().length === 0 ? (
+                 [1, 2].map(i => (
+                    <div key={i} className="bg-white p-5 rounded-xl border border-gray-200 h-24 animate-pulse"></div>
+                 ))
+               ) : (
+                <div className="grid gap-4">
                  {getFilteredMeetings().map(m => (
                    <div key={m.id} className="bg-white p-4 md:p-5 rounded-xl border border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-md transition-shadow group gap-4">
                       <div className="flex items-start gap-4 w-full md:w-auto">
@@ -310,7 +323,8 @@ const App: React.FC = () => {
                       </div>
                    </div>
                  ))}
-               </div>
+                </div>
+               )}
              </div>
           </div>
         );
@@ -321,12 +335,10 @@ const App: React.FC = () => {
     }
   };
 
-  // If not authenticated, render landing page
   if (!isAuthenticated || !currentUser) {
     return <LandingPage onLoginSuccess={handleLoginSuccess} onRegister={handleRegister} />;
   }
 
-  // Sidebar Component Logic
   const SidebarContent = () => (
     <>
         <div className="h-16 flex items-center justify-center border-b border-slate-800 shrink-0">
@@ -346,7 +358,7 @@ const App: React.FC = () => {
               key={item.id}
               onClick={() => {
                   setView(item.id as ViewState);
-                  if (window.innerWidth <= 768) setIsSidebarOpen(false); // Close on mobile after click
+                  if (window.innerWidth <= 768) setIsSidebarOpen(false); 
               }}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                 view === item.id 
@@ -360,7 +372,6 @@ const App: React.FC = () => {
           ))}
         </nav>
 
-        {/* User Profile / Role Switcher */}
         <div className="p-4 border-t border-slate-800 shrink-0">
           <div className={`flex items-center gap-3 ${!isSidebarOpen && 'justify-center'}`}>
             <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400 font-bold overflow-hidden shrink-0">
@@ -383,9 +394,21 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-900 font-sans animate-fade-in">
+    <div className="flex h-screen bg-gray-50 dark:bg-slate-900 overflow-hidden text-gray-900 dark:text-gray-100 font-sans animate-fade-in relative">
       
-      {/* ALERT POPUP (Toast) */}
+      {loading && (
+        <div className="absolute top-0 left-0 right-0 z-50 h-1 bg-gray-200">
+          <div className="h-full bg-teal-500 w-1/3 animate-[slide_1.5s_ease-in-out_infinite] rounded-r-full"></div>
+          <style>{`
+            @keyframes slide {
+              0% { transform: translateX(-100%); width: 20%; }
+              50% { transform: translateX(200%); width: 50%; }
+              100% { transform: translateX(500%); width: 20%; }
+            }
+          `}</style>
+        </div>
+      )}
+
       {showPopup && (
         <div className="fixed top-20 right-4 z-50 max-w-sm w-full bg-white border border-l-4 border-l-orange-500 border-gray-200 rounded-lg shadow-xl p-4 animate-fade-in slide-in-from-right flex gap-3">
           <div className="text-orange-500 shrink-0">
@@ -409,7 +432,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm"
@@ -417,7 +439,6 @@ const App: React.FC = () => {
           />
       )}
 
-      {/* Sidebar - Responsive Logic */}
       <aside 
         className={`
             fixed md:relative inset-y-0 left-0 z-30
@@ -429,18 +450,16 @@ const App: React.FC = () => {
         <SidebarContent />
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f8fafc] w-full">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shadow-sm shrink-0 z-10">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#f8fafc] dark:bg-slate-900 w-full">
+        <header className="h-16 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-4 md:px-6 shadow-sm shrink-0 z-10">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-            className="text-gray-500 hover:text-black transition-colors p-2 -ml-2 rounded-lg active:bg-gray-100"
+            className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors p-2 -ml-2 rounded-lg active:bg-gray-100 dark:active:bg-slate-700"
           >
             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           
           <div className="flex items-center gap-3 md:gap-6">
-             {/* Notification Bell */}
              <div className="relative">
                 <button 
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -454,7 +473,6 @@ const App: React.FC = () => {
                    )}
                 </button>
                 
-                {/* Notification Dropdown */}
                 {showNotifications && (
                   <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in">
                       <div className="p-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -482,13 +500,19 @@ const App: React.FC = () => {
                 )}
              </div>
 
-             {/* Language Selector */}
              <div className="flex items-center gap-2">
-                <Globe size={16} className="text-gray-500 hidden sm:block" />
+                <button 
+                  onClick={toggleTheme}
+                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-teal-700 dark:hover:text-teal-400 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  title={theme === 'light' ? 'Ativar Modo Escuro' : 'Ativar Modo Claro'}
+                >
+                  {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
+                <Globe size={16} className="text-gray-500 dark:text-gray-400 hidden sm:block" />
                 <select 
                     value={language} 
                     onChange={(e) => setLanguage(e.target.value as Language)}
-                    className="text-sm text-gray-700 font-medium bg-transparent border-none focus:ring-0 cursor-pointer hover:text-black transition-colors"
+                    className="text-sm text-gray-700 dark:text-gray-300 font-medium bg-transparent border-none focus:ring-0 cursor-pointer hover:text-black dark:hover:text-white transition-colors"
                 >
                     <option value="pt">PT</option>
                     <option value="en">EN</option>
