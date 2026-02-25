@@ -10,3 +10,6 @@ channel = "stable-23_05"
 [env]
 # Garante que o Replit use a timezone UTC ou configure conforme necessário
 TZ = "UTC"
+
+[agent]
+expertMode = true
