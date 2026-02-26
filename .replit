@@ -21,3 +21,7 @@ default = true
 
 [agent]
 expertMode = true
+
+[deployment]
+deploymentTarget = "cloudrun"
+publicDir = "dist/public"
