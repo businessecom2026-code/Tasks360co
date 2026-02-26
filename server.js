@@ -316,18 +316,11 @@ app.post('/api/tasks', async (req, res) => {
     );
   } else {
     const idx = mockTasks.findIndex(t => t.id === task.id);
-
-    if (idx > 0 && mockTasks[idx]) {
-      // Verifica se idx é um número, se não é negativo e se existe no array
-      const taskIndex = Number(idx);
-      if (Number.isInteger(taskIndex) && taskIndex >= 0 && taskIndex < mockTasks.length) {
-          mockTasks[taskIndex] = task;
-      } else {
-          // Retorne um erro ou ignore a operação inválida
-          console.error("Tentativa de acesso inválido ao array de tarefas.");
+    const existingTask = mockTasks.find(t => t.id === task.id);
+    if (existingTask) {
+      Object.assign(existingTask, task);
     }
     else mockTasks.push(task);
-    console.error("Tentativa de acesso inválido ao array de tarefas.");
   }
   res.json({ message: 'Saved' });
 });
@@ -363,6 +356,59 @@ app.post('/api/meetings', async (req, res) => {
     mockMeetings.unshift(m);
   }
   res.json({ message: 'Created' });
+});
+
+// USER REGISTRATION (ADMIN)
+app.post('/api/admin/register-user', async (req, res) => {
+  // Extrai os dados do corpo da requisição
+  const { full_name, email, password, company, role } = req.body;
+
+  // Validação básica dos dados recebidos
+  if (!full_name || !email || !password || !company || !role) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+  }
+
+  try {
+    // Gera o hash da senha de forma segura
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Lógica de inserção no banco de dados
+    if (isUsingPostgres && pool) {
+      const query = `
+        INSERT INTO users (full_name, email, password_hash, company_tenant, role)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id;
+      `;
+      // Usando parâmetros para evitar SQL Injection
+      const result = await pool.query(query, [full_name, email, hashedPassword, company, role]);
+      res.status(201).json({ success: true, userId: result.rows[0].id });
+    } else {
+      // Fallback para modo em memória (não recomendado para produção)
+      const newUser = {
+        id: `mock_${Date.now()}`,
+        full_name,
+        email,
+        password_hash: hashedPassword,
+        company_tenant: company,
+        role
+      };
+      // Acesso seguro ao array mockUsers
+      const existingUser = mockUsers.find(u => u.email === email);
+      if (existingUser) {
+        return res.status(409).json({ error: 'E-mail já cadastrado.' });
+      }
+      mockUsers.push(newUser);
+      res.status(201).json({ success: true, userId: newUser.id });
+    }
+  } catch (err) {
+    // Tratamento de erros, como e-mail duplicado no banco
+    if (err.code === '23505') { // Código de erro do Postgres para violação de unicidade
+      return res.status(409).json({ error: 'E-mail já cadastrado.' });
+    }
+    console.error('Erro ao registrar usuário:', err);
+    res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
 });
 
 // REVOLUT WEBHOOK
