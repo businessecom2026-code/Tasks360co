@@ -1,20 +1,23 @@
 modules = ["nodejs-18"]
 
-run = "npm install && npm run build && npm start"
+# Roda o build para garantir que a pasta dist esteja atualizada e inicia o servidor
+run = "npm run build && node server.js"
 
 entrypoint = "server.js"
 
 [nix]
 channel = "stable-23_05"
+packages = ["psmisc"]
 
 [env]
-# Garante que o Replit use a timezone UTC ou configure conforme necessário
+NODE_ENV = "production"
 TZ = "UTC"
 
+# Define a porta 3000 como a ÚNICA e PRINCIPAL
 [[ports]]
 localPort = 3000
-externalPort = 3000
+externalPort = 443
+default = true
 
-[[ports]]
-localPort = 24678
-externalPort = 80
+[agent]
+expertMode = true
