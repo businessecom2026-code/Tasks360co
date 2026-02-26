@@ -138,6 +138,7 @@ async function startServer() {
       // await db.query('UPDATE tasks SET title = $1, description = $2, status = $3, due_date = $4, members = $5, tags = $6, checklist = $7 WHERE id = $8', 
       // [updatedTask.title, updatedTask.description, updatedTask.status, updatedTask.dueDate, JSON.stringify(updatedTask.members), JSON.stringify(updatedTask.tags), JSON.stringify(updatedTask.checklist), id]);
       
+
       const taskIndex = Number(index);
       if (Number.isInteger(taskIndex) && taskIndex >= 0 && taskIndex < tasks.length) {
           tasks[taskIndex] = updatedTask;

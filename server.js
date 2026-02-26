@@ -316,6 +316,7 @@ app.post('/api/tasks', async (req, res) => {
     );
   } else {
     const idx = mockTasks.findIndex(t => t.id === task.id);
+
     if (idx > 0 && mockTasks[idx]) {
       // Verifica se idx é um número, se não é negativo e se existe no array
       const taskIndex = Number(idx);
@@ -324,7 +325,6 @@ app.post('/api/tasks', async (req, res) => {
       } else {
           // Retorne um erro ou ignore a operação inválida
           console.error("Tentativa de acesso inválido ao array de tarefas.");
-      }
     }
     else mockTasks.push(task);
     console.error("Tentativa de acesso inválido ao array de tarefas.");
