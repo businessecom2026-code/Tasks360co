@@ -36,8 +36,15 @@
 
     // --- DB INIT ---
     const initDB = async () => {
-      const adminEmail = 'admin@ecom360.co';
-      const hashedAdminPass = await bcrypt.hash('Admin2026*', 10);
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@ecom360.co';
+      const adminPassword = process.env.SUPER_ADMIN; 
+
+      if (!adminPassword) {
+        console.error("❌ ERRO CRÍTICO: Secret SUPER_ADMIN não configurado!");
+      }
+
+      // Criamos o hash usando a variável do Secret ou um fallback seguro
+      const hashedAdminPass = await bcrypt.hash(adminPassword || 'SenhaTemporaria123!', 10);
 
       if (isUsingPostgres && pool) {
         try {
@@ -48,11 +55,16 @@
             CREATE TABLE IF NOT EXISTS meetings (id TEXT PRIMARY KEY, title TEXT, date TEXT, time TEXT, participants TEXT[], link TEXT, platform TEXT, company TEXT);
             CREATE TABLE IF NOT EXISTS password_resets (email TEXT PRIMARY KEY, token TEXT, expires_at TIMESTAMP);
           `);
+
           const res = await client.query("SELECT * FROM users WHERE email = $1", [adminEmail]);
           if (res.rows.length === 0) {
             await client.query("INSERT INTO users (id, name, email, password, role, company) VALUES ($1, $2, $3, $4, $5, $6)", 
             ['u1', 'Admin', adminEmail, hashedAdminPass, 'SUPER_ADMIN', 'Ecom360']);
+          } else {
+            // Opcional: Atualiza a senha se o admin já existir para garantir o login
+            await client.query("UPDATE users SET password = $1 WHERE email = $2", [hashedAdminPass, adminEmail]);
           }
+
           client.release();
           console.log("✅ Database Initialized.");
         } catch (err) {

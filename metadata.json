@@ -1,7 +1,0 @@
-{
-  "name": "Task 360.co OS",
-  "description": "An intelligent productivity ecosystem integrating Kanban, AI-driven meetings, and internal communication with role-based access control.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
-}
