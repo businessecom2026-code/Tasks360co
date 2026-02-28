@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  GESTOR
+  COLABORADOR
+  CLIENTE
+}
+
+enum WorkspaceRole {
+  GESTOR
+  COLABORADOR
+  CLIENTE
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIAL
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model User {
+  id                String       @id @default(cuid())
+  name              String
+  email             String       @unique
+  password          String
+  role              Role         @default(COLABORADOR)
+  avatar            String?
+  activeWorkspaceId String?
+  activeWorkspace   Workspace?   @relation("ActiveWorkspace", fields: [activeWorkspaceId], references: [id])
+  memberships       Membership[]
+  assignedTasks     Task[]       @relation("AssignedTasks")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model Workspace {
+  id           String         @id @default(cuid())
+  name         String
+  slug         String         @unique
+  memberships  Membership[]
+  tasks        Task[]
+  meetings     Meeting[]
+  subscription Subscription?
+  activeUsers  User[]         @relation("ActiveWorkspace")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Membership {
+  id              String        @id @default(cuid())
+  userId          String
+  workspaceId     String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace       Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  roleInWorkspace WorkspaceRole @default(COLABORADOR)
+  inviteAccepted  Boolean       @default(false)
+  costPerMonth    Float         @default(3.00)
+  invitedEmail    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([userId, workspaceId])
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  status       TaskStatus @default(PENDING)
+  assigneeId   String?
+  assignee     User?      @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+  workspaceId  String
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  dueDate      DateTime?
+  image        String?
+  color        String?
+  googleTaskId String?
+  lastSyncedAt DateTime?
+  version      Int        @default(1)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Meeting {
+  id             String   @id @default(cuid())
+  title          String
+  date           String
+  time           String
+  participants   String[]
+  link           String?
+  platform       String?
+  workspaceId    String
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  recordingUrl   String?
+  summary        String?
+  suggestedTasks Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Subscription {
+  id                String    @id @default(cuid())
+  workspaceId       String    @unique
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  basePrice         Float     @default(5.00)
+  seatCount         Int       @default(1)
+  totalMonthlyValue Float     @default(5.00)
+  autoRenew         Boolean   @default(true)
+  status            SubStatus @default(ACTIVE)
+  currentPeriodEnd  DateTime?
+  revolutOrderId    String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  token     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
