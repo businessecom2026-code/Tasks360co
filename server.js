@@ -1,107 +1,120 @@
-  import express from 'express';
-  import pg from 'pg';
-  import cors from 'cors';
-  import path from 'path';
-  import { fileURLToPath } from 'url';
-  import bcrypt from 'bcryptjs';
-  import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
+import 'dotenv/config';
+import { PrismaClient } from '@prisma/client';
+import { authMiddleware } from './server/middleware/auth.js';
+import { authRoutes } from './server/routes/auth.js';
+import { workspaceRoutes } from './server/routes/workspaces.js';
+import { taskRoutes } from './server/routes/tasks.js';
+import { meetingRoutes } from './server/routes/meetings.js';
+import { billingRoutes } from './server/routes/billing.js';
+import { webhookRoutes } from './server/routes/webhooks.js';
 
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  async function startServer() {
-    const app = express();
-    const port = process.env.PORT || 3000;
+async function startServer() {
+  const app = express();
+  const port = process.env.PORT || 3000;
+  const prisma = new PrismaClient();
 
-    app.use(cors());
-    app.use(express.json({ limit: '50mb' }));
+  app.use(cors());
+  app.use(express.json({ limit: '50mb' }));
 
-    // --- DATABASE CONFIGURATION ---
-    let pool = null;
-    let isUsingPostgres = false;
+  // ─── Seed: Create Super Admin if not exists ────────────────────
+  const seedAdmin = async () => {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@ecom360.co';
+    const adminPassword = process.env.SUPER_ADMIN;
 
-    const mockUsers = [];
-    const mockTasks = [];
-    const mockMeetings = [];
-    const mockResets = {};
-
-    if (process.env.DATABASE_URL) {
-      pool = new pg.Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.DATABASE_URL.includes('replit') ? false : { rejectUnauthorized: false },
-      });
-      isUsingPostgres = true;
-      console.log("✅ Database URL found.");
+    if (!adminPassword) {
+      console.error('ERRO: Secret SUPER_ADMIN não configurado!');
+      return;
     }
 
-    // --- DB INIT ---
-    const initDB = async () => {
-      const adminEmail = process.env.ADMIN_EMAIL || 'admin@ecom360.co';
-      const adminPassword = process.env.SUPER_ADMIN; 
+    try {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
 
-      if (!adminPassword) {
-        console.error("❌ ERRO CRÍTICO: Secret SUPER_ADMIN não configurado!");
+      if (!existing) {
+        const admin = await prisma.user.create({
+          data: {
+            name: 'Admin',
+            email: adminEmail,
+            password: hashedPassword,
+            role: 'SUPER_ADMIN',
+          },
+        });
+
+        // Create default workspace for admin
+        await prisma.workspace.create({
+          data: {
+            name: 'Ecom360',
+            slug: 'ecom360',
+            memberships: {
+              create: {
+                userId: admin.id,
+                roleInWorkspace: 'GESTOR',
+                inviteAccepted: true,
+                costPerMonth: 0,
+              },
+            },
+            subscription: {
+              create: { basePrice: 5.0, seatCount: 1, totalMonthlyValue: 5.0 },
+            },
+            activeUsers: { connect: { id: admin.id } },
+          },
+        });
+
+        console.log('Admin criado com sucesso.');
+      } else {
+        await prisma.user.update({
+          where: { email: adminEmail },
+          data: { password: hashedPassword },
+        });
       }
 
-      // Criamos o hash usando a variável do Secret ou um fallback seguro
-      const hashedAdminPass = await bcrypt.hash(adminPassword || 'SenhaTemporaria123!', 10);
+      console.log('Database inicializado.');
+    } catch (err) {
+      console.error('DB Error:', err);
+    }
+  };
 
-      if (isUsingPostgres && pool) {
-        try {
-          const client = await pool.connect();
-          await client.query(`
-            CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT, email TEXT UNIQUE, password TEXT, role TEXT, company TEXT, avatar TEXT);
-            CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, title TEXT, description TEXT, status TEXT DEFAULT 'PENDING', assignee TEXT, due_date TEXT, image TEXT, color TEXT, company TEXT);
-            CREATE TABLE IF NOT EXISTS meetings (id TEXT PRIMARY KEY, title TEXT, date TEXT, time TEXT, participants TEXT[], link TEXT, platform TEXT, company TEXT);
-            CREATE TABLE IF NOT EXISTS password_resets (email TEXT PRIMARY KEY, token TEXT, expires_at TIMESTAMP);
-          `);
+  await seedAdmin();
 
-          const res = await client.query("SELECT * FROM users WHERE email = $1", [adminEmail]);
-          if (res.rows.length === 0) {
-            await client.query("INSERT INTO users (id, name, email, password, role, company) VALUES ($1, $2, $3, $4, $5, $6)", 
-            ['u1', 'Admin', adminEmail, hashedAdminPass, 'SUPER_ADMIN', 'Ecom360']);
-          } else {
-            // Opcional: Atualiza a senha se o admin já existir para garantir o login
-            await client.query("UPDATE users SET password = $1 WHERE email = $2", [hashedAdminPass, adminEmail]);
-          }
+  // ─── Webhook routes (no auth required) ─────────────────────────
+  app.use('/api/webhooks', webhookRoutes(prisma));
 
-          client.release();
-          console.log("✅ Database Initialized.");
-        } catch (err) {
-          console.error("❌ DB Error:", err);
-        }
-      }
-    };
+  // ─── Auth routes (login/register are public, rest protected) ───
+  const authRouter = authRoutes(prisma);
+  app.post('/api/auth/login', (req, res, next) => authRouter(req, res, next));
+  app.post('/api/auth/register', (req, res, next) => authRouter(req, res, next));
+  app.use('/api/auth', authMiddleware, authRouter);
 
-    await initDB();
+  // ─── Protected API routes ──────────────────────────────────────
+  app.use('/api/workspaces', authMiddleware, workspaceRoutes(prisma));
+  app.use('/api/tasks', authMiddleware, taskRoutes(prisma));
+  app.use('/api/meetings', authMiddleware, meetingRoutes(prisma));
+  app.use('/api/billing', authMiddleware, billingRoutes(prisma));
 
-    // --- API ROUTES (Login Simples para teste) ---
-    app.post('/api/login', async (req, res) => {
-      const { email, password } = req.body;
-      try {
-        let user;
-        if (isUsingPostgres && pool) {
-          const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-          user = result.rows[0];
-        }
-        if (user && await bcrypt.compare(password, user.password)) {
-          res.json({ success: true, user });
-        } else {
-          res.status(401).json({ success: false, error: 'Credenciais inválidas' });
-        }
-      } catch (err) { res.status(500).json({ error: err.message }); }
-    });
+  // ─── Serve static frontend (production) ────────────────────────
+  app.use(express.static(path.join(__dirname, 'dist')));
 
-    // --- SERVE STATIC FILES (A parte principal) ---
-    app.use(express.static(path.join(__dirname, 'dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  });
 
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    });
+  // ─── Graceful shutdown ─────────────────────────────────────────
+  process.on('SIGTERM', async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  });
 
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${port}`);
-    });
-  }
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
 
-  startServer();
+startServer();
