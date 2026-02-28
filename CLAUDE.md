@@ -141,7 +141,7 @@ npm run db:studio        # Open Prisma Studio GUI
 |----------------|--------------------------------------------------------------------------------|
 | `User`         | id, name, email (unique), password, role (enum), avatar, activeWorkspaceId     |
 | `Workspace`    | id, name, slug (unique), memberships[], tasks[], meetings[], subscription      |
-| `Membership`   | userId + workspaceId (unique), roleInWorkspace, inviteAccepted, costPerMonth (3.00) |
+| `Membership`   | userId + workspaceId (unique), roleInWorkspace, inviteAccepted, paymentStatus, costPerSeat (3.00) |
 | `Task`         | id, title, status (enum), assigneeId, workspaceId, googleTaskId, lastSyncedAt, version |
 | `Meeting`      | id, title, date, time, participants[], workspaceId, recordingUrl, summary, suggestedTasks (JSON) |
 | `Subscription` | workspaceId (unique), basePrice (5.00), seatCount, totalMonthlyValue, autoRenew, status |

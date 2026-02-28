@@ -36,6 +36,13 @@ enum SubStatus {
   TRIAL
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
 // ─── Models ──────────────────────────────────────────────
 
 model User {
@@ -74,8 +81,11 @@ model Membership {
   workspace       Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   roleInWorkspace WorkspaceRole @default(COLABORADOR)
   inviteAccepted  Boolean       @default(false)
-  costPerMonth    Float         @default(3.00)
+  paymentStatus   PaymentStatus @default(PENDING)
+  costPerSeat     Float         @default(3.00)
   invitedEmail    String?
+  revolutOrderId  String?
+  paidAt          DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 

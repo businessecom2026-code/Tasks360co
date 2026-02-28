@@ -22,7 +22,7 @@ export function tenantGuard(prisma) {
         },
       });
 
-      if (!membership || !membership.inviteAccepted) {
+      if (!membership || !membership.inviteAccepted || membership.paymentStatus !== 'PAID') {
         return res.status(403).json({ error: 'Acesso negado a este workspace' });
       }
 

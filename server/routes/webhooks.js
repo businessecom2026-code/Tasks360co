@@ -24,14 +24,19 @@ export function webhookRoutes(prisma) {
             where: {
               workspaceId,
               invitedEmail: email,
-              inviteAccepted: false,
+              paymentStatus: 'PENDING',
             },
           });
 
           if (membership) {
             await prisma.membership.update({
               where: { id: membership.id },
-              data: { inviteAccepted: true },
+              data: {
+                inviteAccepted: true,
+                paymentStatus: 'PAID',
+                paidAt: new Date(),
+                revolutOrderId: order?.id || null,
+              },
             });
 
             // Recalculate subscription

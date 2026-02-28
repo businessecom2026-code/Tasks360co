@@ -25,7 +25,11 @@ export function workspaceRoutes(prisma) {
           workspaceId: m.workspaceId,
           roleInWorkspace: m.roleInWorkspace,
           inviteAccepted: m.inviteAccepted,
-          costPerMonth: m.costPerMonth,
+          paymentStatus: m.paymentStatus,
+          costPerSeat: m.costPerSeat,
+          invitedEmail: m.invitedEmail,
+          revolutOrderId: m.revolutOrderId,
+          paidAt: m.paidAt,
           createdAt: m.createdAt,
           updatedAt: m.updatedAt,
         },
@@ -59,7 +63,8 @@ export function workspaceRoutes(prisma) {
               userId: req.user.id,
               roleInWorkspace: 'GESTOR',
               inviteAccepted: true,
-              costPerMonth: 0, // Owner doesn't pay seat cost
+              paymentStatus: 'PAID',
+              costPerSeat: 0, // Owner doesn't pay seat cost
             },
           },
           subscription: {
@@ -130,14 +135,15 @@ export function workspaceRoutes(prisma) {
       //   metadata: { workspaceId, email, roleInWorkspace }
       // });
 
-      // For now, create membership as pending (awaiting payment webhook)
+      // Create membership as pending (invite blocked until Revolut payment_success webhook)
       const membership = await prisma.membership.create({
         data: {
           userId: existingUser?.id || 'pending',
           workspaceId,
           roleInWorkspace: roleInWorkspace || 'COLABORADOR',
           inviteAccepted: false,
-          costPerMonth: 3.0,
+          paymentStatus: 'PENDING',
+          costPerSeat: 3.0,
           invitedEmail: email,
         },
       });
@@ -221,7 +227,7 @@ export function workspaceRoutes(prisma) {
  */
 async function recalculateSubscription(prisma, workspaceId) {
   const activeMemberships = await prisma.membership.count({
-    where: { workspaceId, inviteAccepted: true },
+    where: { workspaceId, inviteAccepted: true, paymentStatus: 'PAID' },
   });
 
   const basePrice = 5.0;

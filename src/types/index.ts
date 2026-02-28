@@ -4,6 +4,7 @@ export type Role = 'SUPER_ADMIN' | 'GESTOR' | 'COLABORADOR' | 'CLIENTE';
 export type WorkspaceRole = 'GESTOR' | 'COLABORADOR' | 'CLIENTE';
 export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'REVIEW' | 'DONE';
 export type SubStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIAL';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
 
 // ─── Models ──────────────────────────────────────────────
 
@@ -32,8 +33,11 @@ export interface Membership {
   workspaceId: string;
   roleInWorkspace: WorkspaceRole;
   inviteAccepted: boolean;
-  costPerMonth: number;
+  paymentStatus: PaymentStatus;
+  costPerSeat: number;
   invitedEmail?: string;
+  revolutOrderId?: string;
+  paidAt?: string;
   user?: User;
   workspace?: Workspace;
   createdAt: string;

@@ -84,7 +84,7 @@ export function UserManagement() {
               </span>
 
               <span className="text-xs text-gray-500">
-                {member.costPerMonth.toFixed(2)} EUR/mês
+                {member.costPerSeat.toFixed(2)} EUR/mês
               </span>
 
               <button

@@ -58,7 +58,8 @@ async function startServer() {
                 userId: admin.id,
                 roleInWorkspace: 'GESTOR',
                 inviteAccepted: true,
-                costPerMonth: 0,
+                paymentStatus: 'PAID',
+                costPerSeat: 0,
               },
             },
             subscription: {
