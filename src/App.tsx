@@ -1,14 +1,28 @@
-import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AppLayout } from './components/layout/AppLayout';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { KanbanPage } from './pages/KanbanPage';
+import { MeetingsPage } from './pages/MeetingsPage';
+import { AdminPage } from './pages/AdminPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
-const App: React.FC = () => {
+export default function App() {
   return (
-    <div className="bg-gray-900 min-h-screen flex items-center justify-center p-4 font-sans">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white">Ecom360</h1>
-        <p className="text-xl text-gray-400 mt-2">Frontend recriado. Pronto para começar.</p>
-      </div>
-    </div>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/kanban" element={<KanbanPage />} />
+            <Route path="/meetings" element={<MeetingsPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
-};
-
-export default App;
+}
