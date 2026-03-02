@@ -43,7 +43,7 @@ export function TaskCard({ task, onEdit }: Props) {
       {/* Google sync badge */}
       {task.googleTaskId && (
         <div className="absolute top-2 right-2">
-          <RefreshCw size={12} className="text-green-500" title="Sincronizado com Google Tasks" />
+          <RefreshCw size={12} className="text-green-500" />
         </div>
       )}
 

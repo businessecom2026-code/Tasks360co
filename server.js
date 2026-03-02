@@ -90,9 +90,12 @@ async function startServer() {
 
   // ─── Auth routes (login/register are public, rest protected) ───
   const authRouter = authRoutes(prisma);
-  app.post('/api/auth/login', (req, res, next) => authRouter(req, res, next));
-  app.post('/api/auth/register', (req, res, next) => authRouter(req, res, next));
-  app.use('/api/auth', authMiddleware, authRouter);
+  app.use('/api/auth', (req, res, next) => {
+    if (req.path === '/login' || req.path === '/register') {
+      return next();
+    }
+    return authMiddleware(req, res, next);
+  }, authRouter);
 
   // ─── Protected API routes ──────────────────────────────────────
   app.use('/api/workspaces', authMiddleware, workspaceRoutes(prisma));
