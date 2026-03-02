@@ -1,5 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
+import { MobileNav } from './MobileNav';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { ErrorBoundary } from '../common/ErrorBoundary';
 
@@ -13,11 +14,14 @@ export function AppLayout() {
   return (
     <div className="flex h-screen bg-gray-950 overflow-hidden">
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <ErrorBoundary>
-          <Outlet />
-        </ErrorBoundary>
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <MobileNav />
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
+        </main>
+      </div>
     </div>
   );
 }

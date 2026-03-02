@@ -42,6 +42,14 @@
 - [x] Backend: Revolut webhook handler (stub)
 - [x] Billing calculation: Base(5.00) + (Active_Invites × 3.00)
 
+## Phase 5: Landing Page & Mobile UX
+- [x] Public Landing Page at `/` (hero, features grid, pricing teaser, CTA, footer)
+- [x] Mobile navigation as app dashboard grid (3-column icon grid, overlay panel)
+- [x] Desktop sidebar hidden on mobile (`hidden md:flex`)
+- [x] Header responsiveness (compact on mobile, search icon toggle)
+- [x] Route restructure: `/` → Landing, `/dashboard` → Dashboard (protected)
+- [x] LoginPage redirects to `/dashboard` after auth
+
 ## Infrastructure
 - [x] .gitignore
 - [x] Updated package.json with all dependencies

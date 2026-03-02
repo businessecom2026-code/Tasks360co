@@ -9,7 +9,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

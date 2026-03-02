@@ -11,7 +11,7 @@ import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
 import { useAuthStore } from '../../stores/useAuthStore';
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/kanban', icon: Columns3, label: 'Kanban' },
   { to: '/meetings', icon: Video, label: 'Reuniões' },
   { to: '/admin', icon: Shield, label: 'Admin', roles: ['SUPER_ADMIN', 'GESTOR'] as const },
@@ -22,7 +22,7 @@ export function Sidebar() {
   const { user, logout } = useAuthStore();
 
   return (
-    <aside className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col h-screen shrink-0">
+    <aside className="hidden md:flex w-64 bg-gray-900 border-r border-gray-800 flex-col h-screen shrink-0">
       {/* Logo */}
       <div className="p-4 border-b border-gray-800">
         <h1 className="text-xl font-bold text-white">Task<span className="text-blue-500">360</span></h1>
@@ -46,7 +46,7 @@ export function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/'}
+              end={item.to === '/dashboard'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
