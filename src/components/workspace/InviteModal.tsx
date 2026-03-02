@@ -35,8 +35,10 @@ export function InviteModal({ isOpen, onClose, workspaceId }: Props) {
     setIsSubmitting(false);
 
     if (res.success && res.data?.checkoutUrl) {
-      // In production, redirect to Revolut checkout
-      // window.location.href = res.data.checkoutUrl;
+      // If it's a real Revolut URL, redirect to checkout
+      if (res.data.checkoutUrl.includes('revolut.com') || res.data.checkoutUrl.includes('checkout')) {
+        window.open(res.data.checkoutUrl, '_blank');
+      }
       setStep('payment');
     } else if (res.success) {
       setStep('success');

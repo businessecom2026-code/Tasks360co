@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createSeatCheckout } from '../services/billing.js';
 
 export function workspaceRoutes(prisma) {
   const router = Router();
@@ -117,7 +118,7 @@ export function workspaceRoutes(prisma) {
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({ where: { email } });
 
-      // Check if already invited
+      // Check if already a member or already invited
       if (existingUser) {
         const existingMembership = await prisma.membership.findUnique({
           where: {
@@ -129,22 +130,32 @@ export function workspaceRoutes(prisma) {
         }
       }
 
-      // In production: Create Revolut Checkout Session for 3.00 EUR
-      // const checkoutSession = await revolutService.createCheckout({
-      //   amount: 300, currency: 'EUR',
-      //   metadata: { workspaceId, email, roleInWorkspace }
-      // });
+      // Check for pending invite by email (user doesn't exist yet)
+      const pendingInvite = await prisma.membership.findFirst({
+        where: { workspaceId, invitedEmail: email },
+      });
+      if (pendingInvite) {
+        return res.status(409).json({ error: 'Já existe um convite pendente para este e-mail' });
+      }
+
+      // Create Revolut checkout session for seat payment (3.00 EUR)
+      const checkout = await createSeatCheckout({
+        workspaceId,
+        email,
+        roleInWorkspace: roleInWorkspace || 'COLABORADOR',
+      });
 
       // Create membership as pending (invite blocked until Revolut payment_success webhook)
       const membership = await prisma.membership.create({
         data: {
-          userId: existingUser?.id || 'pending',
+          userId: existingUser?.id || null,
           workspaceId,
           roleInWorkspace: roleInWorkspace || 'COLABORADOR',
           inviteAccepted: false,
           paymentStatus: 'PENDING',
           costPerSeat: 3.0,
           invitedEmail: email,
+          revolutOrderId: checkout.orderId,
         },
       });
 
@@ -153,8 +164,7 @@ export function workspaceRoutes(prisma) {
 
       res.status(201).json({
         membership,
-        // In production: checkoutUrl: checkoutSession.url
-        checkoutUrl: `https://checkout.revolut.com/stub?workspace=${workspaceId}&email=${email}`,
+        checkoutUrl: checkout.checkoutUrl,
       });
     } catch (err) {
       console.error('[Workspaces:invite]', err);

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { verifyWebhookSignature } from '../services/billing.js';
 
 export function webhookRoutes(prisma) {
   const router = Router();
@@ -10,6 +11,14 @@ export function webhookRoutes(prisma) {
    */
   router.post('/revolut', async (req, res) => {
     try {
+      // Verify webhook signature (skips if REVOLUT_WEBHOOK_SECRET not configured)
+      const signature = req.headers['revolut-signature'] || req.headers['x-revolut-signature'];
+      const rawBody = JSON.stringify(req.body);
+      if (!verifyWebhookSignature(rawBody, signature)) {
+        console.error('[Webhook:Revolut] Invalid signature — rejecting');
+        return res.status(401).json({ error: 'Invalid webhook signature' });
+      }
+
       const { event, order } = req.body;
 
       console.log(`[Webhook:Revolut] Event: ${event}`, JSON.stringify(order || {}).slice(0, 200));

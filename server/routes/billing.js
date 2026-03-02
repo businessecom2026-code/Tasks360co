@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createManualCharge } from '../services/billing.js';
 
 export function billingRoutes(prisma) {
   const router = Router();
@@ -124,20 +125,26 @@ export function billingRoutes(prisma) {
     }
 
     try {
-      // In production: Create Revolut payment order
-      // const order = await revolutService.createOrder({
-      //   amount: amount || subscription.totalMonthlyValue * 100,
-      //   currency: 'EUR',
-      //   description: description || 'Cobrança manual Task360',
-      //   metadata: { workspaceId },
-      // });
+      // If no amount specified, get the workspace subscription total
+      let chargeAmount = amount;
+      if (!chargeAmount) {
+        const sub = await prisma.subscription.findUnique({ where: { workspaceId } });
+        chargeAmount = sub?.totalMonthlyValue || 5.0;
+      }
 
-      console.log(`[Billing] Manual charge triggered for workspace ${workspaceId}: ${amount || 'auto'} EUR`);
+      const result = await createManualCharge({
+        workspaceId,
+        amount: chargeAmount,
+        description: description || `Cobrança manual Task360`,
+      });
+
+      console.log(`[Billing] Manual charge created for workspace ${workspaceId}: ${chargeAmount} EUR — Order: ${result.orderId}`);
 
       res.json({
         success: true,
-        message: 'Cobrança manual enviada (stub - integrar Revolut API)',
-        // In production: orderId: order.id, paymentUrl: order.checkout_url
+        orderId: result.orderId,
+        checkoutUrl: result.checkoutUrl,
+        amount: chargeAmount,
       });
     } catch (err) {
       console.error('[Billing:manualCharge]', err);
