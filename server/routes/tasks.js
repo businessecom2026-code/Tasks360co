@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { scheduleSyncToGoogle, deleteFromGoogle } from '../services/syncEngine.js';
+import { getUserTokens } from '../services/googleAuth.js';
 
 export function taskRoutes(prisma) {
   const router = Router();
@@ -60,6 +62,13 @@ export function taskRoutes(prisma) {
         },
       });
 
+      // Trigger Google Tasks sync (non-blocking)
+      getUserTokens(req.user.id, prisma).then((tokens) => {
+        if (tokens) {
+          scheduleSyncToGoogle(task.id, { ...task, prisma }, tokens);
+        }
+      }).catch(() => {});
+
       res.status(201).json(task);
     } catch (err) {
       console.error('[Tasks:create]', err);
@@ -105,6 +114,13 @@ export function taskRoutes(prisma) {
         },
       });
 
+      // Trigger Google Tasks sync (non-blocking)
+      getUserTokens(req.user.id, prisma).then((tokens) => {
+        if (tokens) {
+          scheduleSyncToGoogle(task.id, task, tokens);
+        }
+      }).catch(() => {});
+
       res.json(task);
     } catch (err) {
       console.error('[Tasks:update]', err);
@@ -115,7 +131,18 @@ export function taskRoutes(prisma) {
   // DELETE /api/tasks/:id
   router.delete('/:id', async (req, res) => {
     try {
+      // Get task before deleting to check for googleTaskId
+      const task = await prisma.task.findUnique({ where: { id: req.params.id } });
+
       await prisma.task.delete({ where: { id: req.params.id } });
+
+      // Delete from Google Tasks (non-blocking)
+      if (task?.googleTaskId) {
+        getUserTokens(req.user.id, prisma).then((tokens) => {
+          if (tokens) deleteFromGoogle(task.googleTaskId, tokens);
+        }).catch(() => {});
+      }
+
       res.json({ success: true });
     } catch (err) {
       console.error('[Tasks:delete]', err);

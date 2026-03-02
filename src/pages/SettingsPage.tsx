@@ -1,22 +1,37 @@
 import { useState, useEffect } from 'react';
-import { Save, User, CreditCard, RefreshCw } from 'lucide-react';
+import { Save, User, CreditCard, RefreshCw, Link, Unlink, Loader2 } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { useAuthStore } from '../stores/useAuthStore';
 import { api } from '../lib/api';
 import type { Subscription } from '../types';
 
 export function SettingsPage() {
-  const { user } = useAuthStore();
+  const { user, fetchMe } = useAuthStore();
   const [name, setName] = useState(user?.name || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
 
   useEffect(() => {
     api.get<Subscription>('/billing/subscription').then((res) => {
       if (res.success && res.data) setSubscription(res.data);
     });
-  }, []);
+
+    // Check for Google callback success
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('google_connected') === 'true') {
+      fetchMe();
+      setSyncResult('Google Tasks conectado com sucesso!');
+      window.history.replaceState({}, '', '/settings');
+    }
+    if (params.get('google_error')) {
+      setSyncResult('Erro ao conectar Google Tasks. Tente novamente.');
+      window.history.replaceState({}, '', '/settings');
+    }
+  }, [fetchMe]);
 
   const handleSaveProfile = async () => {
     setIsSaving(true);
@@ -152,15 +167,87 @@ export function SettingsPage() {
             <RefreshCw size={18} className="text-purple-400" />
             <h3 className="text-white font-semibold">Google Tasks Sync</h3>
           </div>
-          <p className="text-gray-400 text-sm mb-4">
-            Conecte sua conta Google para sincronizar tarefas bidirecionalmente com o Google Tasks.
-          </p>
-          <button className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            Conectar Google Account
-          </button>
-          <p className="text-xs text-gray-600 mt-2">
-            Integração via OAuth 2.0 com resolução de conflitos "Last Write Wins".
-          </p>
+
+          {user?.googleConnected ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 bg-green-900/20 border border-green-800 rounded-lg p-3">
+                <Link size={16} className="text-green-400" />
+                <span className="text-green-400 text-sm font-medium">Google Tasks conectado</span>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    setIsSyncing(true);
+                    setSyncResult(null);
+                    const res = await api.post<{ stats: { synced: number; created: number; updated: number; skipped: number } }>('/auth/google/sync', {});
+                    setIsSyncing(false);
+                    if (res.success && res.data) {
+                      const s = res.data.stats;
+                      setSyncResult(`Sincronizado! ${s.synced} processadas, ${s.created} criadas, ${s.updated} atualizadas`);
+                    } else {
+                      setSyncResult(res.error || 'Erro ao sincronizar');
+                    }
+                  }}
+                  disabled={isSyncing}
+                  className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {isSyncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  {isSyncing ? 'Sincronizando...' : 'Sincronizar Agora'}
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setIsConnectingGoogle(true);
+                    const res = await api.delete('/auth/google');
+                    setIsConnectingGoogle(false);
+                    if (res.success) {
+                      fetchMe();
+                      setSyncResult('Google Tasks desconectado');
+                    }
+                  }}
+                  disabled={isConnectingGoogle}
+                  className="flex items-center gap-2 bg-gray-700 hover:bg-red-700 text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Unlink size={16} />
+                  Desconectar
+                </button>
+              </div>
+
+              {syncResult && (
+                <p className="text-sm text-blue-400">{syncResult}</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-gray-400 text-sm">
+                Conecte sua conta Google para sincronizar tarefas bidirecionalmente com o Google Tasks.
+              </p>
+              <button
+                onClick={async () => {
+                  setIsConnectingGoogle(true);
+                  const res = await api.get<{ url: string }>('/auth/google');
+                  setIsConnectingGoogle(false);
+                  if (res.success && res.data?.url) {
+                    window.location.href = res.data.url;
+                  } else {
+                    setSyncResult(res.error || 'Google OAuth não disponível');
+                  }
+                }}
+                disabled={isConnectingGoogle}
+                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                {isConnectingGoogle ? <Loader2 size={16} className="animate-spin" /> : <Link size={16} />}
+                Conectar Google Account
+              </button>
+              {syncResult && (
+                <p className="text-sm text-yellow-400">{syncResult}</p>
+              )}
+              <p className="text-xs text-gray-600">
+                Integração via OAuth 2.0 com resolução de conflitos "Last Write Wins".
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </>

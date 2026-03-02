@@ -91,7 +91,7 @@ async function startServer() {
   // ─── Auth routes (login/register are public, rest protected) ───
   const authRouter = authRoutes(prisma);
   app.use('/api/auth', (req, res, next) => {
-    if (req.path === '/login' || req.path === '/register') {
+    if (req.path === '/login' || req.path === '/register' || req.path === '/google/callback') {
       return next();
     }
     return authMiddleware(req, res, next);

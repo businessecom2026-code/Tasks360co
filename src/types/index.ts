@@ -15,6 +15,7 @@ export interface User {
   role: Role;
   avatar?: string;
   activeWorkspaceId?: string;
+  googleConnected?: boolean;
   createdAt: string;
   updatedAt: string;
 }

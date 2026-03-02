@@ -46,18 +46,21 @@ enum PaymentStatus {
 // ─── Models ──────────────────────────────────────────────
 
 model User {
-  id                String       @id @default(cuid())
-  name              String
-  email             String       @unique
-  password          String
-  role              Role         @default(COLABORADOR)
-  avatar            String?
-  activeWorkspaceId String?
-  activeWorkspace   Workspace?   @relation("ActiveWorkspace", fields: [activeWorkspaceId], references: [id])
-  memberships       Membership[]
-  assignedTasks     Task[]       @relation("AssignedTasks")
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  id                   String       @id @default(cuid())
+  name                 String
+  email                String       @unique
+  password             String
+  role                 Role         @default(COLABORADOR)
+  avatar               String?
+  activeWorkspaceId    String?
+  activeWorkspace      Workspace?   @relation("ActiveWorkspace", fields: [activeWorkspaceId], references: [id])
+  googleAccessToken    String?
+  googleRefreshToken   String?
+  googleTokenExpiresAt DateTime?
+  memberships          Membership[]
+  assignedTasks        Task[]       @relation("AssignedTasks")
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 }
 
 model Workspace {
