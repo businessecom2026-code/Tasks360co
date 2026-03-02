@@ -1,13 +1,14 @@
-import { Calendar, Loader2, Trash2, RefreshCw } from 'lucide-react';
+import { Calendar, Loader2, Trash2, RefreshCw, CheckCircle2 } from 'lucide-react';
 import type { Task } from '../../types';
 import { useTaskStore } from '../../stores/useTaskStore';
 
 interface Props {
   task: Task;
   onEdit?: (task: Task) => void;
+  isDone?: boolean;
 }
 
-export function TaskCard({ task, onEdit }: Props) {
+export function TaskCard({ task, onEdit, isDone }: Props) {
   const { deleteTask, syncingTaskIds } = useTaskStore();
   const isSyncing = syncingTaskIds.has(task.id);
 
@@ -24,9 +25,9 @@ export function TaskCard({ task, onEdit }: Props) {
 
   return (
     <div
-      className={`group relative bg-gray-800 rounded-lg border border-gray-700 border-l-4 ${borderColor} p-3 cursor-pointer hover:bg-gray-750 transition-all ${
+      className={`group relative bg-gray-800 rounded-lg border border-l-4 ${borderColor} p-3 cursor-pointer hover:bg-gray-750 transition-all ${
         isSyncing ? 'opacity-60 pointer-events-none' : ''
-      }`}
+      } ${isDone ? 'animate-task-done border-green-700/50' : 'border-gray-700'}`}
       onClick={() => onEdit?.(task)}
       draggable
       onDragStart={(e) => {
@@ -47,7 +48,14 @@ export function TaskCard({ task, onEdit }: Props) {
         </div>
       )}
 
-      <h4 className="text-sm font-medium text-white pr-6 mb-1">{task.title}</h4>
+      {/* Done checkmark */}
+      {isDone && !task.googleTaskId && (
+        <div className="absolute top-2 right-2">
+          <CheckCircle2 size={14} className="text-green-500" />
+        </div>
+      )}
+
+      <h4 className={`text-sm font-medium pr-6 mb-1 ${isDone ? 'text-green-100' : 'text-white'}`}>{task.title}</h4>
 
       {task.description && (
         <p className="text-xs text-gray-400 line-clamp-2 mb-2">{task.description}</p>
