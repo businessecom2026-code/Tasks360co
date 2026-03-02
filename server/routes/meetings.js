@@ -1,4 +1,24 @@
 import { Router } from 'express';
+import multer from 'multer';
+import { processMeeting, validateDuration } from '../services/ai.js';
+
+// Configure multer for in-memory file storage (max 200MB)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 200 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      'audio/mpeg', 'audio/wav', 'audio/webm',
+      'video/mp4', 'video/webm',
+      'text/plain',
+    ];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Formato não suportado. Use MP3, WAV, WebM, MP4 ou TXT.'));
+    }
+  },
+});
 
 export function meetingRoutes(prisma) {
   const router = Router();
@@ -56,29 +76,31 @@ export function meetingRoutes(prisma) {
     }
   });
 
-  // POST /api/meetings/process — process recording with AI (Gemini 1.5 Flash stub)
-  router.post('/process', async (req, res) => {
+  // POST /api/meetings/process — process recording with AI (Gemini 1.5 Flash)
+  router.post('/process', upload.single('file'), async (req, res) => {
     const { meetingId } = req.body;
 
     try {
-      // In production: Upload file to storage, then call Gemini 1.5 Flash API
-      // const transcription = await geminiService.transcribe(file);
-      // const analysis = await geminiService.analyze(transcription, {
-      //   maxDuration: 3600, // 60 minutes constraint
-      //   outputFormat: { summary: 'string', suggestedTasks: [{ title, deadline }] }
-      // });
+      let aiResult;
 
-      // Stub response for development
-      const aiResult = {
-        summary: 'Reunião sobre planejamento do sprint. Foram discutidos os próximos passos do projeto, incluindo melhorias no Kanban, integração com Google Tasks e configuração do billing.',
-        suggestedTasks: [
-          { title: 'Implementar drag-and-drop no Kanban', deadline: '2026-03-07' },
-          { title: 'Configurar OAuth Google Tasks', deadline: '2026-03-10' },
-          { title: 'Testar fluxo de pagamento Revolut', deadline: '2026-03-14' },
-        ],
-      };
+      if (req.file) {
+        // File uploaded — validate duration and process with Gemini
+        const validation = validateDuration(req.file.size, req.file.mimetype);
+        if (!validation.valid) {
+          return res.status(400).json({ error: validation.message });
+        }
 
-      // If meetingId, update the meeting record
+        console.log(`[Meetings:process] File received: ${req.file.originalname} (${(req.file.size / (1024 * 1024)).toFixed(1)}MB, ${req.file.mimetype})`);
+        aiResult = await processMeeting(req.file.buffer, req.file.mimetype);
+      } else if (meetingId) {
+        // No file — process existing meeting (stub/fallback)
+        console.log(`[Meetings:process] No file, processing meetingId=${meetingId}`);
+        aiResult = await processMeeting('', 'text/plain');
+      } else {
+        return res.status(400).json({ error: 'Envie um arquivo ou informe o meetingId' });
+      }
+
+      // If meetingId provided, update the meeting record with AI results
       if (meetingId) {
         await prisma.meeting.update({
           where: { id: meetingId },
@@ -92,8 +114,22 @@ export function meetingRoutes(prisma) {
       res.json(aiResult);
     } catch (err) {
       console.error('[Meetings:process]', err);
-      res.status(500).json({ error: 'Erro ao processar reunião com IA' });
+      res.status(500).json({ error: err.message || 'Erro ao processar reunião com IA' });
     }
+  });
+
+  // Handle multer errors
+  router.use((err, _req, res, next) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Arquivo muito grande. Limite: 200MB.' });
+      }
+      return res.status(400).json({ error: err.message });
+    }
+    if (err.message) {
+      return res.status(400).json({ error: err.message });
+    }
+    next(err);
   });
 
   // DELETE /api/meetings/:id

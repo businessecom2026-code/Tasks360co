@@ -15,6 +15,7 @@
     "db:studio": "npx prisma studio"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.14.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -22,6 +23,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.395.0",
+    "multer": "^2.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
