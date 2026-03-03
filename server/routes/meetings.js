@@ -25,10 +25,7 @@ export function meetingRoutes(prisma) {
 
   // GET /api/meetings — list meetings for current workspace
   router.get('/', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
+    const workspaceId = req.workspaceId;
 
     try {
       const meetings = await prisma.meeting.findMany({
@@ -45,11 +42,7 @@ export function meetingRoutes(prisma) {
 
   // POST /api/meetings — create a meeting
   router.post('/', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
-
+    const workspaceId = req.workspaceId;
     const { title, date, time, participants, link, platform } = req.body;
 
     if (!title) {
@@ -102,6 +95,10 @@ export function meetingRoutes(prisma) {
 
       // If meetingId provided, update the meeting record with AI results
       if (meetingId) {
+        const meeting = await prisma.meeting.findUnique({ where: { id: meetingId } });
+        if (!meeting || meeting.workspaceId !== req.workspaceId) {
+          return res.status(403).json({ error: 'Acesso negado a esta reunião' });
+        }
         await prisma.meeting.update({
           where: { id: meetingId },
           data: {
@@ -135,6 +132,16 @@ export function meetingRoutes(prisma) {
   // DELETE /api/meetings/:id
   router.delete('/:id', async (req, res) => {
     try {
+      const meeting = await prisma.meeting.findUnique({ where: { id: req.params.id } });
+
+      if (!meeting) {
+        return res.status(404).json({ error: 'Reunião não encontrada' });
+      }
+
+      if (meeting.workspaceId !== req.workspaceId) {
+        return res.status(403).json({ error: 'Acesso negado a esta reunião' });
+      }
+
       await prisma.meeting.delete({ where: { id: req.params.id } });
       res.json({ success: true });
     } catch (err) {

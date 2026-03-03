@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from './server/middleware/auth.js';
+import { tenantGuard } from './server/middleware/tenantGuard.js';
 import { authRoutes } from './server/routes/auth.js';
 import { workspaceRoutes } from './server/routes/workspaces.js';
 import { taskRoutes } from './server/routes/tasks.js';
@@ -100,9 +101,9 @@ async function startServer() {
 
   // ─── Protected API routes ──────────────────────────────────────
   app.use('/api/workspaces', authMiddleware, workspaceRoutes(prisma));
-  app.use('/api/tasks', authMiddleware, taskRoutes(prisma));
-  app.use('/api/meetings', authMiddleware, meetingRoutes(prisma));
-  app.use('/api/billing', authMiddleware, billingRoutes(prisma));
+  app.use('/api/tasks', authMiddleware, tenantGuard(prisma), taskRoutes(prisma));
+  app.use('/api/meetings', authMiddleware, tenantGuard(prisma), meetingRoutes(prisma));
+  app.use('/api/billing', authMiddleware, tenantGuard(prisma), billingRoutes(prisma));
   app.use('/api/notifications', authMiddleware, notificationRoutes(prisma));
 
   // ─── Serve static frontend (production) ────────────────────────

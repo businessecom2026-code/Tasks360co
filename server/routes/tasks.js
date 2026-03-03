@@ -8,10 +8,7 @@ export function taskRoutes(prisma) {
 
   // GET /api/tasks — list tasks for current workspace
   router.get('/', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
+    const workspaceId = req.workspaceId;
 
     try {
       const tasks = await prisma.task.findMany({
@@ -33,11 +30,7 @@ export function taskRoutes(prisma) {
 
   // POST /api/tasks — create a task
   router.post('/', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
-
+    const workspaceId = req.workspaceId;
     const { title, description, status, assigneeId, dueDate, color, image, priority, labels, checklist, coverColor } = req.body;
 
     if (!title) {
@@ -102,6 +95,11 @@ export function taskRoutes(prisma) {
       const existing = await prisma.task.findUnique({ where: { id } });
       if (!existing) {
         return res.status(404).json({ error: 'Tarefa não encontrada' });
+      }
+
+      // Verify task belongs to the user's workspace
+      if (existing.workspaceId !== req.workspaceId) {
+        return res.status(403).json({ error: 'Acesso negado a esta tarefa' });
       }
 
       // Optimistic locking: if version is provided, check it matches
@@ -177,6 +175,15 @@ export function taskRoutes(prisma) {
     try {
       // Get task before deleting to check for googleTaskId
       const task = await prisma.task.findUnique({ where: { id: req.params.id } });
+
+      if (!task) {
+        return res.status(404).json({ error: 'Tarefa não encontrada' });
+      }
+
+      // Verify task belongs to the user's workspace
+      if (task.workspaceId !== req.workspaceId) {
+        return res.status(403).json({ error: 'Acesso negado a esta tarefa' });
+      }
 
       await prisma.task.delete({ where: { id: req.params.id } });
 

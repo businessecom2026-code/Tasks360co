@@ -44,6 +44,17 @@ const PRIORITY_FILTERS: { value: TaskPriority | 'ALL'; label: string; icon: stri
   { value: 'LOW', label: 'Baixa', icon: '🟢' },
 ];
 
+const COLOR_OPTIONS = [
+  { name: 'blue', bg: 'bg-blue-500' },
+  { name: 'red', bg: 'bg-red-500' },
+  { name: 'green', bg: 'bg-green-500' },
+  { name: 'yellow', bg: 'bg-yellow-500' },
+  { name: 'purple', bg: 'bg-purple-500' },
+  { name: 'orange', bg: 'bg-orange-500' },
+  { name: 'pink', bg: 'bg-pink-500' },
+  { name: 'teal', bg: 'bg-teal-500' },
+];
+
 export function KanbanBoard() {
   const { tasks, isLoading, fetchTasks, moveTask, addTask, updateTask } = useTaskStore();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
@@ -341,12 +352,12 @@ export function KanbanBoard() {
               <div>
                 <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Cor</label>
                 <div className="flex gap-2">
-                  {['blue', 'red', 'green', 'yellow', 'purple', 'orange', 'pink', 'teal'].map((c) => (
+                  {COLOR_OPTIONS.map((c) => (
                     <button
-                      key={c}
-                      onClick={() => setNewTaskColor(c)}
-                      className={`w-7 h-7 rounded-full bg-${c}-500 transition-all ${
-                        newTaskColor === c ? 'ring-2 ring-white scale-110' : 'opacity-50 hover:opacity-100'
+                      key={c.name}
+                      onClick={() => setNewTaskColor(c.name)}
+                      className={`w-7 h-7 rounded-full ${c.bg} transition-all ${
+                        newTaskColor === c.name ? 'ring-2 ring-white scale-110' : 'opacity-50 hover:opacity-100'
                       }`}
                     />
                   ))}

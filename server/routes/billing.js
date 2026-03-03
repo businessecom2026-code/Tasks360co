@@ -6,10 +6,7 @@ export function billingRoutes(prisma) {
 
   // GET /api/billing/subscription — get current workspace subscription
   router.get('/subscription', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
+    const workspaceId = req.workspaceId;
 
     try {
       const subscription = await prisma.subscription.findUnique({
@@ -29,11 +26,7 @@ export function billingRoutes(prisma) {
 
   // PATCH /api/billing/subscription — update subscription (e.g., toggle autoRenew)
   router.patch('/subscription', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
-
+    const workspaceId = req.workspaceId;
     const { autoRenew } = req.body;
 
     try {

@@ -51,12 +51,13 @@ export const useTaskStore = create<TaskState>()((set, get) => ({
   },
 
   moveTask: async (id, status) => {
+    const task = get().tasks.find((t) => t.id === id);
     // Optimistic update
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? { ...t, status } : t)),
     }));
 
-    const res = await api.patch(`/tasks/${id}`, { status });
+    const res = await api.patch(`/tasks/${id}`, { status, version: task?.version });
     if (!res.success) {
       // Revert on failure
       get().fetchTasks();
