@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createSeatCheckout } from '../services/billing.js';
+import { createNotification } from '../services/notifications.js';
 
 export function workspaceRoutes(prisma) {
   const router = Router();
@@ -161,6 +162,19 @@ export function workspaceRoutes(prisma) {
 
       // Update subscription seat count
       await recalculateSubscription(prisma, workspaceId);
+
+      // Notify invited user if they exist (non-blocking)
+      if (existingUser) {
+        const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+        createNotification(prisma, {
+          userId: existingUser.id,
+          workspaceId,
+          type: 'invite_received',
+          title: 'Convite recebido',
+          body: `Você foi convidado para o workspace "${workspace?.name}"`,
+          data: { workspaceId, membershipId: membership.id },
+        }).catch(() => {});
+      }
 
       res.status(201).json({
         membership,

@@ -99,6 +99,22 @@ export interface Subscription {
   updatedAt: string;
 }
 
+// ─── Notifications ───────────────────────────────────────
+
+export type NotificationType = 'task_assigned' | 'task_moved' | 'invite_received' | 'meeting_created' | 'payment_success';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  workspaceId?: string;
+  type: NotificationType;
+  title: string;
+  body?: string;
+  read: boolean;
+  data?: Record<string, unknown>;
+  createdAt: string;
+}
+
 // ─── API Types ───────────────────────────────────────────
 
 export interface ApiResponse<T = unknown> {

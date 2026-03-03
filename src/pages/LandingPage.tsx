@@ -74,7 +74,7 @@ export function LandingPage() {
               Entrar
             </Link>
             <Link
-              to="/login"
+              to="/register"
               className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               Começar Grátis
@@ -102,7 +102,7 @@ export function LandingPage() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
-            to="/login"
+            to="/register"
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors text-base"
           >
             Começar Agora
@@ -169,7 +169,7 @@ export function LandingPage() {
             O dono não paga assento.
           </p>
           <Link
-            to="/login"
+            to="/register"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
           >
             Experimentar Grátis
@@ -188,7 +188,7 @@ export function LandingPage() {
           Pronto para transformar a gestão da sua equipa?
         </h3>
         <Link
-          to="/login"
+          to="/register"
           className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-xl font-medium text-lg transition-colors"
         >
           Criar Conta Grátis

@@ -59,6 +59,9 @@ model User {
   googleTokenExpiresAt DateTime?
   memberships          Membership[]
   assignedTasks        Task[]       @relation("AssignedTasks")
+  notifications        Notification[]
+  emailVerified        Boolean      @default(false)
+  verificationToken    String?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 }
@@ -144,6 +147,21 @@ model Subscription {
   revolutOrderId    String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String?
+  type        String   // task_assigned, task_moved, invite_received, meeting_created, etc.
+  title       String
+  body        String?
+  read        Boolean  @default(false)
+  data        Json?    // Extra payload (taskId, meetingId, etc.)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, read])
 }
 
 model PasswordReset {

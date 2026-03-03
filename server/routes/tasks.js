@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { scheduleSyncToGoogle, deleteFromGoogle } from '../services/syncEngine.js';
 import { getUserTokens } from '../services/googleAuth.js';
+import { createNotification, notifyWorkspace } from '../services/notifications.js';
 
 export function taskRoutes(prisma) {
   const router = Router();
@@ -69,6 +70,18 @@ export function taskRoutes(prisma) {
         }
       }).catch(() => {});
 
+      // Notify assignee (non-blocking)
+      if (assigneeId && assigneeId !== req.user.id) {
+        createNotification(prisma, {
+          userId: assigneeId,
+          workspaceId,
+          type: 'task_assigned',
+          title: 'Nova tarefa atribuída',
+          body: `"${task.title}" foi atribuída a você`,
+          data: { taskId: task.id },
+        }).catch(() => {});
+      }
+
       res.status(201).json(task);
     } catch (err) {
       console.error('[Tasks:create]', err);
@@ -120,6 +133,29 @@ export function taskRoutes(prisma) {
           scheduleSyncToGoogle(task.id, task, tokens);
         }
       }).catch(() => {});
+
+      // Notifications (non-blocking)
+      const workspaceId = existing.workspaceId;
+      if (status && status !== existing.status) {
+        notifyWorkspace(prisma, {
+          workspaceId,
+          type: 'task_moved',
+          title: 'Tarefa movida',
+          body: `"${task.title}" → ${status}`,
+          data: { taskId: task.id, from: existing.status, to: status },
+          excludeUserId: req.user.id,
+        }).catch(() => {});
+      }
+      if (assigneeId && assigneeId !== existing.assigneeId && assigneeId !== req.user.id) {
+        createNotification(prisma, {
+          userId: assigneeId,
+          workspaceId,
+          type: 'task_assigned',
+          title: 'Tarefa atribuída',
+          body: `"${task.title}" foi atribuída a você`,
+          data: { taskId: task.id },
+        }).catch(() => {});
+      }
 
       res.json(task);
     } catch (err) {

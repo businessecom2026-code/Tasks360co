@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { ErrorBoundary } from '../common/ErrorBoundary';
+import { OfflineBanner } from '../common/OfflineBanner';
 
 export function AppLayout() {
   const { isAuthenticated } = useAuthStore();
@@ -16,6 +17,7 @@ export function AppLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <MobileNav />
+        <OfflineBanner />
         <main className="flex-1 flex flex-col overflow-hidden">
           <ErrorBoundary>
             <Outlet />

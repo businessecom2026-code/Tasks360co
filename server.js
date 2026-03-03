@@ -12,6 +12,7 @@ import { taskRoutes } from './server/routes/tasks.js';
 import { meetingRoutes } from './server/routes/meetings.js';
 import { billingRoutes } from './server/routes/billing.js';
 import { webhookRoutes } from './server/routes/webhooks.js';
+import { notificationRoutes } from './server/routes/notifications.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,6 +103,7 @@ async function startServer() {
   app.use('/api/tasks', authMiddleware, taskRoutes(prisma));
   app.use('/api/meetings', authMiddleware, meetingRoutes(prisma));
   app.use('/api/billing', authMiddleware, billingRoutes(prisma));
+  app.use('/api/notifications', authMiddleware, notificationRoutes(prisma));
 
   // ─── Serve static frontend (production) ────────────────────────
   app.use(express.static(path.join(__dirname, 'dist')));

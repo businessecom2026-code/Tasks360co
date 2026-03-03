@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { LogIn, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
 
@@ -72,7 +72,14 @@ export function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-600 mt-4">
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Não tem conta?{' '}
+          <Link to="/register" className="text-blue-400 hover:text-blue-300 transition-colors">
+            Criar conta
+          </Link>
+        </p>
+
+        <p className="text-center text-xs text-gray-600 mt-3">
           Task360 Engine &copy; {new Date().getFullYear()}
         </p>
       </div>
