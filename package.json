@@ -18,6 +18,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^5.14.0",
     "bcryptjs": "^2.4.3",
@@ -28,10 +31,10 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.395.0",
     "multer": "^2.1.0",
+    "prisma": "^5.14.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
-    "prisma": "^5.14.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

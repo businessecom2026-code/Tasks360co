@@ -103,6 +103,8 @@ model Task {
   title        String
   description  String?
   status       TaskStatus @default(PENDING)
+  priority     String?    // LOW, MEDIUM, HIGH, URGENT
+  labels       Json?      // Array of { name, color }
   assigneeId   String?
   assignee     User?      @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
   workspaceId  String

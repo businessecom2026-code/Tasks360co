@@ -3,8 +3,14 @@
 export type Role = 'SUPER_ADMIN' | 'GESTOR' | 'COLABORADOR' | 'CLIENTE';
 export type WorkspaceRole = 'GESTOR' | 'COLABORADOR' | 'CLIENTE';
 export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'REVIEW' | 'DONE';
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type SubStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIAL';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+
+export interface TaskLabel {
+  name: string;
+  color: string; // tailwind color key: red, blue, green, yellow, purple, orange, pink, teal
+}
 
 // ─── Models ──────────────────────────────────────────────
 
@@ -50,6 +56,8 @@ export interface Task {
   title: string;
   description?: string;
   status: TaskStatus;
+  priority?: TaskPriority;
+  labels?: TaskLabel[];
   assigneeId?: string;
   assignee?: User;
   workspaceId: string;
