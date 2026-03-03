@@ -8,8 +8,9 @@ import {
   Clock,
   Flag,
   GripVertical,
+  CheckSquare,
 } from 'lucide-react';
-import type { Task, TaskLabel, TaskPriority } from '../../types';
+import type { Task, TaskLabel, TaskPriority, ChecklistItem } from '../../types';
 import { useTaskStore } from '../../stores/useTaskStore';
 
 interface Props {
@@ -76,12 +77,15 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
   const dueDateStatus = task.dueDate ? getDueDateStatus(task.dueDate) : null;
   const labels = (task.labels || []) as TaskLabel[];
   const priority = task.priority as TaskPriority | undefined;
+  const checklist = (task.checklist || []) as ChecklistItem[];
+  const checkDone = checklist.filter(i => i.checked).length;
+  const checkTotal = checklist.length;
 
   return (
     <div
       ref={!isOverlay ? setNodeRef : undefined}
       className={`
-        group relative rounded-lg border transition-all duration-200 cursor-pointer
+        group relative rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden
         ${isOverlay
           ? 'bg-slate-800 border-emerald-500/50 shadow-2xl shadow-emerald-500/20 rotate-2 scale-105'
           : isDragging
@@ -94,6 +98,11 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
       `}
       onClick={() => !isDragging && onEdit?.(task)}
     >
+      {/* Cover color */}
+      {task.coverColor && (
+        <div className="h-7" style={{ backgroundColor: task.coverColor }} />
+      )}
+
       {/* Drag handle + card content wrapper */}
       <div className="flex">
         {/* Drag handle */}
@@ -150,6 +159,16 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
                 <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${DUE_DATE_STYLES[dueDateStatus]}`}>
                   {dueDateStatus === 'overdue' ? <Clock size={10} /> : <Calendar size={10} />}
                   {new Date(task.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                </span>
+              )}
+
+              {/* Checklist progress badge */}
+              {checkTotal > 0 && (
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                  checkDone === checkTotal ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-400'
+                }`}>
+                  <CheckSquare size={10} />
+                  {checkDone}/{checkTotal}
                 </span>
               )}
 

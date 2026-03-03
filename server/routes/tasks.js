@@ -38,7 +38,7 @@ export function taskRoutes(prisma) {
       return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
     }
 
-    const { title, description, status, assigneeId, dueDate, color, image, priority, labels } = req.body;
+    const { title, description, status, assigneeId, dueDate, color, image, priority, labels, checklist, coverColor } = req.body;
 
     if (!title) {
       return res.status(400).json({ error: 'Título obrigatório' });
@@ -52,6 +52,8 @@ export function taskRoutes(prisma) {
           status: status || 'PENDING',
           priority: priority || null,
           labels: labels || undefined,
+          checklist: checklist || undefined,
+          coverColor: coverColor || undefined,
           assigneeId,
           workspaceId,
           dueDate: dueDate ? new Date(dueDate) : null,
@@ -94,7 +96,7 @@ export function taskRoutes(prisma) {
   // PATCH /api/tasks/:id — update a task (with optimistic locking)
   router.patch('/:id', async (req, res) => {
     const { id } = req.params;
-    const { title, description, status, assigneeId, dueDate, color, image, version, priority, labels } = req.body;
+    const { title, description, status, assigneeId, dueDate, color, image, version, priority, labels, checklist, coverColor } = req.body;
 
     try {
       const existing = await prisma.task.findUnique({ where: { id } });
@@ -120,6 +122,8 @@ export function taskRoutes(prisma) {
       if (image !== undefined) data.image = image;
       if (priority !== undefined) data.priority = priority;
       if (labels !== undefined) data.labels = labels;
+      if (checklist !== undefined) data.checklist = checklist;
+      if (coverColor !== undefined) data.coverColor = coverColor;
 
       const task = await prisma.task.update({
         where: { id },

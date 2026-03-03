@@ -12,6 +12,12 @@ export interface TaskLabel {
   color: string; // tailwind color key: red, blue, green, yellow, purple, orange, pink, teal
 }
 
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  checked: boolean;
+}
+
 // ─── Models ──────────────────────────────────────────────
 
 export interface User {
@@ -58,6 +64,8 @@ export interface Task {
   status: TaskStatus;
   priority?: TaskPriority;
   labels?: TaskLabel[];
+  checklist?: ChecklistItem[];
+  coverColor?: string;
   assigneeId?: string;
   assignee?: User;
   workspaceId: string;
