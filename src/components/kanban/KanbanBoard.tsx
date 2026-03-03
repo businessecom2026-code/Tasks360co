@@ -45,7 +45,7 @@ const PRIORITY_FILTERS: { value: TaskPriority | 'ALL'; label: string; icon: stri
 ];
 
 export function KanbanBoard() {
-  const { tasks, isLoading, fetchTasks, moveTask, addTask } = useTaskStore();
+  const { tasks, isLoading, fetchTasks, moveTask, addTask, updateTask } = useTaskStore();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'ALL'>('ALL');
@@ -117,6 +117,18 @@ export function KanbanBoard() {
     setNewTaskTitle('');
     setNewTaskDesc('');
     setShowAddModal(false);
+  };
+
+  const handleTaskUpdate = async (updates: Partial<Task>) => {
+    if (!detailTask) return;
+    const success = await updateTask(detailTask.id, updates);
+    if (success) {
+      setDetailTask(prev => prev ? { ...prev, ...updates } : null);
+    }
+  };
+
+  const getColumnTitle = (status: TaskStatus) => {
+    return COLUMNS.find(c => c.status === status)?.title || '';
   };
 
   const activeFiltersCount = (searchQuery ? 1 : 0) + (priorityFilter !== 'ALL' ? 1 : 0);
@@ -283,11 +295,13 @@ export function KanbanBoard() {
         <ListView tasks={filteredTasks} onEditTask={(task) => setDetailTask(task)} />
       )}
 
-      {/* Task Detail Modal */}
+      {/* Task Detail Modal (Trello-style) */}
       {detailTask && (
         <TaskDetailModal
           task={detailTask}
+          columnTitle={getColumnTitle(detailTask.status)}
           onClose={() => setDetailTask(null)}
+          onUpdate={handleTaskUpdate}
         />
       )}
 

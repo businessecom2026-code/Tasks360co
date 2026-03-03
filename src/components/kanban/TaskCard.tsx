@@ -5,12 +5,12 @@ import {
   Trash2,
   RefreshCw,
   CheckCircle2,
+  CheckSquare,
   Clock,
   Flag,
   GripVertical,
-  CheckSquare,
 } from 'lucide-react';
-import type { Task, TaskLabel, TaskPriority, ChecklistItem } from '../../types';
+import type { Task, TaskLabel, TaskPriority } from '../../types';
 import { useTaskStore } from '../../stores/useTaskStore';
 
 interface Props {
@@ -77,7 +77,7 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
   const dueDateStatus = task.dueDate ? getDueDateStatus(task.dueDate) : null;
   const labels = (task.labels || []) as TaskLabel[];
   const priority = task.priority as TaskPriority | undefined;
-  const checklist = (task.checklist || []) as ChecklistItem[];
+  const checklist = task.checklist || [];
   const checkDone = checklist.filter(i => i.checked).length;
   const checkTotal = checklist.length;
 
@@ -85,7 +85,7 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
     <div
       ref={!isOverlay ? setNodeRef : undefined}
       className={`
-        group relative rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden
+        group relative rounded-lg border transition-all duration-200 cursor-pointer
         ${isOverlay
           ? 'bg-slate-800 border-emerald-500/50 shadow-2xl shadow-emerald-500/20 rotate-2 scale-105'
           : isDragging
@@ -100,7 +100,10 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
     >
       {/* Cover color */}
       {task.coverColor && (
-        <div className="h-7" style={{ backgroundColor: task.coverColor }} />
+        <div
+          className="h-8 rounded-t-lg"
+          style={{ backgroundColor: task.coverColor }}
+        />
       )}
 
       {/* Drag handle + card content wrapper */}
