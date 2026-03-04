@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -106,13 +106,18 @@ export function KanbanBoard() {
     }
   }, [tasks, moveTask]);
 
-  const handleTaskUpdate = async (updates: Partial<Task>) => {
-    if (!modalTask?.id) return;
-    const success = await updateTask(modalTask.id, updates);
-    if (success) {
-      setModalTask((prev) => prev ? { ...prev, ...updates } : prev);
-    }
-  };
+  // Ref sempre aponta para o modalTask mais recente — sem stale closure
+  const modalTaskRef = useRef<Task | null | undefined>(undefined);
+  modalTaskRef.current = modalTask;
+
+  const handleTaskUpdate = useCallback(async (updates: Partial<Task>) => {
+    const current = modalTaskRef.current;
+    if (!current?.id) return;
+    // Atualização local imediata para UI responsiva (otimista)
+    setModalTask((prev) => prev ? { ...prev, ...updates } : prev);
+    // Dispara patch na API (rollback automático no updateTask se falhar)
+    await updateTask(current.id, updates);
+  }, [updateTask]);
 
   const activeFiltersCount = (searchQuery ? 1 : 0) + (priorityFilter !== 'ALL' ? 1 : 0);
 

@@ -140,8 +140,9 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
   const [isEditingDesc,  setIsEditingDesc]  = useState(false);
 
   // ── validação / loading ──────────────────────────────────────
-  const [titleError, setTitleError] = useState(false);
-  const [isSaving,   setIsSaving]   = useState(false);
+  const [titleError,  setTitleError]  = useState(false);
+  const [isSaving,    setIsSaving]    = useState(false);
+  const [saveError,   setSaveError]   = useState<string | null>(null);
 
   // ── checklist toggle ────────────────────────────────────────
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -348,6 +349,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
       titleRef.current?.focus();
       return;
     }
+    setSaveError(null);
     setIsSaving(true);
     const result = await addTask({
       title:       title.trim(),
@@ -362,7 +364,14 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
       color:       cardColor,
     });
     setIsSaving(false);
-    if (result) { onSave?.(result); onClose(); }
+    if (result) {
+      // Card já apareceu optimisticamente — fecha o modal
+      onSave?.(result);
+      onClose();
+    } else {
+      // API falhou — card foi revertido, mostra erro sem fechar o modal
+      setSaveError('Erro ao criar tarefa. Verifique a conexão e tente novamente.');
+    }
   };
 
   const checkDone    = checklist.filter((i) => i.checked).length;
@@ -1129,7 +1138,13 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
 
           {/* ── Footer CTA (apenas modo criação) ──────────── */}
           {isNew && (
-            <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-slate-800/60">
+            <div className="mt-6 pt-4 border-t border-slate-800/60">
+              {saveError && (
+                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-3">
+                  {saveError}
+                </p>
+              )}
+            <div className="flex items-center justify-end gap-3">
               <button
                 onClick={onClose}
                 className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800"
@@ -1147,6 +1162,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                   <><Plus size={15} /> Criar Tarefa</>
                 )}
               </button>
+            </div>
             </div>
           )}
         </div>

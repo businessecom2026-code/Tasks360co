@@ -31,11 +31,38 @@ export const useTaskStore = create<TaskState>()((set, get) => ({
   },
 
   addTask: async (task) => {
+    // Optimistic insert: card aparece imediatamente com id temporário
+    const tempId = `temp_${Date.now()}`;
+    const tempTask: Task = {
+      id: tempId,
+      title: task.title ?? '',
+      description: task.description,
+      status: task.status ?? 'PENDING',
+      priority: task.priority,
+      labels: task.labels ?? [],
+      checklist: task.checklist ?? [],
+      coverColor: task.coverColor,
+      assigneeId: task.assigneeId,
+      workspaceId: '',
+      dueDate: task.dueDate,
+      color: task.color,
+      version: 1,
+      attachments: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    set((state) => ({ tasks: [...state.tasks, tempTask] }));
+
     const res = await api.post<Task>('/tasks', task);
     if (res.success && res.data) {
-      set((state) => ({ tasks: [...state.tasks, res.data!] }));
+      // Substitui o placeholder pelo objeto real do servidor
+      set((state) => ({
+        tasks: state.tasks.map((t) => (t.id === tempId ? res.data! : t)),
+      }));
       return res.data;
     }
+    // Rollback: remove o placeholder se API falhou
+    set((state) => ({ tasks: state.tasks.filter((t) => t.id !== tempId) }));
     return null;
   },
 
