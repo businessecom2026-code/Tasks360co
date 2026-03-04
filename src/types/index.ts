@@ -16,6 +16,20 @@ export interface ChecklistItem {
   id: string;
   text: string;
   checked: boolean;
+  parentId?: string | null; // null = root item, string = sub-item of parent
+}
+
+export type AttachmentFileCategory = 'image' | 'document' | 'video';
+
+export interface Attachment {
+  id: string;
+  taskId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string; // MIME type
+  fileSize: number; // bytes
+  thumbnailUrl?: string;
+  createdAt: string;
 }
 
 // ─── Models ──────────────────────────────────────────────
@@ -75,6 +89,7 @@ export interface Task {
   googleTaskId?: string;
   lastSyncedAt?: string;
   version: number;
+  attachments?: Attachment[];
   isSyncing?: boolean;
   createdAt: string;
   updatedAt: string;

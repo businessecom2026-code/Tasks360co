@@ -5,16 +5,40 @@
  * modo "edit"   → task é um objeto Task existente, alterações são emitidas
  *                  via onUpdate() campo a campo (auto-save on blur).
  */
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   X, CreditCard, Tag, Calendar, CheckSquare, AlignLeft,
   Activity, Plus, Trash2, Copy, ArrowRight, Clock, Pencil,
   Flag, Check, Square, CheckCircle2, Users, ChevronDown, Loader2,
+  Paperclip, Upload, FileText, Film, Image as ImageIcon,
+  ChevronRight, Eye, Download,
 } from 'lucide-react';
-import type { Task, TaskStatus, TaskPriority, TaskLabel, ChecklistItem } from '../../types';
+import type { Task, TaskStatus, TaskPriority, TaskLabel, ChecklistItem, Attachment } from '../../types';
 import { useTaskStore } from '../../stores/useTaskStore';
 import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { api } from '../../lib/api';
+
+// ─── Helpers: Attachments ────────────────────────────────────────────────────
+
+function getFileCategory(mimeType: string): 'image' | 'document' | 'video' {
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType.startsWith('video/')) return 'video';
+  return 'document';
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileIcon(mimeType: string) {
+  const cat = getFileCategory(mimeType);
+  if (cat === 'image') return <ImageIcon size={16} className="text-blue-400" />;
+  if (cat === 'video') return <Film size={16} className="text-purple-400" />;
+  return <FileText size={16} className="text-orange-400" />;
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -108,6 +132,8 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
   const [status,      setStatus]      = useState<TaskStatus>(task?.status ?? initialStatus ?? 'PENDING');
   const [commentText, setCommentText] = useState('');
   const [newCheckItem, setNewCheckItem] = useState('');
+  const [newSubItemParent, setNewSubItemParent] = useState<string | null>(null);
+  const [newSubItemText, setNewSubItemText] = useState('');
 
   // ── modo edição ──────────────────────────────────────────────
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -116,6 +142,18 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
   // ── validação / loading ──────────────────────────────────────
   const [titleError, setTitleError] = useState(false);
   const [isSaving,   setIsSaving]   = useState(false);
+
+  // ── checklist toggle ────────────────────────────────────────
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [hideCompleted, setHideCompleted] = useState(false);
+
+  // ── anexos ──────────────────────────────────────────────────
+  const [attachments, setAttachments] = useState<Attachment[]>(task?.attachments ?? []);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver]   = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxType, setLightboxType] = useState<'image' | 'video' | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── popovers ─────────────────────────────────────────────────
   const [showLabelPicker,    setShowLabelPicker]    = useState(false);
@@ -223,10 +261,79 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
   };
 
   const removeCheckItem = (id: string) => {
-    const next = checklist.filter((i) => i.id !== id);
+    // Also remove sub-items of this item
+    const next = checklist.filter((i) => i.id !== id && i.parentId !== id);
     setChecklist(next);
     emit({ checklist: next });
   };
+
+  const toggleExpandItem = (id: string) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const addSubItem = (parentId: string) => {
+    if (!newSubItemText.trim()) return;
+    const next = [...checklist, { id: uid(), text: newSubItemText.trim(), checked: false, parentId }];
+    setChecklist(next);
+    emit({ checklist: next });
+    setNewSubItemText('');
+    setNewSubItemParent(null);
+  };
+
+  // ── helpers: checklist grouping ──────────────────────────────
+  const rootItems = checklist.filter((i) => i.text && !i.parentId);
+  const getSubItems = (parentId: string) => checklist.filter((i) => i.parentId === parentId);
+
+  // ── handlers: file upload ──────────────────────────────────
+  const handleFileUpload = useCallback(async (files: FileList | File[]) => {
+    if (!task?.id || files.length === 0) return;
+    setIsUploading(true);
+    const formData = new FormData();
+    Array.from(files).forEach((f) => formData.append('files', f));
+    try {
+      const res = await api.upload<Attachment[]>(`/tasks/${task.id}/attachments`, formData);
+      if (res.success && res.data) {
+        setAttachments((prev) => [...res.data!, ...prev]);
+      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [task?.id]);
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!task?.id) return;
+    const res = await api.delete(`/tasks/${task.id}/attachments/${attachmentId}`);
+    if (res.success) {
+      setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+    }
+  };
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    if (e.dataTransfer.files?.length) {
+      handleFileUpload(e.dataTransfer.files);
+    }
+  }, [handleFileUpload]);
 
   const handleDelete = () => { if (!isNew && task) { deleteTask(task.id); onClose(); } };
 
@@ -405,6 +512,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
               { label: 'Prioridade', icon: <Flag size={14} />,        fn: () => { setShowPriorityPicker(v => !v); setShowLabelPicker(false); setShowDatePicker(false); setShowAssigneePicker(false); } },
               { label: 'Capa',       icon: <CreditCard size={14} />,  fn: () => setShowCoverPicker(v => !v) },
               { label: 'Membro',     icon: <Users size={14} />,       fn: () => { setShowAssigneePicker(v => !v); setShowLabelPicker(false); setShowDatePicker(false); setShowPriorityPicker(false); } },
+              ...(!isNew ? [{ label: 'Anexos', icon: <Paperclip size={14} />, fn: () => fileInputRef.current?.click() }] : []),
             ].map(({ label, icon, fn }) => (
               <button
                 key={label}
@@ -652,13 +760,21 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                 )}
               </div>
 
-              {/* Checklist */}
+              {/* Checklist com collapse/expand */}
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <CheckSquare size={16} className="text-slate-400" />
                   <span className="text-sm font-semibold text-white">Checklist</span>
                   {checkTotal > 0 && (
-                    <span className="text-xs text-slate-500 ml-auto">{checkPercent}%</span>
+                    <>
+                      <span className="text-xs text-slate-500 ml-auto">{checkPercent}%</span>
+                      <button
+                        onClick={() => setHideCompleted((v) => !v)}
+                        className="text-[10px] text-slate-500 hover:text-slate-300 ml-2 transition-colors"
+                      >
+                        {hideCompleted ? 'Mostrar concluídos' : 'Ocultar concluídos'}
+                      </button>
+                    </>
                   )}
                 </div>
                 {checkTotal > 0 && (
@@ -669,21 +785,105 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                         style={{ width: `${checkPercent}%` }}
                       />
                     </div>
-                    <div className="space-y-1 mb-3">
-                      {checklist.filter((i) => i.text).map((item) => (
-                        <div key={item.id} className="flex items-center gap-2 group/ci px-1 py-1 rounded hover:bg-slate-800/30">
-                          <button onClick={() => toggleCheckItem(item.id)} className="shrink-0 text-slate-400 hover:text-emerald-400 transition-colors">
-                            {item.checked
-                              ? <CheckCircle2 size={18} className="text-emerald-500" />
-                              : <Square size={18} />
-                            }
-                          </button>
-                          <span className={`flex-1 text-sm ${item.checked ? 'text-slate-500 line-through' : 'text-slate-300'}`}>{item.text}</span>
-                          <button onClick={() => removeCheckItem(item.id)} className="opacity-0 group-hover/ci:opacity-100 text-slate-500 hover:text-red-400 transition-all">
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
+                    <div className="space-y-0.5 mb-3">
+                      {rootItems
+                        .filter((item) => !(hideCompleted && item.checked))
+                        .map((item) => {
+                          const subs = getSubItems(item.id);
+                          const hasSubs = subs.length > 0;
+                          const isExpanded = expandedItems.has(item.id);
+                          const subsDone = subs.filter((s) => s.checked).length;
+
+                          return (
+                            <div key={item.id}>
+                              {/* Root item */}
+                              <div className="flex items-center gap-1.5 group/ci px-1 py-1 rounded hover:bg-slate-800/30">
+                                {/* Expand toggle */}
+                                <button
+                                  onClick={() => hasSubs && toggleExpandItem(item.id)}
+                                  className={`shrink-0 w-4 h-4 flex items-center justify-center transition-transform ${hasSubs ? 'text-slate-500 hover:text-slate-300 cursor-pointer' : 'text-transparent cursor-default'}`}
+                                >
+                                  <ChevronRight
+                                    size={12}
+                                    className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                                  />
+                                </button>
+                                <button onClick={() => toggleCheckItem(item.id)} className="shrink-0 text-slate-400 hover:text-emerald-400 transition-colors">
+                                  {item.checked
+                                    ? <CheckCircle2 size={18} className="text-emerald-500" />
+                                    : <Square size={18} />
+                                  }
+                                </button>
+                                <span className={`flex-1 text-sm ${item.checked ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                                  {item.text}
+                                  {hasSubs && (
+                                    <span className="text-[10px] text-slate-500 ml-1.5">({subsDone}/{subs.length})</span>
+                                  )}
+                                </span>
+                                {/* Add sub-item button */}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setNewSubItemParent(item.id); setExpandedItems((prev) => new Set(prev).add(item.id)); }}
+                                  className="opacity-0 group-hover/ci:opacity-100 text-slate-500 hover:text-emerald-400 transition-all"
+                                  title="Adicionar sub-item"
+                                >
+                                  <Plus size={13} />
+                                </button>
+                                <button onClick={() => removeCheckItem(item.id)} className="opacity-0 group-hover/ci:opacity-100 text-slate-500 hover:text-red-400 transition-all">
+                                  <X size={14} />
+                                </button>
+                              </div>
+
+                              {/* Sub-items (collapsible) */}
+                              <div
+                                className="overflow-hidden transition-all duration-200"
+                                style={{
+                                  maxHeight: isExpanded ? `${(subs.length + (newSubItemParent === item.id ? 1 : 0)) * 40 + 8}px` : '0px',
+                                  opacity: isExpanded ? 1 : 0,
+                                }}
+                              >
+                                <div className="ml-6 border-l border-slate-700/50 pl-2 space-y-0.5 py-0.5">
+                                  {subs
+                                    .filter((sub) => !(hideCompleted && sub.checked))
+                                    .map((sub) => (
+                                    <div key={sub.id} className="flex items-center gap-2 group/sub px-1 py-1 rounded hover:bg-slate-800/30">
+                                      <button onClick={() => toggleCheckItem(sub.id)} className="shrink-0 text-slate-400 hover:text-emerald-400 transition-colors">
+                                        {sub.checked
+                                          ? <CheckCircle2 size={15} className="text-emerald-500" />
+                                          : <Square size={15} />
+                                        }
+                                      </button>
+                                      <span className={`flex-1 text-xs ${sub.checked ? 'text-slate-500 line-through' : 'text-slate-400'}`}>{sub.text}</span>
+                                      <button onClick={() => removeCheckItem(sub.id)} className="opacity-0 group-hover/sub:opacity-100 text-slate-500 hover:text-red-400 transition-all">
+                                        <X size={12} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                  {/* Inline sub-item input */}
+                                  {newSubItemParent === item.id && (
+                                    <div className="flex items-center gap-1.5 py-1">
+                                      <input
+                                        type="text"
+                                        value={newSubItemText}
+                                        onChange={(e) => setNewSubItemText(e.target.value)}
+                                        placeholder="Sub-item..."
+                                        autoFocus
+                                        className="flex-1 bg-slate-800 border border-slate-700/50 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') addSubItem(item.id);
+                                          if (e.key === 'Escape') { setNewSubItemParent(null); setNewSubItemText(''); }
+                                        }}
+                                        onBlur={() => { if (!newSubItemText.trim()) { setNewSubItemParent(null); setNewSubItemText(''); } }}
+                                      />
+                                      <button onClick={() => addSubItem(item.id)} className="px-2 py-1 bg-slate-700 hover:bg-emerald-600 text-white text-[10px] rounded transition-colors">
+                                        <Plus size={11} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                     </div>
                   </>
                 )}
@@ -704,6 +904,127 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                   </button>
                 </div>
               </div>
+
+              {/* ── Anexos: Drop zone + Thumbnails ──────────── */}
+              {!isNew && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Paperclip size={16} className="text-slate-400" />
+                    <span className="text-sm font-semibold text-white">Anexos</span>
+                    {attachments.length > 0 && (
+                      <span className="text-xs text-slate-500 ml-auto">{attachments.length} arquivo{attachments.length !== 1 ? 's' : ''}</span>
+                    )}
+                  </div>
+
+                  {/* Drop zone */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all duration-200 mb-3 ${
+                      isDragOver
+                        ? 'border-emerald-500 bg-emerald-500/10 scale-[1.01]'
+                        : 'border-slate-700/50 hover:border-slate-600 bg-slate-800/30 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    {isUploading ? (
+                      <div className="flex items-center justify-center gap-2 py-2">
+                        <Loader2 size={18} className="animate-spin text-emerald-400" />
+                        <span className="text-sm text-emerald-400">Enviando...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1.5 py-1">
+                        <Upload size={20} className={isDragOver ? 'text-emerald-400' : 'text-slate-500'} />
+                        <p className="text-xs text-slate-400">
+                          {isDragOver ? 'Solte aqui!' : 'Arraste arquivos ou clique para enviar'}
+                        </p>
+                        <p className="text-[10px] text-slate-600">Imagens, PDFs, Docs, Videos (max 50MB)</p>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.length) handleFileUpload(e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </div>
+
+                  {/* Thumbnails / Preview grid */}
+                  {attachments.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {attachments.map((att) => {
+                        const cat = getFileCategory(att.fileType);
+                        return (
+                          <div
+                            key={att.id}
+                            className="group/att relative bg-slate-800 rounded-lg border border-slate-700/50 overflow-hidden hover:border-slate-600 transition-colors"
+                          >
+                            {/* Preview area */}
+                            {cat === 'image' ? (
+                              <div
+                                className="h-24 bg-slate-900 cursor-pointer relative"
+                                onClick={() => { setLightboxUrl(att.fileUrl); setLightboxType('image'); }}
+                              >
+                                <img src={att.fileUrl} alt={att.fileName} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center">
+                                  <Eye size={18} className="text-white opacity-0 group-hover/att:opacity-100 transition-opacity" />
+                                </div>
+                              </div>
+                            ) : cat === 'video' ? (
+                              <div
+                                className="h-24 bg-slate-900 cursor-pointer relative flex items-center justify-center"
+                                onClick={() => { setLightboxUrl(att.fileUrl); setLightboxType('video'); }}
+                              >
+                                <Film size={28} className="text-purple-400/60" />
+                                <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <Eye size={18} className="text-white opacity-0 group-hover/att:opacity-100 transition-opacity" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="h-24 bg-slate-900 flex items-center justify-center">
+                                <FileText size={28} className="text-orange-400/60" />
+                              </div>
+                            )}
+
+                            {/* File info */}
+                            <div className="px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+                              {getFileIcon(att.fileType)}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] text-slate-300 truncate leading-tight">{att.fileName}</p>
+                                <p className="text-[9px] text-slate-500">{formatFileSize(att.fileSize)}</p>
+                              </div>
+                              <div className="flex items-center gap-0.5 opacity-0 group-hover/att:opacity-100 transition-opacity">
+                                <a
+                                  href={att.fileUrl}
+                                  download={att.fileName}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-1 text-slate-500 hover:text-emerald-400 transition-colors rounded"
+                                  title="Download"
+                                >
+                                  <Download size={11} />
+                                </a>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteAttachment(att.id); }}
+                                  className="p-1 text-slate-500 hover:text-red-400 transition-colors rounded"
+                                  title="Excluir"
+                                >
+                                  <Trash2 size={11} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Coluna direita: Sidebar */}
@@ -830,6 +1151,37 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
           )}
         </div>
       </div>
+
+      {/* ── Lightbox overlay ───────────────────────────────── */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-8 animate-fade-in"
+          onClick={() => { setLightboxUrl(null); setLightboxType(null); }}
+        >
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            onClick={() => { setLightboxUrl(null); setLightboxType(null); }}
+          >
+            <X size={20} />
+          </button>
+          {lightboxType === 'image' ? (
+            <img
+              src={lightboxUrl}
+              alt="Preview"
+              className="max-w-full max-h-full rounded-lg shadow-2xl object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : lightboxType === 'video' ? (
+            <video
+              src={lightboxUrl}
+              controls
+              autoPlay
+              className="max-w-full max-h-full rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

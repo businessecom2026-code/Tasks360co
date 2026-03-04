@@ -17,6 +17,10 @@ export function taskRoutes(prisma) {
           assignee: {
             select: { id: true, name: true, email: true, avatar: true },
           },
+          attachments: {
+            select: { id: true, fileName: true, fileUrl: true, fileType: true, fileSize: true, thumbnailUrl: true, createdAt: true },
+            orderBy: { createdAt: 'desc' },
+          },
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -56,6 +60,10 @@ export function taskRoutes(prisma) {
         include: {
           assignee: {
             select: { id: true, name: true, email: true, avatar: true },
+          },
+          attachments: {
+            select: { id: true, fileName: true, fileUrl: true, fileType: true, fileSize: true, thumbnailUrl: true, createdAt: true },
+            orderBy: { createdAt: 'desc' },
           },
         },
       });
@@ -129,6 +137,10 @@ export function taskRoutes(prisma) {
         include: {
           assignee: {
             select: { id: true, name: true, email: true, avatar: true },
+          },
+          attachments: {
+            select: { id: true, fileName: true, fileUrl: true, fileType: true, fileSize: true, thumbnailUrl: true, createdAt: true },
+            orderBy: { createdAt: 'desc' },
           },
         },
       });

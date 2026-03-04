@@ -14,6 +14,7 @@ import { meetingRoutes } from './server/routes/meetings.js';
 import { billingRoutes } from './server/routes/billing.js';
 import { webhookRoutes } from './server/routes/webhooks.js';
 import { notificationRoutes } from './server/routes/notifications.js';
+import { attachmentRoutes } from './server/routes/attachments.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,9 +103,13 @@ async function startServer() {
   // ─── Protected API routes ──────────────────────────────────────
   app.use('/api/workspaces', authMiddleware, workspaceRoutes(prisma));
   app.use('/api/tasks', authMiddleware, tenantGuard(prisma), taskRoutes(prisma));
+  app.use('/api/tasks', authMiddleware, tenantGuard(prisma), attachmentRoutes(prisma));
   app.use('/api/meetings', authMiddleware, tenantGuard(prisma), meetingRoutes(prisma));
   app.use('/api/billing', authMiddleware, tenantGuard(prisma), billingRoutes(prisma));
   app.use('/api/notifications', authMiddleware, notificationRoutes(prisma));
+
+  // ─── Serve uploaded files ──────────────────────────────────────
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
   // ─── Serve static frontend (production) ────────────────────────
   app.use(express.static(path.join(__dirname, 'dist')));

@@ -9,6 +9,7 @@ import {
   Clock,
   Flag,
   GripVertical,
+  Paperclip,
 } from 'lucide-react';
 import type { Task, TaskLabel, TaskPriority } from '../../types';
 import { useTaskStore } from '../../stores/useTaskStore';
@@ -80,6 +81,7 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
   const checklist = task.checklist || [];
   const checkDone = checklist.filter(i => i.checked).length;
   const checkTotal = checklist.length;
+  const attachmentCount = task.attachments?.length ?? 0;
 
   return (
     <div
@@ -172,6 +174,14 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
                 }`}>
                   <CheckSquare size={10} />
                   {checkDone}/{checkTotal}
+                </span>
+              )}
+
+              {/* Attachment count badge */}
+              {attachmentCount > 0 && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-400">
+                  <Paperclip size={10} />
+                  {attachmentCount}
                 </span>
               )}
 
