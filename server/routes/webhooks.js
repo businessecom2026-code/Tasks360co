@@ -24,45 +24,58 @@ export function webhookRoutes(prisma) {
       console.log(`[Webhook:Revolut] Event: ${event}`, JSON.stringify(order || {}).slice(0, 200));
 
       if (event === 'ORDER_COMPLETED' || event === 'payment_success') {
+        const orderId = order?.id;
         const metadata = order?.metadata || {};
         const { workspaceId, email } = metadata;
 
-        if (workspaceId && email) {
-          // Find the pending membership and activate it
-          const membership = await prisma.membership.findFirst({
-            where: {
-              workspaceId,
-              invitedEmail: email,
-              paymentStatus: 'PENDING',
+        // Primary lookup: by revolutOrderId (idempotent, anti-replay)
+        let membership = orderId
+          ? await prisma.membership.findFirst({
+              where: { revolutOrderId: orderId },
+            })
+          : null;
+
+        // Fallback lookup: by workspace + email (for stub/manual flows)
+        if (!membership && workspaceId && email) {
+          membership = await prisma.membership.findFirst({
+            where: { workspaceId, invitedEmail: email, paymentStatus: 'PENDING' },
+          });
+        }
+
+        if (!membership) {
+          console.warn(`[Webhook:Revolut] No matching membership for order ${orderId}`);
+        } else if (membership.paymentStatus === 'PAID') {
+          // Anti-replay: already processed
+          console.warn(`[Webhook:Revolut] Order ${orderId} already processed — skipping`);
+        } else {
+          const targetWorkspaceId = membership.workspaceId;
+
+          await prisma.membership.update({
+            where: { id: membership.id },
+            data: {
+              inviteAccepted: true,
+              paymentStatus: 'PAID',
+              paidAt: new Date(),
+              revolutOrderId: orderId || membership.revolutOrderId,
             },
           });
 
-          if (membership) {
-            await prisma.membership.update({
-              where: { id: membership.id },
-              data: {
-                inviteAccepted: true,
-                paymentStatus: 'PAID',
-                paidAt: new Date(),
-                revolutOrderId: order?.id || null,
-              },
-            });
+          // Recalculate subscription
+          const activeCount = await prisma.membership.count({
+            where: { workspaceId: targetWorkspaceId, inviteAccepted: true, paymentStatus: 'PAID' },
+          });
 
-            // Recalculate subscription
-            const activeCount = await prisma.membership.count({
-              where: { workspaceId, inviteAccepted: true },
-            });
+          await prisma.subscription.update({
+            where: { workspaceId: targetWorkspaceId },
+            data: {
+              seatCount: activeCount,
+              totalMonthlyValue: 5.0 + Math.max(0, (activeCount - 1) * 3.0),
+            },
+          });
 
-            await prisma.subscription.update({
-              where: { workspaceId },
-              data: {
-                seatCount: activeCount,
-                totalMonthlyValue: 5.0 + Math.max(0, (activeCount - 1) * 3.0),
-              },
-            });
-
-            console.log(`[Webhook:Revolut] Membership activated for ${email} in workspace ${workspaceId}`);
-          }
+          console.log(
+            `[Webhook:Revolut] Membership activated — order: ${orderId}, email: ${membership.invitedEmail}, workspace: ${targetWorkspaceId}`
+          );
         }
       }
 

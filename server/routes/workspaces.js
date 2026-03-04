@@ -105,15 +105,19 @@ export function workspaceRoutes(prisma) {
     }
 
     try {
-      // Verify caller is GESTOR of this workspace
+      // GESTOR or CLIENTE can invite (COLABORADOR cannot)
       const callerMembership = await prisma.membership.findUnique({
         where: {
           userId_workspaceId: { userId: req.user.id, workspaceId },
         },
       });
 
-      if (!callerMembership || callerMembership.roleInWorkspace !== 'GESTOR') {
-        return res.status(403).json({ error: 'Apenas Gestores podem convidar membros' });
+      const canInvite = callerMembership &&
+        (callerMembership.roleInWorkspace === 'GESTOR' ||
+         callerMembership.roleInWorkspace === 'CLIENTE');
+
+      if (!canInvite) {
+        return res.status(403).json({ error: 'Apenas Gestores e Clientes podem convidar membros' });
       }
 
       // Check if user already exists

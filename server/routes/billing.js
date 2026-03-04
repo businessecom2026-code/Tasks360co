@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { createManualCharge } from '../services/billing.js';
+import { requireRole, requireWorkspaceRole } from '../middleware/roleGuard.js';
 
 export function billingRoutes(prisma) {
   const router = Router();
 
-  // GET /api/billing/subscription — get current workspace subscription
+  // GET /api/billing/subscription — all workspace roles can view
   router.get('/subscription', async (req, res) => {
     const workspaceId = req.workspaceId;
 
@@ -24,8 +25,8 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // PATCH /api/billing/subscription — update subscription (e.g., toggle autoRenew)
-  router.patch('/subscription', async (req, res) => {
+  // PATCH /api/billing/subscription — GESTOR only: toggle autoRenew
+  router.patch('/subscription', requireWorkspaceRole('GESTOR'), async (req, res) => {
     const workspaceId = req.workspaceId;
     const { autoRenew } = req.body;
 
@@ -42,54 +43,22 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // GET /api/billing/overview — admin: get billing for all workspaces
-  router.get('/overview', async (req, res) => {
-    // Only SUPER_ADMIN or GESTOR can see billing overview
-    if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'GESTOR') {
-      return res.status(403).json({ error: 'Acesso restrito a administradores' });
-    }
-
+  // GET /api/billing/overview — SUPER_ADMIN only: global subscription view
+  router.get('/overview', requireRole('SUPER_ADMIN'), async (req, res) => {
     try {
-      let subscriptions;
-
-      if (req.user.role === 'SUPER_ADMIN') {
-        // Super admin sees all
-        subscriptions = await prisma.subscription.findMany({
-          include: {
-            workspace: {
-              include: {
-                memberships: {
-                  where: { roleInWorkspace: 'GESTOR' },
-                  include: { user: { select: { name: true } } },
-                  take: 1,
-                },
+      const subscriptions = await prisma.subscription.findMany({
+        include: {
+          workspace: {
+            include: {
+              memberships: {
+                where: { roleInWorkspace: 'GESTOR' },
+                include: { user: { select: { name: true } } },
+                take: 1,
               },
             },
           },
-        });
-      } else {
-        // Gestor sees only their workspaces
-        const memberships = await prisma.membership.findMany({
-          where: { userId: req.user.id, roleInWorkspace: 'GESTOR' },
-          select: { workspaceId: true },
-        });
-
-        const workspaceIds = memberships.map((m) => m.workspaceId);
-        subscriptions = await prisma.subscription.findMany({
-          where: { workspaceId: { in: workspaceIds } },
-          include: {
-            workspace: {
-              include: {
-                memberships: {
-                  where: { roleInWorkspace: 'GESTOR' },
-                  include: { user: { select: { name: true } } },
-                  take: 1,
-                },
-              },
-            },
-          },
-        });
-      }
+        },
+      });
 
       const overview = subscriptions.map((sub) => ({
         workspaceId: sub.workspaceId,
@@ -109,13 +78,9 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // POST /api/billing/manual-charge — admin: generate manual charge via Revolut
-  router.post('/manual-charge', async (req, res) => {
+  // POST /api/billing/manual-charge — SUPER_ADMIN only
+  router.post('/manual-charge', requireRole('SUPER_ADMIN'), async (req, res) => {
     const { workspaceId, amount, description } = req.body;
-
-    if (req.user.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Acesso restrito a Super Admins' });
-    }
 
     try {
       // If no amount specified, get the workspace subscription total

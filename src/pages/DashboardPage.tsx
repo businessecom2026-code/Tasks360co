@@ -12,12 +12,18 @@ import { Header } from '../components/layout/Header';
 import { TaskStatusChart } from '../components/kanban/TaskStatusChart';
 import { useTaskStore } from '../stores/useTaskStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
+import { useAuthStore } from '../stores/useAuthStore';
 import { api } from '../lib/api';
 import type { Meeting, Subscription } from '../types';
 
 export function DashboardPage() {
   const { tasks, fetchTasks } = useTaskStore();
   const { currentWorkspace } = useWorkspaceStore();
+  const { user } = useAuthStore();
+
+  const workspaceRole = currentWorkspace?.membership?.roleInWorkspace;
+  const canViewSubscription =
+    user?.role === 'SUPER_ADMIN' || workspaceRole === 'GESTOR';
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
@@ -100,8 +106,8 @@ export function DashboardPage() {
             )}
           </div>
 
-          {/* Subscription info */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          {/* Subscription info — GESTOR / SUPER_ADMIN only */}
+          {canViewSubscription && <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={18} className="text-green-400" />
               <h3 className="text-white font-semibold">Assinatura</h3>
@@ -136,7 +142,7 @@ export function DashboardPage() {
             ) : (
               <p className="text-gray-500 text-sm py-4 text-center">Sem assinatura ativa</p>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </>
