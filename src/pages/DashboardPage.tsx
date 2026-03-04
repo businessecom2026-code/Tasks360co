@@ -9,6 +9,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { Header } from '../components/layout/Header';
+import { TaskStatusChart } from '../components/kanban/TaskStatusChart';
 import { useTaskStore } from '../stores/useTaskStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { api } from '../lib/api';
@@ -65,6 +66,9 @@ export function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Task status donut chart */}
+        <TaskStatusChart />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Upcoming meetings */}
