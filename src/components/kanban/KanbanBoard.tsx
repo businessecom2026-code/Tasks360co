@@ -67,6 +67,7 @@ export function KanbanBoard() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDesc, setNewTaskDesc] = useState('');
   const [newTaskColor, setNewTaskColor] = useState('blue');
+  const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority | ''>('');
 
   // DnD sensors with activation constraint to distinguish click from drag
   const sensors = useSensors(
@@ -123,10 +124,12 @@ export function KanbanBoard() {
       title: newTaskTitle.trim(),
       description: newTaskDesc.trim() || undefined,
       color: newTaskColor,
+      priority: (newTaskPriority || undefined) as Task['priority'],
       status: 'PENDING',
     });
     setNewTaskTitle('');
     setNewTaskDesc('');
+    setNewTaskPriority('');
     setShowAddModal(false);
   };
 
@@ -360,6 +363,24 @@ export function KanbanBoard() {
                         newTaskColor === c.name ? 'ring-2 ring-white scale-110' : 'opacity-50 hover:opacity-100'
                       }`}
                     />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Prioridade</label>
+                <div className="flex gap-1.5">
+                  {PRIORITY_FILTERS.filter(f => f.value !== 'ALL').map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setNewTaskPriority(newTaskPriority === f.value ? '' : f.value as TaskPriority)}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs transition-all ${
+                        newTaskPriority === f.value
+                          ? 'bg-emerald-600/20 text-emerald-400 ring-1 ring-emerald-500/50'
+                          : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <span>{f.icon}</span>{f.label}
+                    </button>
                   ))}
                 </div>
               </div>

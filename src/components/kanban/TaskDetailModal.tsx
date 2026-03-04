@@ -3,10 +3,12 @@ import {
   X, CreditCard, Tag, Calendar, CheckSquare, AlignLeft,
   Activity, Plus, Trash2,
   Copy, ArrowRight, Clock, Pencil, Flag,
-  Check, Square, CheckCircle2,
+  Check, Square, CheckCircle2, Users,
 } from 'lucide-react';
 import type { Task, TaskStatus, TaskPriority, TaskLabel, ChecklistItem } from '../../types';
 import { useTaskStore } from '../../stores/useTaskStore';
+import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
+import { useAuthStore } from '../../stores/useAuthStore';
 
 interface Props {
   task: Task;
@@ -63,6 +65,8 @@ function generateId() {
 
 export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props) {
   const { deleteTask, moveTask } = useTaskStore();
+  const { members, fetchMembers } = useWorkspaceStore();
+  const { user: currentUser } = useAuthStore();
 
   // ─── Local state ───────────────────────────────────────
   const [title, setTitle] = useState(task.title);
@@ -74,6 +78,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
   const [dueDate, setDueDate] = useState(task.dueDate || '');
   const [priority, setPriority] = useState<TaskPriority | ''>(task.priority || '');
   const [coverColor, setCoverColor] = useState(task.coverColor || '');
+  const [assigneeId, setAssigneeId] = useState<string | undefined>(task.assigneeId);
   const [newCheckItem, setNewCheckItem] = useState('');
   const [showAddCheck, setShowAddCheck] = useState(false);
 
@@ -83,7 +88,16 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
   const [showCoverPicker, setShowCoverPicker] = useState(false);
   const [showMovePicker, setShowMovePicker] = useState(false);
   const [showPriorityPicker, setShowPriorityPicker] = useState(false);
+  const [showAssigneePicker, setShowAssigneePicker] = useState(false);
   const [commentText, setCommentText] = useState('');
+
+  // Fetch members once for assignee picker
+  useEffect(() => {
+    if (members.length === 0) fetchMembers();
+  }, [fetchMembers, members.length]);
+
+  // Accepted members with a linked user
+  const assignableMembers = members.filter((m) => m.inviteAccepted && m.user);
 
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -161,6 +175,14 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
     setCoverColor(color);
     onUpdate({ coverColor: color || undefined });
   };
+
+  const saveAssignee = (id: string | undefined) => {
+    setAssigneeId(id);
+    onUpdate({ assigneeId: id });
+    setShowAssigneePicker(false);
+  };
+
+  const currentAssignee = assignableMembers.find((m) => m.userId === assigneeId)?.user;
 
   const toggleCheckItem = (id: string) => {
     const next = checklist.map(item =>
@@ -333,6 +355,12 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
             >
               <CreditCard size={14} /> Capa
             </button>
+            <button
+              onClick={() => setShowAssigneePicker(!showAssigneePicker)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+            >
+              <Users size={14} /> Membro
+            </button>
           </div>
 
           {/* ── Label picker popover ──────────────────── */}
@@ -430,6 +458,50 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
             </div>
           )}
 
+          {/* ── Assignee picker popover ───────────────── */}
+          {showAssigneePicker && (
+            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-white">Atribuir a</span>
+                <button onClick={() => setShowAssigneePicker(false)} className="text-slate-400 hover:text-white">
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {assignableMembers.length === 0 ? (
+                  <p className="text-xs text-slate-500 py-2 text-center">Nenhum membro no workspace</p>
+                ) : (
+                  assignableMembers.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => saveAssignee(assigneeId === m.userId ? undefined : m.userId ?? undefined)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-700/50 transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-[11px] text-white font-bold shrink-0">
+                        {m.user!.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="text-sm text-white truncate">{m.user!.name}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{m.user!.email}</p>
+                      </div>
+                      {assigneeId === m.userId && (
+                        <Check size={14} className="text-emerald-400 shrink-0" />
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+              {assigneeId && (
+                <button
+                  onClick={() => saveAssignee(undefined)}
+                  className="mt-2 w-full text-xs text-slate-400 hover:text-white py-1 rounded bg-slate-700 hover:bg-slate-600 transition-colors"
+                >
+                  Remover atribuição
+                </button>
+              )}
+            </div>
+          )}
+
           {/* ── Active labels display ─────────────────── */}
           {labels.length > 0 && (
             <div className="mb-4">
@@ -489,6 +561,22 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── Assignee display ──────────────────────── */}
+          {currentAssignee && (
+            <div className="mb-4">
+              <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Responsável</span>
+              <button
+                onClick={() => setShowAssigneePicker(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 transition-colors"
+              >
+                <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold">
+                  {currentAssignee.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm text-white">{currentAssignee.name}</span>
+              </button>
             </div>
           )}
 
@@ -669,7 +757,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                 {/* Comment input */}
                 <div className="flex items-start gap-2 mb-4">
                   <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold shrink-0 mt-0.5">
-                    U
+                    {currentUser?.name?.charAt(0).toUpperCase() ?? 'U'}
                   </div>
                   <div className="flex-1">
                     <input
