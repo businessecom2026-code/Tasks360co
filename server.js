@@ -19,12 +19,30 @@ import { attachmentRoutes } from './server/routes/attachments.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Singleton: evita múltiplas instâncias em hot-reload / Render restart
+const globalForPrisma = globalThis;
+const prisma = globalForPrisma.__prisma ?? new PrismaClient({
+  datasources: { db: { url: process.env.DATABASE_URL } },
+});
+if (process.env.NODE_ENV !== 'production') globalForPrisma.__prisma = prisma;
+
 async function startServer() {
   const app = express();
   const port = process.env.PORT || 3000;
-  const prisma = new PrismaClient();
 
-  app.use(cors());
+  // CORS: aceita Render production + dev local
+  const allowedOrigins = [
+    'http://localhost:5173',
+    process.env.APP_URL,
+  ].filter(Boolean);
+
+  app.use(cors({
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) cb(null, true);
+      else cb(null, true); // permissivo em produção (mesmo domínio serve dist/)
+    },
+    credentials: true,
+  }));
   app.use(express.json({ limit: '50mb' }));
 
   // ─── Seed: Create Super Admin if not exists ────────────────────
