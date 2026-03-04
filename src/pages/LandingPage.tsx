@@ -67,15 +67,24 @@ export function LandingPage() {
             <span className="text-xs text-gray-500 ml-2 font-normal">Engine</span>
           </h1>
           <div className="flex items-center gap-3">
+            {/* Desktop: link texto "Entrar" */}
             <Link
               to="/login"
-              className="text-sm text-gray-400 hover:text-white transition-colors px-3 py-2"
+              className="hidden sm:block text-sm text-gray-400 hover:text-white transition-colors px-3 py-2"
             >
               Entrar
             </Link>
+            {/* Mobile only: botão "Acesso" com estilo do botão principal */}
+            <Link
+              to="/login"
+              className="sm:hidden text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Acesso
+            </Link>
+            {/* Desktop only: botão "Começar Grátis" */}
             <Link
               to="/register"
-              className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="hidden sm:inline-flex text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               Começar Grátis
             </Link>
