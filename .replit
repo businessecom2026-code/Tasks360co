@@ -1,0 +1,16 @@
+run = "npm run replit:start"
+entrypoint = "server.js"
+
+[env]
+NODE_ENV = "production"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "npm run replit:start"]
+build = ["sh", "-c", "npm run replit:build"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80

@@ -8,3 +8,6 @@ dist
 prisma/*.db
 prisma/migrations
 uploads/
+.cache/
+.config/
+.upm/
