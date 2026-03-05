@@ -63,5 +63,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "lucide-react": "0.395.0"
   }
 }
