@@ -98,7 +98,8 @@ export function workspaceRoutes(prisma) {
 
   // POST /api/workspaces/invite — invite a member (gated by Revolut checkout)
   router.post('/invite', async (req, res) => {
-    const { workspaceId, email, roleInWorkspace } = req.body;
+    const workspaceId = req.headers['x-workspace-id'] || req.body.workspaceId;
+    const { email, roleInWorkspace } = req.body;
 
     if (!workspaceId || !email) {
       return res.status(400).json({ error: 'workspaceId e email obrigatórios' });

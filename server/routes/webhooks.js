@@ -19,12 +19,12 @@ export function webhookRoutes(prisma) {
         return res.status(401).json({ error: 'Invalid webhook signature' });
       }
 
-      const { event, order } = req.body;
+      const { event, order, order_id: rootOrderId } = req.body;
 
       console.log(`[Webhook:Revolut] Event: ${event}`, JSON.stringify(order || {}).slice(0, 200));
 
       if (event === 'ORDER_COMPLETED' || event === 'payment_success') {
-        const orderId = order?.id;
+        const orderId = order?.id || rootOrderId;
         const metadata = order?.metadata || {};
         const { workspaceId, email } = metadata;
 

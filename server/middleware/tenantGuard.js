@@ -7,6 +7,13 @@ export function tenantGuard(prisma) {
   return async (req, res, next) => {
     const workspaceId = req.headers['x-workspace-id'];
 
+    // SUPER_ADMIN can access routes without a workspace header (e.g. billing overview)
+    if (!workspaceId && req.user?.role === 'SUPER_ADMIN') {
+      req.workspaceId = null;
+      req.membership = null;
+      return next();
+    }
+
     if (!workspaceId) {
       return res.status(400).json({ error: 'X-Workspace-Id header obrigatório' });
     }
