@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
+import { ThemeToggle } from '../common/ThemeToggle';
 
 interface AppItem {
   to: string;
@@ -98,13 +99,14 @@ export function MobileNav() {
   return (
     <>
       {/* ─── Mobile top bar ─── */}
-      <div className="md:hidden flex items-center justify-between h-14 px-4 bg-slate-900 border-b border-slate-800/60 shrink-0 relative z-50">
-        <h1 className="text-lg font-bold text-white tracking-tight">
+      <div className="md:hidden flex items-center justify-between h-14 px-4 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800/60 shrink-0 relative z-50">
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
           Task<span className="text-emerald-400">360</span>
         </h1>
 
         <div className="flex items-center gap-1">
-          <button className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+          <ThemeToggle />
+          <button className="relative p-2 rounded-xl text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-all">
             <Bell size={20} />
           </button>
 
@@ -113,7 +115,7 @@ export function MobileNav() {
             className={`p-2 rounded-xl transition-all duration-200 ${
               isOpen
                 ? 'bg-emerald-500/20 text-emerald-400'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800'
             }`}
           >
             {isOpen ? <X size={22} /> : <Menu size={22} />}
@@ -137,17 +139,17 @@ export function MobileNav() {
         style={{ maxHeight: 'calc(100vh - 56px)' }}
       >
         <div
-          className="bg-slate-950 rounded-t-3xl border-t border-slate-800/60 overflow-y-auto"
+          className="bg-white dark:bg-slate-950 rounded-t-3xl border-t border-gray-200 dark:border-slate-800/60 overflow-y-auto"
           style={{ maxHeight: 'calc(100vh - 56px)' }}
         >
           {/* Pull indicator bar */}
           <div className="flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 rounded-full bg-slate-700" />
+            <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-slate-700" />
           </div>
 
           <div className="px-5 pb-6 pt-2">
             {/* Workspace Switcher */}
-            <div className="mb-5 bg-slate-900/80 border border-slate-800/60 rounded-2xl overflow-hidden">
+            <div className="mb-5 bg-gray-50 dark:bg-slate-900/80 border border-gray-200 dark:border-slate-800/60 rounded-2xl overflow-hidden">
               <WorkspaceSwitcher />
             </div>
 
@@ -170,19 +172,19 @@ export function MobileNav() {
                         transition-all duration-200 active:scale-90
                         ${isActive
                           ? `${item.color} ring-2 ${item.activeRing} shadow-lg`
-                          : 'bg-slate-800/80 group-hover:bg-slate-800 group-hover:scale-105'
+                          : 'bg-gray-100 dark:bg-slate-800/80 group-hover:bg-gray-200 dark:group-hover:bg-slate-800 group-hover:scale-105'
                         }
                       `}>
                         <item.icon
                           size={24}
                           strokeWidth={1.8}
-                          className={`transition-colors ${isActive ? item.iconColor : 'text-slate-400 group-hover:text-slate-200'}`}
+                          className={`transition-colors ${isActive ? item.iconColor : 'text-gray-500 dark:text-slate-400 group-hover:text-gray-700 dark:group-hover:text-slate-200'}`}
                         />
                       </div>
 
                       {/* Label */}
                       <span className={`text-[11px] font-medium truncate max-w-full transition-colors ${
-                        isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
+                        isActive ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-slate-500 group-hover:text-gray-700 dark:group-hover:text-slate-300'
                       }`}>
                         {item.label}
                       </span>
@@ -200,8 +202,8 @@ export function MobileNav() {
               >
                 <Columns3 size={18} className="text-emerald-400 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-white">Abrir Kanban</p>
-                  <p className="text-[10px] text-slate-500">Gerir tarefas</p>
+                  <p className="text-xs font-medium text-gray-900 dark:text-white">Abrir Kanban</p>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-500">Gerir tarefas</p>
                 </div>
               </NavLink>
               <NavLink
@@ -210,25 +212,25 @@ export function MobileNav() {
               >
                 <Video size={18} className="text-purple-400 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-white">Reunioes</p>
-                  <p className="text-[10px] text-slate-500">Agendar & IA</p>
+                  <p className="text-xs font-medium text-gray-900 dark:text-white">Reunioes</p>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-500">Agendar & IA</p>
                 </div>
               </NavLink>
             </div>
 
             {/* ─── User card ─── */}
-            <div className="bg-slate-900/60 border border-slate-800/60 rounded-2xl p-4">
+            <div className="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800/60 rounded-2xl p-4">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-emerald-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-lg shadow-emerald-500/20">
                   {user?.name?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium truncate">{user?.name}</p>
-                  <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+                  <p className="text-sm text-gray-900 dark:text-white font-medium truncate">{user?.name}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-slate-500 truncate">{user?.email}</p>
                 </div>
                 <button
                   onClick={logout}
-                  className="p-2.5 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  className="p-2.5 rounded-xl text-gray-500 dark:text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
                   title="Sair"
                 >
                   <LogOut size={18} />
