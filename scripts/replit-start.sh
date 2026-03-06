@@ -31,4 +31,4 @@ if [ ! -d "dist" ]; then
 fi
 
 echo "🚀 Iniciando servidor..."
-node server.js
+exec node server.js 2>&1

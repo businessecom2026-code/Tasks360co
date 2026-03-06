@@ -31,6 +31,21 @@ async function startServer() {
   const app = express();
   const port = process.env.PORT || 3000;
 
+  // ─── Validate critical env vars ──────────────────────────────
+  if (!process.env.DATABASE_URL) {
+    console.error('FATAL: DATABASE_URL not set. Server cannot start without a database.');
+    process.exit(1);
+  }
+
+  // ─── Test DB connection early ────────────────────────────────
+  try {
+    await prisma.$connect();
+    console.log('Database connected successfully.');
+  } catch (err) {
+    console.error('FATAL: Cannot connect to database:', err.message);
+    process.exit(1);
+  }
+
   // CORS: aceita Render production + dev local
   const allowedOrigins = [
     'http://localhost:5173',
@@ -45,6 +60,17 @@ async function startServer() {
     credentials: true,
   }));
   app.use(express.json({ limit: '50mb' }));
+
+  // ─── Healthcheck (no auth, no DB required for liveness) ───────
+  app.get('/health', async (_req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({ status: 'ok', db: 'connected', uptime: process.uptime() });
+    } catch (err) {
+      console.error('[Health] DB check failed:', err.message);
+      res.status(503).json({ status: 'degraded', db: 'disconnected', error: err.message });
+    }
+  });
 
   // ─── Seed: Create Super Admin if not exists ────────────────────
   const seedAdmin = async () => {
