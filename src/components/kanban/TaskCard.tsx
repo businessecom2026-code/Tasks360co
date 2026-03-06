@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import {
   Calendar,
@@ -65,7 +66,7 @@ function LabelPill({ label }: { label: TaskLabel }) {
   );
 }
 
-export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
+export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
   const { deleteTask, syncingTaskIds } = useTaskStore();
   const isSyncing = syncingTaskIds.has(task.id);
 
@@ -239,4 +240,4 @@ export function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
       )}
     </div>
   );
-}
+});

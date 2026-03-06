@@ -1,5 +1,6 @@
-import { Video, Calendar, Users, ExternalLink, Trash2 } from 'lucide-react';
+import { Video, Calendar, Users, ExternalLink, Trash2, Download } from 'lucide-react';
 import type { Meeting } from '../../types';
+import { generateMeetingPdf } from '../../lib/meetingPdf';
 
 interface Props {
   meetings: Meeting[];
@@ -60,6 +61,18 @@ export function MeetingList({ meetings, onDelete, onSelect }: Props) {
             </div>
 
             <div className="flex items-center gap-2 ml-4">
+              {meeting.summary && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    generateMeetingPdf(meeting);
+                  }}
+                  className="text-gray-500 hover:text-emerald-400 transition-colors"
+                  title="Download PDF"
+                >
+                  <Download size={16} />
+                </button>
+              )}
               {meeting.link && (
                 <a
                   href={meeting.link}
