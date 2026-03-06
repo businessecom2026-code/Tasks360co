@@ -109,14 +109,8 @@ async function startServer() {
   // ─── Webhook routes (no auth required) ─────────────────────────
   app.use('/api/webhooks', webhookRoutes(prisma));
 
-  // ─── Auth routes (login/register are public, rest protected) ───
-  const authRouter = authRoutes(prisma);
-  app.use('/api/auth', (req, res, next) => {
-    if (req.path === '/login' || req.path === '/register' || req.path === '/google/callback') {
-      return next();
-    }
-    return authMiddleware(req, res, next);
-  }, authRouter);
+  // ─── Auth routes (auth applied per-route inside router) ───────────
+  app.use('/api/auth', authRoutes(prisma));
 
   // ─── Protected API routes ──────────────────────────────────────
   app.use('/api/workspaces', authMiddleware, workspaceRoutes(prisma));

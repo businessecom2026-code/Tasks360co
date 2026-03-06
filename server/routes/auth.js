@@ -61,8 +61,8 @@ export function authRoutes(prisma) {
     }
   });
 
-  // GET /api/auth/me
-  router.get('/me', async (req, res) => {
+  // GET /api/auth/me (protected)
+  router.get('/me', authMiddleware, async (req, res) => {
     try {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
@@ -146,8 +146,8 @@ export function authRoutes(prisma) {
     }
   });
 
-  // PATCH /api/auth/me
-  router.patch('/me', async (req, res) => {
+  // PATCH /api/auth/me (protected)
+  router.patch('/me', authMiddleware, async (req, res) => {
     const { name, activeWorkspaceId } = req.body;
     const data = {};
 
