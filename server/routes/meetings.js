@@ -43,7 +43,7 @@ export function meetingRoutes(prisma) {
   // POST /api/meetings — create a meeting
   router.post('/', async (req, res) => {
     const workspaceId = req.workspaceId;
-    const { title, date, time, participants, link, platform } = req.body;
+    const { title, date, time, participants, link, platform, recordWithAi } = req.body;
 
     if (!title) {
       return res.status(400).json({ error: 'Título obrigatório' });
@@ -59,6 +59,7 @@ export function meetingRoutes(prisma) {
           link,
           platform: platform || 'Google Meet',
           workspaceId,
+          recordWithAi: recordWithAi === true,
         },
       });
 

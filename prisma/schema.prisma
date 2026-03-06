@@ -43,6 +43,16 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum RecordingStatus {
+  IDLE
+  RECORDING
+  PAUSED
+  STOPPED
+  PROCESSING
+  DONE
+  FAILED
+}
+
 // ─── Models ──────────────────────────────────────────────
 
 model User {
@@ -138,7 +148,7 @@ model Attachment {
 }
 
 model Meeting {
-  id             String   @id @default(cuid())
+  id             String             @id @default(cuid())
   title          String
   date           String
   time           String
@@ -146,12 +156,32 @@ model Meeting {
   link           String?
   platform       String?
   workspaceId    String
-  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace      Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   recordingUrl   String?
   summary        String?
   suggestedTasks Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  recordWithAi   Boolean            @default(false)
+  recordings     RecordingSession[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model RecordingSession {
+  id              String          @id @default(cuid())
+  meetingId       String
+  meeting         Meeting         @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  status          RecordingStatus @default(IDLE)
+  startedAt       DateTime?
+  pausedAt        DateTime?
+  stoppedAt       DateTime?
+  totalDurationMs Int             @default(0)
+  audioUrl        String?
+  processingJobId String?
+  errorMessage    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([meetingId])
 }
 
 model Subscription {

@@ -6,6 +6,7 @@ export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'REVIEW' | 'DONE';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type SubStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIAL';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+export type RecordingStatus = 'IDLE' | 'RECORDING' | 'PAUSED' | 'STOPPED' | 'PROCESSING' | 'DONE' | 'FAILED';
 
 export interface TaskLabel {
   name: string;
@@ -107,6 +108,23 @@ export interface Meeting {
   recordingUrl?: string;
   summary?: string;
   suggestedTasks?: SuggestedTask[];
+  recordWithAi?: boolean;
+  recordings?: RecordingSession[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecordingSession {
+  id: string;
+  meetingId: string;
+  status: RecordingStatus;
+  startedAt?: string;
+  pausedAt?: string;
+  stoppedAt?: string;
+  totalDurationMs: number;
+  audioUrl?: string;
+  processingJobId?: string;
+  errorMessage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,7 +150,7 @@ export interface Subscription {
 
 // ─── Notifications ───────────────────────────────────────
 
-export type NotificationType = 'task_assigned' | 'task_moved' | 'invite_received' | 'meeting_created' | 'payment_success';
+export type NotificationType = 'task_assigned' | 'task_moved' | 'invite_received' | 'meeting_created' | 'payment_success' | 'recording_ready';
 
 export interface Notification {
   id: string;

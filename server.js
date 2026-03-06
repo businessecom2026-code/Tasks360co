@@ -15,6 +15,7 @@ import { billingRoutes } from './server/routes/billing.js';
 import { webhookRoutes } from './server/routes/webhooks.js';
 import { notificationRoutes } from './server/routes/notifications.js';
 import { attachmentRoutes } from './server/routes/attachments.js';
+import { recordingRoutes } from './server/routes/recordings.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -117,6 +118,7 @@ async function startServer() {
   app.use('/api/tasks', authMiddleware, tenantGuard(prisma), taskRoutes(prisma));
   app.use('/api/tasks', authMiddleware, tenantGuard(prisma), attachmentRoutes(prisma));
   app.use('/api/meetings', authMiddleware, tenantGuard(prisma), meetingRoutes(prisma));
+  app.use('/api/recordings', authMiddleware, tenantGuard(prisma), recordingRoutes(prisma));
   app.use('/api/billing', authMiddleware, tenantGuard(prisma), billingRoutes(prisma));
   app.use('/api/notifications', authMiddleware, notificationRoutes(prisma));
 

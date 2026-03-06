@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Mic } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { MeetingList } from '../components/meetings/MeetingList';
 import { MeetingUpload } from '../components/meetings/MeetingUpload';
+import { RecordingControls } from '../components/meetings/RecordingControls';
+import { RecordingReportPanel } from '../components/meetings/RecordingReportPanel';
 import { api } from '../lib/api';
 import type { Meeting } from '../types';
 
@@ -11,7 +13,14 @@ export function MeetingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newMeeting, setNewMeeting] = useState({ title: '', date: '', time: '', platform: 'Google Meet' });
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
+  const [newMeeting, setNewMeeting] = useState({
+    title: '',
+    date: '',
+    time: '',
+    platform: 'Google Meet',
+    recordWithAi: false,
+  });
 
   useEffect(() => {
     fetchMeetings();
@@ -34,13 +43,28 @@ export function MeetingsPage() {
     if (res.success && res.data) {
       setMeetings((prev) => [res.data!, ...prev]);
       setShowCreateForm(false);
-      setNewMeeting({ title: '', date: '', time: '', platform: 'Google Meet' });
+
+      // If recordWithAi, auto-select to show recording controls
+      if (newMeeting.recordWithAi) {
+        setSelectedMeeting(res.data);
+      }
+
+      setNewMeeting({ title: '', date: '', time: '', platform: 'Google Meet', recordWithAi: false });
     }
   };
 
   const handleDelete = async (id: string) => {
     await api.delete(`/meetings/${id}`);
     setMeetings((prev) => prev.filter((m) => m.id !== id));
+    if (selectedMeeting?.id === id) setSelectedMeeting(null);
+  };
+
+  const handleSelectMeeting = (meeting: Meeting) => {
+    setSelectedMeeting(meeting);
+  };
+
+  const handleRecordingProcessed = () => {
+    fetchMeetings();
   };
 
   return (
@@ -113,6 +137,34 @@ export function MeetingsPage() {
                 />
               </div>
             </div>
+
+            {/* Record with AI toggle */}
+            <div className="mt-4 flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={newMeeting.recordWithAi}
+                    onChange={(e) => setNewMeeting({ ...newMeeting, recordWithAi: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-gray-600 rounded-full peer-checked:bg-red-600 transition-colors" />
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4" />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Mic size={14} className={newMeeting.recordWithAi ? 'text-red-400' : 'text-gray-500'} />
+                  <span className={`text-sm ${newMeeting.recordWithAi ? 'text-white' : 'text-gray-400'}`}>
+                    Gravar com IA
+                  </span>
+                </div>
+              </label>
+              {newMeeting.recordWithAi && (
+                <span className="text-xs text-gray-500">
+                  Abre os controlos de gravação ao criar
+                </span>
+              )}
+            </div>
+
             <button
               onClick={handleCreateMeeting}
               className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -122,16 +174,47 @@ export function MeetingsPage() {
           </div>
         )}
 
-        {/* AI Upload */}
+        {/* AI Upload (file-based) */}
         {showUpload && (
           <MeetingUpload onProcessed={() => { setShowUpload(false); fetchMeetings(); }} />
+        )}
+
+        {/* Selected meeting: Recording controls + Report */}
+        {selectedMeeting && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-white font-medium text-lg">{selectedMeeting.title}</h3>
+              <button
+                onClick={() => setSelectedMeeting(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Recording controls */}
+            <RecordingControls
+              meetingId={selectedMeeting.id}
+              onProcessed={handleRecordingProcessed}
+            />
+
+            {/* AI Report Panel */}
+            <RecordingReportPanel
+              meeting={selectedMeeting}
+              onTasksInjected={() => fetchMeetings()}
+            />
+          </div>
         )}
 
         {/* Meeting list */}
         {isLoading ? (
           <p className="text-gray-500 text-center py-8">Carregando...</p>
         ) : (
-          <MeetingList meetings={meetings} onDelete={handleDelete} />
+          <MeetingList
+            meetings={meetings}
+            onDelete={handleDelete}
+            onSelect={handleSelectMeeting}
+          />
         )}
       </div>
     </>
