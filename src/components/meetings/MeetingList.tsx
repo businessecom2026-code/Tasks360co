@@ -1,5 +1,6 @@
-import { Video, Calendar, Users, ExternalLink, Trash2 } from 'lucide-react';
+import { Video, Calendar, Users, ExternalLink, Trash2, Download } from 'lucide-react';
 import type { Meeting } from '../../types';
+import { generateMeetingPdf } from '../../lib/meetingPdf';
 
 interface Props {
   meetings: Meeting[];
@@ -23,12 +24,12 @@ export function MeetingList({ meetings, onDelete, onSelect }: Props) {
       {meetings.map((meeting) => (
         <div
           key={meeting.id}
-          className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer"
+          className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
           onClick={() => onSelect?.(meeting)}
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h4 className="text-white font-medium">{meeting.title}</h4>
+              <h4 className="text-gray-900 dark:text-white font-medium">{meeting.title}</h4>
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
                 <span className="flex items-center gap-1">
                   <Calendar size={14} />
@@ -39,12 +40,12 @@ export function MeetingList({ meetings, onDelete, onSelect }: Props) {
                   {meeting.participants.length} participante(s)
                 </span>
                 {meeting.platform && (
-                  <span className="text-xs bg-gray-700 px-2 py-0.5 rounded">{meeting.platform}</span>
+                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-gray-600 dark:text-gray-300">{meeting.platform}</span>
                 )}
               </div>
 
               {meeting.summary && (
-                <div className="mt-3 bg-gray-900 rounded-lg p-3">
+                <div className="mt-3 bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
                   <p className="text-xs text-gray-500 mb-1 font-medium">Resumo IA:</p>
                   <p className="text-sm text-gray-300">{meeting.summary}</p>
                 </div>
@@ -60,6 +61,18 @@ export function MeetingList({ meetings, onDelete, onSelect }: Props) {
             </div>
 
             <div className="flex items-center gap-2 ml-4">
+              {meeting.summary && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    generateMeetingPdf(meeting);
+                  }}
+                  className="text-gray-500 hover:text-emerald-400 transition-colors"
+                  title="Download PDF"
+                >
+                  <Download size={16} />
+                </button>
+              )}
               {meeting.link && (
                 <a
                   href={meeting.link}

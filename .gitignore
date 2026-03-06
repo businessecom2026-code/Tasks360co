@@ -7,3 +7,7 @@ dist
 .DS_Store
 prisma/*.db
 prisma/migrations
+uploads/
+.cache/
+.config/
+.upm/

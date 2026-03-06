@@ -1,11 +1,11 @@
 /**
- * Billing Service — Revolut Integration
+ * Billing Service — Orchestration layer for subscription billing.
  *
- * Handles:
- * - Creating checkout sessions for seat payments (3.00 EUR)
- * - Processing recurring billing (Base 5.00 + seats × 3.00)
- * - Manual charge generation
+ * Delegates payment operations to RevolutPayService (revolut.js).
+ * Handles: monthly calculation, recurring billing cron, subscription management.
  */
+
+import { revolutPay, createSeatCheckout, createManualCharge } from './revolut.js';
 
 const SEAT_PRICE_EUR = 3.00;
 const BASE_PRICE_EUR = 5.00;
@@ -20,43 +20,18 @@ export function calculateMonthlyTotal(activeSeats) {
 }
 
 /**
- * Create a Revolut checkout session for a seat invite.
- *
- * @param {object} params
- * @param {string} params.workspaceId
- * @param {string} params.email
- * @param {string} params.roleInWorkspace
- * @returns {Promise<{ checkoutUrl: string, orderId: string }>}
+ * Verify Revolut webhook signature.
+ * Delegates to RevolutPayService.
  */
-export async function createSeatCheckout({ workspaceId, email, roleInWorkspace }) {
-  console.log(`[Billing] Creating checkout for ${email} in workspace ${workspaceId}`);
+export function verifyWebhookSignature(payload, signature) {
+  return revolutPay.verifyWebhookSignature(payload, signature);
+}
 
-  // In production:
-  // const response = await fetch('https://merchant.revolut.com/api/orders', {
-  //   method: 'POST',
-  //   headers: {
-  //     'Authorization': `Bearer ${process.env.REVOLUT_API_KEY}`,
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify({
-  //     amount: SEAT_PRICE_EUR * 100, // Revolut uses cents
-  //     currency: 'EUR',
-  //     description: `Task360 - Assento para ${email}`,
-  //     metadata: { workspaceId, email, roleInWorkspace },
-  //     checkout: {
-  //       success_url: `${process.env.APP_URL}/admin?invited=${email}`,
-  //       failure_url: `${process.env.APP_URL}/admin?invite_failed=true`,
-  //     },
-  //   }),
-  // });
-  //
-  // const order = await response.json();
-  // return { checkoutUrl: order.checkout_url, orderId: order.id };
-
-  return {
-    checkoutUrl: `https://checkout.revolut.com/stub?workspace=${workspaceId}&email=${email}`,
-    orderId: `stub-${Date.now()}`,
-  };
+/**
+ * Retrieve a Revolut order by ID (for status checking).
+ */
+export async function getOrder(orderId) {
+  return revolutPay.getOrder(orderId);
 }
 
 /**
@@ -72,13 +47,37 @@ export async function processRecurringBilling(prisma) {
       include: { workspace: true },
     });
 
+    const results = [];
+
     for (const sub of subscriptions) {
-      // In production: Create Revolut payment order
-      console.log(`[Billing] Charging workspace ${sub.workspace.name}: ${sub.totalMonthlyValue.toFixed(2)} EUR`);
+      if (!revolutPay.isConfigured) {
+        console.log(`[Billing] (stub) Charging workspace ${sub.workspace.name}: ${sub.totalMonthlyValue.toFixed(2)} EUR`);
+        results.push({ workspace: sub.workspace.name, amount: sub.totalMonthlyValue, status: 'stub' });
+        continue;
+      }
+
+      try {
+        const result = await revolutPay.createOrder({
+          amount: sub.totalMonthlyValue,
+          description: `Task360 — Fatura mensal ${sub.workspace.name}`,
+          metadata: { workspaceId: sub.workspaceId, type: 'recurring' },
+        });
+
+        console.log(`[Billing] Recurring charge for ${sub.workspace.name}: ${sub.totalMonthlyValue.toFixed(2)} EUR — Order: ${result.orderId}`);
+        results.push({ workspace: sub.workspace.name, amount: sub.totalMonthlyValue, orderId: result.orderId, status: 'created' });
+      } catch (err) {
+        console.error(`[Billing] Failed to charge ${sub.workspace.name}:`, err.message);
+        results.push({ workspace: sub.workspace.name, status: 'failed', error: err.message });
+      }
     }
 
     console.log(`[Billing] Processed ${subscriptions.length} recurring charges`);
+    return results;
   } catch (err) {
     console.error('[Billing] Recurring billing failed:', err.message);
+    throw err;
   }
 }
+
+// Re-export payment functions from revolut.js
+export { createSeatCheckout, createManualCharge };
