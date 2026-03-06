@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
-  <rect width="192" height="192" rx="40" fill="#030712"/>
-  <rect x="8" y="8" width="176" height="176" rx="34" fill="#111827" stroke="#1f2937" stroke-width="2"/>
-  <text x="96" y="80" text-anchor="middle" font-family="system-ui, sans-serif" font-size="48" font-weight="700" fill="white">Task</text>
-  <text x="96" y="130" text-anchor="middle" font-family="system-ui, sans-serif" font-size="48" font-weight="700" fill="#2563eb">360</text>
-</svg>
