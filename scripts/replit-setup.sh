@@ -30,8 +30,8 @@ fi
 
 # ─── 3. Instalar dependências ────────────────────────────
 echo ""
-echo "📦 Instalando dependências..."
-npm ci
+echo "📦 Instalando dependências (incluindo devDependencies para build)..."
+npm ci --include=dev
 
 # ─── 4. Gerar Prisma Client ─────────────────────────────
 echo ""

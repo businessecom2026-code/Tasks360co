@@ -23,9 +23,10 @@ if [ -n "$DATABASE_URL_TEST" ]; then
   (DATABASE_URL="$DATABASE_URL_TEST" npx prisma db push --accept-data-loss 2>/dev/null || true) &
 fi
 
-# Se dist/ não existe, build frontend
+# Se dist/ não existe, build frontend (precisa devDependencies)
 if [ ! -d "dist" ]; then
-  echo "🏗️  Building frontend..."
+  echo "🏗️  Instalando devDependencies e building frontend..."
+  npm install --include=dev
   npm run build
 fi
 
