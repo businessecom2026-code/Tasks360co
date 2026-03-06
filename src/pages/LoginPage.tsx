@@ -19,39 +19,39 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Task<span className="text-blue-500">360</span>
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Gestão de tarefas inteligente</p>
+          <p className="text-gray-500 dark:text-gray-500 text-sm mt-1">Gestão de tarefas inteligente</p>
         </div>
 
         {/* Login form */}
-        <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">E-mail</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">E-mail</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Senha</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Senha</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -79,7 +79,7 @@ export function LoginPage() {
           </Link>
         </p>
 
-        <p className="text-center text-xs text-gray-600 mt-3">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-3">
           Task360 Engine &copy; {new Date().getFullYear()}
         </p>
       </div>

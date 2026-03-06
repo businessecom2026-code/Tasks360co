@@ -53,7 +53,7 @@ function getDueDateStatus(dueDate: string): 'overdue' | 'soon' | 'normal' {
 const DUE_DATE_STYLES = {
   overdue: 'bg-red-500/20 text-red-400',
   soon: 'bg-yellow-500/20 text-yellow-400',
-  normal: 'bg-slate-700/50 text-slate-400',
+  normal: 'bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400',
 };
 
 function LabelPill({ label }: { label: TaskLabel }) {
@@ -90,12 +90,12 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
       className={`
         group relative rounded-lg border transition-all duration-200 cursor-pointer
         ${isOverlay
-          ? 'bg-slate-800 border-emerald-500/50 shadow-2xl shadow-emerald-500/20 rotate-2 scale-105'
+          ? 'bg-white dark:bg-slate-800 border-emerald-500/50 shadow-2xl shadow-emerald-500/20 rotate-2 scale-105'
           : isDragging
-            ? 'opacity-30 border-dashed border-slate-600 bg-slate-900'
+            ? 'opacity-30 border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-900'
             : isDone
-              ? 'animate-task-done bg-slate-800/80 border-emerald-700/30 hover:border-emerald-600/50'
-              : 'bg-slate-800 border-slate-700/50 hover:border-slate-600 hover:shadow-lg hover:shadow-slate-900/50'
+              ? 'animate-task-done bg-white dark:bg-slate-800/80 border-emerald-700/30 hover:border-emerald-600/50'
+              : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700/50 hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-slate-900/50'
         }
         ${isSyncing ? 'opacity-60 pointer-events-none' : ''}
       `}
@@ -116,7 +116,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
           <div
             {...attributes}
             {...listeners}
-            className="flex-shrink-0 w-6 flex items-center justify-center opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab active:cursor-grabbing transition-opacity"
+            className="flex-shrink-0 w-6 flex items-center justify-center opacity-0 group-hover:opacity-40 hover:!opacity-100 cursor-grab active:cursor-grabbing transition-opacity text-gray-400 dark:text-slate-400"
           >
             <GripVertical size={14} className="text-slate-400" />
           </div>
@@ -140,13 +140,13 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
           )}
 
           {/* Title */}
-          <h4 className={`text-sm font-medium leading-snug mb-1 ${isDone ? 'text-emerald-100 line-through decoration-emerald-500/40' : 'text-white'}`}>
+          <h4 className={`text-sm font-medium leading-snug mb-1 ${isDone ? 'text-emerald-800 dark:text-emerald-100 line-through decoration-emerald-500/40' : 'text-gray-900 dark:text-white'}`}>
             {task.title}
           </h4>
 
           {/* Description preview */}
           {task.description && (
-            <p className="text-xs text-slate-400 line-clamp-2 mb-2 leading-relaxed">{task.description}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 line-clamp-2 mb-2 leading-relaxed">{task.description}</p>
           )}
 
           {/* Badges row */}
@@ -171,7 +171,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
               {/* Checklist progress badge */}
               {checkTotal > 0 && (
                 <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                  checkDone === checkTotal ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-400'
+                  checkDone === checkTotal ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400'
                 }`}>
                   <CheckSquare size={10} />
                   {checkDone}/{checkTotal}
@@ -180,7 +180,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
 
               {/* Attachment count badge */}
               {attachmentCount > 0 && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-400">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">
                   <Paperclip size={10} />
                   {attachmentCount}
                 </span>
@@ -207,7 +207,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
                   e.stopPropagation();
                   deleteTask(task.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-500 hover:text-red-400 transition-all rounded"
+                className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 dark:text-slate-500 hover:text-red-400 transition-all rounded"
                 title="Excluir"
               >
                 <Trash2 size={12} />
@@ -216,7 +216,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
               {/* Assignee avatar */}
               {task.assignee && (
                 <div
-                  className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold ring-2 ring-slate-800"
+                  className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold ring-2 ring-white dark:ring-slate-800"
                   title={task.assignee.name}
                 >
                   {task.assignee.name.charAt(0).toUpperCase()}
@@ -229,7 +229,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
 
       {/* Sync spinner overlay */}
       {isSyncing && (
-        <div className="absolute inset-0 bg-slate-900/60 rounded-lg flex items-center justify-center z-10 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 rounded-lg flex items-center justify-center z-10 backdrop-blur-sm">
           <Loader2 size={20} className="animate-spin text-emerald-400" />
         </div>
       )}

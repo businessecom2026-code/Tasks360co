@@ -47,7 +47,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
   return (
     <div
       className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
-        notification.read ? 'bg-gray-900/50' : 'bg-gray-800/70'
+        notification.read ? 'bg-gray-50 dark:bg-gray-900/50' : 'bg-gray-100 dark:bg-gray-800/70'
       }`}
     >
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}>
@@ -55,7 +55,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className={`text-sm font-medium truncate ${notification.read ? 'text-gray-400' : 'text-white'}`}>
+          <p className={`text-sm font-medium truncate ${notification.read ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>
             {notification.title}
           </p>
           {!notification.read && (
@@ -118,13 +118,13 @@ export function NotificationPanel() {
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+      className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-800">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
           <Bell size={16} className="text-blue-400" />
-          <h3 className="text-sm font-semibold text-white">Notificações</h3>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Notificações</h3>
           {unreadCount > 0 && (
             <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded-full">
               {unreadCount}
@@ -143,7 +143,7 @@ export function NotificationPanel() {
           )}
           <button
             onClick={() => setOpen(false)}
-            className="text-gray-500 hover:text-white transition-colors p-1"
+            className="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors p-1"
           >
             <X size={14} />
           </button>
@@ -154,8 +154,8 @@ export function NotificationPanel() {
       <div className="max-h-80 overflow-y-auto p-2 space-y-1">
         {notifications.length === 0 ? (
           <div className="text-center py-8">
-            <Bell size={24} className="text-gray-700 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Sem notificações</p>
+            <Bell size={24} className="text-gray-400 dark:text-gray-700 mx-auto mb-2" />
+            <p className="text-sm text-gray-500 dark:text-gray-600">Sem notificações</p>
           </div>
         ) : (
           notifications.map((n) => <NotificationItem key={n.id} notification={n} />)

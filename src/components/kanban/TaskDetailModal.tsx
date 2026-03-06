@@ -230,7 +230,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
     >
       <div
         ref={modalRef}
-        className="bg-slate-900 rounded-xl w-full max-w-[768px] shadow-2xl border border-slate-700/50 relative animate-modal-enter"
+        className="bg-white dark:bg-slate-900 rounded-xl w-full max-w-[768px] shadow-2xl border border-gray-200 dark:border-slate-700/50 relative animate-modal-enter"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Cover ─────────────────────────────────────── */}
@@ -251,10 +251,10 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
 
         {/* Cover picker popover */}
         {showCoverPicker && (
-          <div className="absolute top-2 right-2 z-30 bg-slate-800 rounded-lg border border-slate-700/50 p-3 shadow-xl w-64">
+          <div className="absolute top-2 right-2 z-30 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-3 shadow-xl w-64">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-white">Capa</span>
-              <button onClick={() => setShowCoverPicker(false)} className="text-slate-400 hover:text-white">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">Capa</span>
+              <button onClick={() => setShowCoverPicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                 <X size={14} />
               </button>
             </div>
@@ -271,7 +271,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
             {coverColor && (
               <button
                 onClick={() => saveCover('')}
-                className="mt-2 w-full text-xs text-slate-400 hover:text-white py-1 rounded bg-slate-700 hover:bg-slate-600 transition-colors"
+                className="mt-2 w-full text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white py-1 rounded bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
               >
                 Remover capa
               </button>
@@ -282,7 +282,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
         {/* ── Close button ──────────────────────────────── */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
         >
           <X size={16} />
         </button>
@@ -303,13 +303,13 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
               onChange={(e) => setTitle(e.target.value)}
               onBlur={saveTitle}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); saveTitle(); } }}
-              className="w-full bg-slate-800 border border-emerald-500/50 rounded-lg px-3 py-2 text-xl font-bold text-white resize-none focus:outline-none mb-4"
+              className="w-full bg-gray-50 dark:bg-slate-800 border border-emerald-500/50 rounded-lg px-3 py-2 text-xl font-bold text-gray-900 dark:text-white resize-none focus:outline-none mb-4"
               rows={1}
               autoFocus
             />
           ) : (
             <h2
-              className="text-xl font-bold text-white mb-4 cursor-pointer hover:bg-slate-800/50 rounded-lg px-2 py-1 -mx-2 transition-colors"
+              className="text-xl font-bold text-gray-900 dark:text-white mb-4 cursor-pointer hover:bg-gray-50 dark:bg-slate-800/50 rounded-lg px-2 py-1 -mx-2 transition-colors"
               onClick={() => setIsEditingTitle(true)}
             >
               {title}
@@ -320,13 +320,13 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
           <div className="flex flex-wrap gap-2 mb-6">
             <button
               onClick={() => setShowLabelPicker(!showLabelPicker)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <Tag size={14} /> Etiquetas
             </button>
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <Calendar size={14} /> Datas
             </button>
@@ -339,25 +339,25 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                 }
                 setShowAddCheck(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <CheckSquare size={14} /> Checklist
             </button>
             <button
               onClick={() => setShowPriorityPicker(!showPriorityPicker)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <Flag size={14} /> Prioridade
             </button>
             <button
               onClick={() => setShowCoverPicker(!showCoverPicker)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <CreditCard size={14} /> Capa
             </button>
             <button
               onClick={() => setShowAssigneePicker(!showAssigneePicker)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               <Users size={14} /> Membro
             </button>
@@ -365,10 +365,10 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
 
           {/* ── Label picker popover ──────────────────── */}
           {showLabelPicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Etiquetas</span>
-                <button onClick={() => setShowLabelPicker(false)} className="text-slate-400 hover:text-white">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Etiquetas</span>
+                <button onClick={() => setShowLabelPicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                   <X size={14} />
                 </button>
               </div>
@@ -382,7 +382,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                     <button
                       key={preset.name}
                       onClick={() => toggleLabel(preset)}
-                      className="w-full flex items-center gap-2 rounded-md p-1.5 hover:bg-slate-700/50 transition-colors"
+                      className="w-full flex items-center gap-2 rounded-md p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors"
                     >
                       <div
                         className={`flex-1 h-8 rounded-md flex items-center px-3 text-sm font-medium text-white ${colors.bg}`}
@@ -400,10 +400,10 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
 
           {/* ── Date picker popover ───────────────────── */}
           {showDatePicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Data de Entrega</span>
-                <button onClick={() => setShowDatePicker(false)} className="text-slate-400 hover:text-white">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Data de Entrega</span>
+                <button onClick={() => setShowDatePicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                   <X size={14} />
                 </button>
               </div>
@@ -411,7 +411,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                 type="date"
                 value={dueDate ? new Date(dueDate).toISOString().split('T')[0] : ''}
                 onChange={(e) => saveDueDate(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700/50 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 [color-scheme:dark]"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700/50 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50 [color-scheme:dark]"
               />
               {dueDate && (
                 <button
@@ -426,10 +426,10 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
 
           {/* ── Priority picker popover ───────────────── */}
           {showPriorityPicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Prioridade</span>
-                <button onClick={() => setShowPriorityPicker(false)} className="text-slate-400 hover:text-white">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Prioridade</span>
+                <button onClick={() => setShowPriorityPicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                   <X size={14} />
                 </button>
               </div>
@@ -439,7 +439,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                     key={opt.value}
                     onClick={() => savePriority(opt.value)}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                      priority === opt.value ? 'bg-slate-700 ring-1 ring-emerald-500/50' : 'hover:bg-slate-700/50'
+                      priority === opt.value ? 'bg-slate-700 ring-1 ring-emerald-500/50' : 'hover:bg-gray-100 dark:hover:bg-slate-700/50'
                     }`}
                   >
                     <span className="text-sm">{opt.icon}</span>
@@ -449,7 +449,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                 {priority && (
                   <button
                     onClick={() => savePriority('')}
-                    className="w-full text-xs text-slate-400 hover:text-white py-1 mt-1"
+                    className="w-full text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white py-1 mt-1"
                   >
                     Remover prioridade
                   </button>
@@ -460,10 +460,10 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
 
           {/* ── Assignee picker popover ───────────────── */}
           {showAssigneePicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Atribuir a</span>
-                <button onClick={() => setShowAssigneePicker(false)} className="text-slate-400 hover:text-white">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Atribuir a</span>
+                <button onClick={() => setShowAssigneePicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                   <X size={14} />
                 </button>
               </div>
@@ -475,13 +475,13 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                     <button
                       key={m.id}
                       onClick={() => saveAssignee(assigneeId === m.userId ? undefined : m.userId ?? undefined)}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-700/50 transition-colors"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors"
                     >
                       <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-[11px] text-white font-bold shrink-0">
                         {m.user!.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-sm text-white truncate">{m.user!.name}</p>
+                        <p className="text-sm text-gray-900 dark:text-white truncate">{m.user!.name}</p>
                         <p className="text-[10px] text-slate-500 truncate">{m.user!.email}</p>
                       </div>
                       {assigneeId === m.userId && (
@@ -494,7 +494,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
               {assigneeId && (
                 <button
                   onClick={() => saveAssignee(undefined)}
-                  className="mt-2 w-full text-xs text-slate-400 hover:text-white py-1 rounded bg-slate-700 hover:bg-slate-600 transition-colors"
+                  className="mt-2 w-full text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white py-1 rounded bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
                 >
                   Remover atribuição
                 </button>
@@ -522,7 +522,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                 })}
                 <button
                   onClick={() => setShowLabelPicker(true)}
-                  className="w-7 h-6 rounded-md bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                  className="w-7 h-6 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <Plus size={12} />
                 </button>
@@ -554,7 +554,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                   <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Prioridade</span>
                   <button
                     onClick={() => setShowPriorityPicker(true)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium ${currentPriorityOpt.color} bg-slate-800 hover:bg-slate-700 transition-colors`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium ${currentPriorityOpt.color} bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors`}
                   >
                     <span>{currentPriorityOpt.icon}</span>
                     {currentPriorityOpt.label}
@@ -570,12 +570,12 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
               <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Responsável</span>
               <button
                 onClick={() => setShowAssigneePicker(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
               >
                 <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold">
                   {currentAssignee.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-sm text-white">{currentAssignee.name}</span>
+                <span className="text-sm text-gray-900 dark:text-white">{currentAssignee.name}</span>
               </button>
             </div>
           )}
@@ -588,11 +588,11 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <AlignLeft size={16} className="text-slate-400" />
-                  <span className="text-sm font-semibold text-white">Descrição</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">Descrição</span>
                   {description && !isEditingDesc && (
                     <button
                       onClick={() => setIsEditingDesc(true)}
-                      className="text-slate-400 hover:text-white ml-auto"
+                      className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white ml-auto"
                     >
                       <Pencil size={12} />
                     </button>
@@ -605,7 +605,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Adicione uma descrição mais detalhada..."
                       rows={4}
-                      className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 resize-y"
+                      className="w-full bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50 resize-y"
                       autoFocus
                     />
                     <div className="flex gap-2 mt-2">
@@ -617,7 +617,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                       </button>
                       <button
                         onClick={() => { setIsEditingDesc(false); setDescription(task.description || ''); }}
-                        className="px-3 py-1.5 text-slate-400 hover:text-white text-sm transition-colors"
+                        className="px-3 py-1.5 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors"
                       >
                         Cancelar
                       </button>
@@ -628,8 +628,8 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                     onClick={() => setIsEditingDesc(true)}
                     className={`min-h-[56px] rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors ${
                       description
-                        ? 'text-slate-300 hover:bg-slate-800/50'
-                        : 'bg-slate-800/50 text-slate-500 hover:bg-slate-800'
+                        ? 'text-slate-300 hover:bg-gray-50 dark:bg-slate-800/50'
+                        : 'bg-gray-50 dark:bg-slate-800/50 text-slate-500 hover:bg-slate-800'
                     }`}
                   >
                     {description || 'Adicione uma descrição mais detalhada...'}
@@ -642,12 +642,12 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckSquare size={16} className="text-slate-400" />
-                    <span className="text-sm font-semibold text-white">Checklist</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">Checklist</span>
                     <span className="text-xs text-slate-500 ml-auto">{checklistPercent}%</span>
                   </div>
 
                   {/* Progress bar */}
-                  <div className="h-1.5 bg-slate-800 rounded-full mb-3 overflow-hidden">
+                  <div className="h-1.5 bg-gray-200 dark:bg-slate-800 rounded-full mb-3 overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         checklistPercent === 100 ? 'bg-emerald-500' : 'bg-emerald-600'
@@ -659,7 +659,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                   {/* Items */}
                   <div className="space-y-1">
                     {checklist.filter(i => i.text).map((item) => (
-                      <div key={item.id} className="flex items-center gap-2 group/item px-1 py-1 rounded hover:bg-slate-800/30">
+                      <div key={item.id} className="flex items-center gap-2 group/item px-1 py-1 rounded hover:bg-gray-50 dark:hover:bg-slate-800/30">
                         <button
                           onClick={() => toggleCheckItem(item.id)}
                           className="shrink-0 text-slate-400 hover:text-emerald-400 transition-colors"
@@ -689,7 +689,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                       value={newCheckItem}
                       onChange={(e) => setNewCheckItem(e.target.value)}
                       placeholder="Adicionar item..."
-                      className="flex-1 bg-slate-800 border border-slate-700/50 rounded-md px-2 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500/50"
+                      className="flex-1 bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-md px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50"
                       onKeyDown={(e) => { if (e.key === 'Enter') addCheckItem(); }}
                     />
                     <button
@@ -711,7 +711,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                 <div className="space-y-1">
                   <button
                     onClick={() => setShowMovePicker(!showMovePicker)}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors text-left"
                   >
                     <ArrowRight size={14} /> Mover
                   </button>
@@ -722,7 +722,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                           key={s}
                           onClick={() => handleMove(s)}
                           className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
-                            task.status === s ? 'bg-emerald-600/20 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                            task.status === s ? 'bg-emerald-600/20 text-emerald-400' : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700/50'
                           }`}
                         >
                           {label}
@@ -734,7 +734,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                     onClick={() => {
                       navigator.clipboard.writeText(`${title}\n${description}`);
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors text-left"
                   >
                     <Copy size={14} /> Copiar
                   </button>
@@ -751,7 +751,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Activity size={16} className="text-slate-400" />
-                  <span className="text-sm font-semibold text-white">Atividade</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">Atividade</span>
                 </div>
 
                 {/* Comment input */}
@@ -765,7 +765,7 @@ export function TaskDetailModal({ task, columnTitle, onClose, onUpdate }: Props)
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
                       placeholder="Escreva um comentário..."
-                      className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50"
+                      className="w-full bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50"
                     />
                   </div>
                 </div>

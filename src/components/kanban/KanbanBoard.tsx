@@ -132,16 +132,16 @@ export function KanbanBoard() {
   return (
     <ErrorBoundary>
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800/60 bg-slate-950/50">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-800/60 bg-gray-50/80 dark:bg-slate-950/50">
         <div className="flex items-center gap-3">
           {/* View toggle */}
-          <div className="flex items-center bg-slate-800/60 rounded-lg p-0.5">
+          <div className="flex items-center bg-gray-200/60 dark:bg-slate-800/60 rounded-lg p-0.5">
             <button
               onClick={() => setViewMode('kanban')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 viewMode === 'kanban'
                   ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <LayoutGrid size={14} /> Kanban
@@ -151,14 +151,14 @@ export function KanbanBoard() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 viewMode === 'list'
                   ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-500/20'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               <List size={14} /> Lista
             </button>
           </div>
 
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-gray-500 dark:text-slate-500">
             {filteredTasks.length} tarefa{filteredTasks.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -166,16 +166,16 @@ export function KanbanBoard() {
         <div className="flex items-center gap-2">
           {/* Search */}
           <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar tarefas..."
-              className="w-48 bg-slate-800/60 border border-slate-700/50 rounded-lg pl-8 pr-8 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+              className="w-48 bg-gray-100 dark:bg-slate-800/60 border border-gray-300 dark:border-slate-700/50 rounded-lg pl-8 pr-8 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+              <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 hover:text-gray-900 dark:hover:text-white">
                 <X size={12} />
               </button>
             )}
@@ -187,7 +187,7 @@ export function KanbanBoard() {
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all ${
               showFilters || activeFiltersCount > 0
                 ? 'bg-emerald-600/20 text-emerald-400'
-                : 'bg-slate-800/60 text-slate-400 hover:text-white'
+                : 'bg-gray-200/60 dark:bg-slate-800/60 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             <Filter size={14} /> Filtros
@@ -210,10 +210,10 @@ export function KanbanBoard() {
 
       {/* Filter bar */}
       {showFilters && (
-        <div className="flex items-center gap-4 px-4 py-2.5 border-b border-slate-800/40 bg-slate-900/40 animate-slide-down">
+        <div className="flex items-center gap-4 px-4 py-2.5 border-b border-gray-200 dark:border-slate-800/40 bg-gray-50 dark:bg-slate-900/40 animate-slide-down">
           <div className="flex items-center gap-2">
-            <Flag size={12} className="text-slate-500" />
-            <span className="text-[11px] text-slate-500 uppercase tracking-wider">Prioridade:</span>
+            <Flag size={12} className="text-gray-400 dark:text-slate-500" />
+            <span className="text-[11px] text-gray-400 dark:text-slate-500 uppercase tracking-wider">Prioridade:</span>
             {PRIORITY_FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -221,7 +221,7 @@ export function KanbanBoard() {
                 className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-all ${
                   priorityFilter === f.value
                     ? 'bg-emerald-600/20 text-emerald-400 font-medium'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/60'
+                    : 'text-gray-500 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800/60'
                 }`}
               >
                 {f.icon && <span>{f.icon}</span>}

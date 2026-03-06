@@ -171,9 +171,9 @@ export function ListView({ tasks, onEditTask }: Props) {
       </div>
 
       {/* Table */}
-      <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800/80 rounded-xl overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[1fr_120px_100px_120px_100px_80px] gap-2 px-4 py-2.5 border-b border-slate-800/60 bg-slate-900/80">
+        <div className="grid grid-cols-[1fr_120px_100px_120px_100px_80px] gap-2 px-4 py-2.5 border-b border-gray-200 dark:border-slate-800/60 bg-gray-50 dark:bg-slate-900/80">
           <SortHeader field="title" label="Titulo" />
           <SortHeader field="status" label="Status" />
           <SortHeader field="priority" label="Prioridade" />
@@ -189,7 +189,7 @@ export function ListView({ tasks, onEditTask }: Props) {
             {groupBy !== 'none' && (
               <button
                 onClick={() => toggleGroup(group.key)}
-                className="w-full flex items-center gap-2 px-4 py-2 bg-slate-800/40 hover:bg-slate-800/60 transition-colors border-b border-slate-800/40"
+                className="w-full flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-slate-800/40 hover:bg-gray-100 dark:hover:bg-slate-800/60 transition-colors border-b border-gray-200 dark:border-slate-800/40"
               >
                 {expandedGroups.has(group.key) ? (
                   <ChevronDown size={14} className="text-slate-500" />
@@ -199,7 +199,7 @@ export function ListView({ tasks, onEditTask }: Props) {
                 <span className={`text-xs font-semibold ${'color' in group ? group.color : 'text-slate-300'}`}>
                   {group.label}
                 </span>
-                <span className="text-[10px] text-slate-600 bg-slate-800 px-1.5 py-0.5 rounded-full">
+                <span className="text-[10px] text-gray-500 dark:text-slate-600 bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
                   {group.tasks.length}
                 </span>
               </button>
@@ -215,14 +215,14 @@ export function ListView({ tasks, onEditTask }: Props) {
                 <div
                   key={task.id}
                   onClick={() => onEditTask(task)}
-                  className="grid grid-cols-[1fr_120px_100px_120px_100px_80px] gap-2 px-4 py-2.5 border-b border-slate-800/30 hover:bg-slate-800/30 cursor-pointer transition-colors group"
+                  className="grid grid-cols-[1fr_120px_100px_120px_100px_80px] gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-slate-800/30 hover:bg-gray-50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors group"
                 >
                   {/* Title */}
                   <div className="flex items-center gap-2 min-w-0">
                     {task.color && (
                       <div className={`w-1 h-6 rounded-full bg-${task.color}-500 flex-shrink-0`} />
                     )}
-                    <span className={`text-sm truncate ${task.status === 'DONE' ? 'text-slate-500 line-through' : 'text-white'}`}>
+                    <span className={`text-sm truncate ${task.status === 'DONE' ? 'text-gray-400 dark:text-slate-500 line-through' : 'text-gray-900 dark:text-white'}`}>
                       {task.title}
                     </span>
                   </div>
@@ -293,7 +293,7 @@ export function ListView({ tasks, onEditTask }: Props) {
             {groupBy === 'status' && expandedGroups.has(group.key) && (
               <>
                 {quickAddStatus === group.key ? (
-                  <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-800/30 bg-slate-800/20">
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-slate-800/30 bg-gray-50 dark:bg-slate-800/20">
                     <input
                       type="text"
                       value={quickAddTitle}
@@ -303,7 +303,7 @@ export function ListView({ tasks, onEditTask }: Props) {
                         if (e.key === 'Escape') { setQuickAddStatus(null); setQuickAddTitle(''); }
                       }}
                       placeholder="Titulo da nova tarefa..."
-                      className="flex-1 bg-transparent text-sm text-white placeholder-slate-600 border-none focus:outline-none"
+                      className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-600 border-none focus:outline-none"
                       autoFocus
                     />
                     <button
@@ -322,7 +322,7 @@ export function ListView({ tasks, onEditTask }: Props) {
                 ) : (
                   <button
                     onClick={() => setQuickAddStatus(group.key as TaskStatus)}
-                    className="w-full flex items-center gap-1.5 px-4 py-1.5 text-xs text-slate-500 hover:text-emerald-400 hover:bg-slate-800/20 transition-all border-b border-slate-800/30"
+                    className="w-full flex items-center gap-1.5 px-4 py-1.5 text-xs text-gray-500 dark:text-slate-500 hover:text-emerald-400 hover:bg-gray-50 dark:hover:bg-slate-800/20 transition-all border-b border-gray-100 dark:border-slate-800/30"
                   >
                     <Plus size={12} /> Nova tarefa
                   </button>
@@ -335,10 +335,10 @@ export function ListView({ tasks, onEditTask }: Props) {
         {/* Empty state */}
         {tasks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center">
-              <Flag size={20} className="text-slate-600" />
+            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center">
+              <Flag size={20} className="text-gray-400 dark:text-slate-600" />
             </div>
-            <p className="text-sm text-slate-500">Nenhuma tarefa encontrada</p>
+            <p className="text-sm text-gray-500 dark:text-slate-500">Nenhuma tarefa encontrada</p>
           </div>
         )}
       </div>

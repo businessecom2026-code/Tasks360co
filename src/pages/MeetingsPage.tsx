@@ -81,7 +81,7 @@ export function MeetingsPage() {
           </button>
           <button
             onClick={() => setShowUpload(!showUpload)}
-            className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             Processar Gravação com IA
           </button>
@@ -89,29 +89,29 @@ export function MeetingsPage() {
 
         {/* Create form */}
         {showCreateForm && (
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-medium">Criar Reunião</h3>
-              <button onClick={() => setShowCreateForm(false)} className="text-gray-400 hover:text-white">
+              <h3 className="text-gray-900 dark:text-white font-medium">Criar Reunião</h3>
+              <button onClick={() => setShowCreateForm(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                 <X size={18} />
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Título</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Título</label>
                 <input
                   type="text"
                   value={newMeeting.title}
                   onChange={(e) => setNewMeeting({ ...newMeeting, title: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Plataforma</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Plataforma</label>
                 <select
                   value={newMeeting.platform}
                   onChange={(e) => setNewMeeting({ ...newMeeting, platform: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                 >
                   <option>Google Meet</option>
                   <option>Zoom</option>
@@ -119,21 +119,21 @@ export function MeetingsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Data</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Data</label>
                 <input
                   type="date"
                   value={newMeeting.date}
                   onChange={(e) => setNewMeeting({ ...newMeeting, date: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Hora</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Hora</label>
                 <input
                   type="time"
                   value={newMeeting.time}
                   onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
@@ -183,10 +183,10 @@ export function MeetingsPage() {
         {selectedMeeting && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-white font-medium text-lg">{selectedMeeting.title}</h3>
+              <h3 className="text-gray-900 dark:text-white font-medium text-lg">{selectedMeeting.title}</h3>
               <button
                 onClick={() => setSelectedMeeting(null)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <X size={18} />
               </button>

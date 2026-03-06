@@ -49,7 +49,7 @@ export function AdminPage() {
           <>
             {/* Tab bar + invite button */}
             <div className="flex items-center justify-between">
-              <div className="flex gap-1 bg-gray-900 rounded-lg p-1 border border-gray-800">
+              <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 border border-gray-200 dark:border-gray-800">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -57,7 +57,7 @@ export function AdminPage() {
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'bg-blue-600 text-white'
-                        : 'text-gray-400 hover:text-white'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
                     {tab.label}

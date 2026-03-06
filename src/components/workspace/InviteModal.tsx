@@ -57,10 +57,10 @@ export function InviteModal({ isOpen, onClose, workspaceId }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md mx-4 shadow-2xl">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">Convidar Membro</h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-white transition-colors">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 w-full max-w-md mx-4 shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Convidar Membro</h2>
+          <button onClick={handleClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -69,22 +69,22 @@ export function InviteModal({ isOpen, onClose, workspaceId }: Props) {
           {step === 'form' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">E-mail</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">E-mail</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="colaborador@empresa.com"
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Função</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Função</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as 'COLABORADOR' | 'CLIENTE')}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
                 >
                   <option value="COLABORADOR">Colaborador</option>
                   <option value="CLIENTE">Cliente</option>
@@ -119,7 +119,7 @@ export function InviteModal({ isOpen, onClose, workspaceId }: Props) {
           {step === 'payment' && (
             <div className="text-center py-6 space-y-3">
               <CreditCard size={40} className="mx-auto text-blue-400" />
-              <h3 className="text-white font-medium">Checkout Revolut Gerado</h3>
+              <h3 className="text-gray-900 dark:text-white font-medium">Checkout Revolut Gerado</h3>
               <p className="text-gray-400 text-sm">
                 Em produção, o gestor seria redirecionado para o checkout da Revolut.
                 Após o pagamento, o convite será enviado automaticamente via webhook.
@@ -138,13 +138,13 @@ export function InviteModal({ isOpen, onClose, workspaceId }: Props) {
               <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto">
                 <Send size={20} className="text-white" />
               </div>
-              <h3 className="text-white font-medium">Convite Enviado!</h3>
+              <h3 className="text-gray-900 dark:text-white font-medium">Convite Enviado!</h3>
               <p className="text-gray-400 text-sm">
                 Um e-mail de convite foi enviado para <strong className="text-white">{email}</strong>.
               </p>
               <button
                 onClick={handleClose}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors"
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-sm transition-colors"
               >
                 Fechar
               </button>

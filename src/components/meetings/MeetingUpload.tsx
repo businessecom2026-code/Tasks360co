@@ -81,11 +81,11 @@ export function MeetingUpload({ meetingId, onProcessed }: Props) {
 
       {/* Upload area */}
       {!result && (
-        <div className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center hover:border-gray-600 transition-colors">
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center hover:border-gray-400 dark:hover:border-gray-600 transition-colors">
           {!file ? (
             <label className="cursor-pointer block">
               <Upload size={32} className="mx-auto text-gray-500 mb-3" />
-              <p className="text-gray-300 font-medium mb-1">
+              <p className="text-gray-700 dark:text-gray-300 font-medium mb-1">
                 Upload de gravação ou transcrição
               </p>
               <p className="text-gray-500 text-sm">
@@ -101,14 +101,14 @@ export function MeetingUpload({ meetingId, onProcessed }: Props) {
           ) : (
             <div className="space-y-3">
               <FileAudio size={32} className="mx-auto text-blue-400" />
-              <p className="text-white font-medium">{file.name}</p>
+              <p className="text-gray-900 dark:text-white font-medium">{file.name}</p>
               <p className="text-gray-500 text-sm">
                 {(file.size / (1024 * 1024)).toFixed(1)} MB
               </p>
               <div className="flex justify-center gap-3">
                 <button
                   onClick={() => { setFile(null); setError(''); }}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg text-sm transition-colors"
                 >
                   Trocar arquivo
                 </button>
@@ -138,19 +138,19 @@ export function MeetingUpload({ meetingId, onProcessed }: Props) {
 
       {/* AI Results */}
       {result && (
-        <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-          <div className="p-4 border-b border-gray-700">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2 text-green-400 mb-2">
               <CheckCircle2 size={18} />
               <span className="font-medium text-sm">Processamento concluído</span>
             </div>
-            <h4 className="text-white font-medium mb-2">Resumo da Reunião</h4>
+            <h4 className="text-gray-900 dark:text-white font-medium mb-2">Resumo da Reunião</h4>
             <p className="text-gray-300 text-sm">{result.summary}</p>
           </div>
 
           {result.suggestedTasks.length > 0 && (
             <div className="p-4">
-              <h4 className="text-white font-medium mb-3">
+              <h4 className="text-gray-900 dark:text-white font-medium mb-3">
                 Tarefas Sugeridas ({result.suggestedTasks.length})
               </h4>
               <ul className="space-y-2 mb-4">

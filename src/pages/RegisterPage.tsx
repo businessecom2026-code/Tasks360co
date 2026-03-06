@@ -59,24 +59,24 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Task<span className="text-blue-500">360</span>
           </h1>
           <p className="text-gray-500 text-sm mt-1">Criar nova conta</p>
         </div>
 
         {success ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 text-center space-y-4">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 text-center space-y-4">
             <div className="w-14 h-14 bg-green-600/20 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 size={28} className="text-green-400" />
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-1">Conta criada!</h3>
-              <p className="text-gray-400 text-sm">
+              <h3 className="text-gray-900 dark:text-white font-semibold mb-1">Conta criada!</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 A redirecionar para o dashboard...
               </p>
             </div>
@@ -84,34 +84,34 @@ export function RegisterPage() {
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4"
+            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 space-y-4"
           >
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Nome</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Nome</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Seu nome completo"
                 required
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">E-mail</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">E-mail</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
                 required
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Senha</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Senha</label>
               <input
                 type="password"
                 value={password}
@@ -119,19 +119,19 @@ export function RegisterPage() {
                 placeholder="Mínimo 6 caracteres"
                 required
                 minLength={6}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Confirmar Senha</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Confirmar Senha</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repita a senha"
                 required
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
@@ -163,7 +163,7 @@ export function RegisterPage() {
           </form>
         )}
 
-        <p className="text-center text-xs text-gray-600 mt-4">
+        <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4">
           Task360 Engine &copy; {new Date().getFullYear()}
         </p>
       </div>

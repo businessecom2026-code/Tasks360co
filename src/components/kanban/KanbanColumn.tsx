@@ -93,10 +93,10 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
       className={`
         flex flex-col min-w-[290px] w-[290px] shrink-0 rounded-xl transition-all duration-300 relative
         ${isOver
-          ? 'bg-slate-800/80 border-2 border-dashed border-emerald-500/60 shadow-lg shadow-emerald-500/10 scale-[1.02]'
+          ? 'bg-gray-100 dark:bg-slate-800/80 border-2 border-dashed border-emerald-500/60 shadow-lg shadow-emerald-500/10 scale-[1.02]'
           : showCelebration
-            ? 'bg-slate-900/90 border border-emerald-500/40 shadow-lg shadow-emerald-500/10'
-            : 'bg-slate-900/60 border border-slate-800/80'
+            ? 'bg-white dark:bg-slate-900/90 border border-emerald-500/40 shadow-lg shadow-emerald-500/10'
+            : 'bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800/80'
         }
       `}
     >
@@ -110,14 +110,14 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
       )}
 
       {/* Column header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-800/60">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 dark:border-slate-800/60">
         <div className="flex items-center gap-2">
           <div className={`w-2.5 h-2.5 rounded-full ${color} ${showCelebration ? 'animate-ping' : ''}`} />
-          <h3 className="text-sm font-semibold text-slate-200 tracking-wide">{title}</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-slate-200 tracking-wide">{title}</h3>
           <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${
             showCelebration
               ? 'bg-emerald-500/20 text-emerald-400'
-              : 'text-slate-500 bg-slate-800/80'
+              : 'text-gray-500 dark:text-slate-500 bg-gray-100 dark:bg-slate-800/80'
           }`}>
             {tasks.length}
           </span>
@@ -142,7 +142,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
 
         {/* Inline quick add card */}
         {isAddingCard && (
-          <div className="rounded-lg border border-emerald-500/30 bg-slate-800/80 p-2 space-y-2 animate-slide-up">
+          <div className="rounded-lg border border-emerald-500/30 bg-gray-50 dark:bg-slate-800/80 p-2 space-y-2 animate-slide-up">
             <input
               ref={inputRef}
               type="text"
@@ -153,7 +153,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
                 if (e.key === 'Escape') { setIsAddingCard(false); setNewCardTitle(''); }
               }}
               placeholder="Título da tarefa..."
-              className="w-full bg-transparent border-none text-sm text-white placeholder-slate-500 focus:outline-none"
+              className="w-full bg-transparent border-none text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none"
             />
             <div className="flex items-center gap-2">
               <button
@@ -164,7 +164,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
               </button>
               <button
                 onClick={() => { setIsAddingCard(false); setNewCardTitle(''); }}
-                className="p-1 text-slate-400 hover:text-slate-200 transition-colors"
+                className="p-1 text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 transition-colors"
               >
                 <X size={14} />
               </button>
@@ -176,9 +176,9 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
         {tasks.length === 0 && !isAddingCard && (
           <div className="flex flex-col items-center justify-center py-10 gap-2">
             <div className={`w-10 h-10 rounded-full ${color}/10 flex items-center justify-center mb-1`}>
-              <Plus size={18} className="text-slate-500" />
+              <Plus size={18} className="text-gray-400 dark:text-slate-500" />
             </div>
-            <p className="text-center text-xs text-slate-600">
+            <p className="text-center text-xs text-gray-400 dark:text-slate-600">
               Arraste tarefas para cá
             </p>
             <button
@@ -195,7 +195,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
       {!isAddingCard && tasks.length > 0 && (
         <button
           onClick={() => setIsAddingCard(true)}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all border-t border-slate-800/40 rounded-b-xl"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all border-t border-gray-200 dark:border-slate-800/40 rounded-b-xl"
         >
           <Plus size={14} /> Adicionar tarefa
         </button>

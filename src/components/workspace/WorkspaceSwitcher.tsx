@@ -12,7 +12,7 @@ export function WorkspaceSwitcher() {
 
   if (isLoading) {
     return (
-      <div className="px-3 py-2 text-sm text-gray-500 animate-pulse">
+      <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-500 animate-pulse">
         Carregando workspaces...
       </div>
     );
@@ -20,7 +20,7 @@ export function WorkspaceSwitcher() {
 
   if (workspaces.length === 0) {
     return (
-      <div className="px-3 py-2 text-sm text-gray-500">
+      <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-500">
         Nenhum workspace disponível
       </div>
     );
@@ -33,10 +33,10 @@ export function WorkspaceSwitcher() {
         <select
           value={currentWorkspace?.id || ''}
           onChange={(e) => switchWorkspace(e.target.value)}
-          className="bg-transparent text-white text-sm font-medium w-full appearance-none cursor-pointer focus:outline-none truncate"
+          className="bg-transparent text-gray-900 dark:text-white text-sm font-medium w-full appearance-none cursor-pointer focus:outline-none truncate"
         >
           {workspaces.map((w) => (
-            <option key={w.id} value={w.id} className="bg-gray-800 text-white">
+            <option key={w.id} value={w.id} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
               {w.name}
             </option>
           ))}

@@ -57,40 +57,40 @@ export function SettingsPage() {
       <Header title="Configurações" />
       <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-2xl">
         {/* Profile */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <User size={18} className="text-blue-400" />
-            <h3 className="text-white font-semibold">Perfil</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold">Perfil</h3>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Nome</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Nome</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">E-mail</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">E-mail</label>
               <input
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-gray-500 text-sm cursor-not-allowed"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-500 text-sm cursor-not-allowed"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Função</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Função</label>
               <input
                 type="text"
                 value={user?.role || ''}
                 disabled
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-gray-500 text-sm cursor-not-allowed"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-500 text-sm cursor-not-allowed"
               />
             </div>
 
@@ -107,16 +107,16 @@ export function SettingsPage() {
 
         {/* Subscription settings */}
         {subscription && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <CreditCard size={18} className="text-green-400" />
-              <h3 className="text-white font-semibold">Assinatura</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold">Assinatura</h3>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                 <div>
-                  <p className="text-white text-sm font-medium">Renovação Automática</p>
+                  <p className="text-gray-900 dark:text-white text-sm font-medium">Renovação Automática</p>
                   <p className="text-gray-500 text-xs mt-0.5">
                     {subscription.autoRenew
                       ? 'Sua assinatura será renovada automaticamente no fim do ciclo'
@@ -139,7 +139,7 @@ export function SettingsPage() {
 
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Total Mensal</span>
-                <span className="text-white font-medium">{subscription.totalMonthlyValue.toFixed(2)} EUR</span>
+                <span className="text-gray-900 dark:text-white font-medium">{subscription.totalMonthlyValue.toFixed(2)} EUR</span>
               </div>
 
               <div className="flex items-center justify-between text-sm">
@@ -162,10 +162,10 @@ export function SettingsPage() {
         )}
 
         {/* Google Sync settings */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <RefreshCw size={18} className="text-purple-400" />
-            <h3 className="text-white font-semibold">Google Tasks Sync</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold">Google Tasks Sync</h3>
           </div>
 
           {user?.googleConnected ? (
@@ -207,7 +207,7 @@ export function SettingsPage() {
                     }
                   }}
                   disabled={isConnectingGoogle}
-                  className="flex items-center gap-2 bg-gray-700 hover:bg-red-700 text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-700 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   <Unlink size={16} />
                   Desconectar
@@ -220,7 +220,7 @@ export function SettingsPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 Conecte sua conta Google para sincronizar tarefas bidirecionalmente com o Google Tasks.
               </p>
               <button
@@ -235,7 +235,7 @@ export function SettingsPage() {
                   }
                 }}
                 disabled={isConnectingGoogle}
-                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 {isConnectingGoogle ? <Loader2 size={16} className="animate-spin" /> : <Link size={16} />}
                 Conectar Google Account

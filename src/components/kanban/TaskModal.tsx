@@ -385,7 +385,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="bg-slate-900 rounded-xl w-full max-w-[768px] shadow-2xl border border-slate-700/50 relative animate-modal-enter"
+        className="bg-white dark:bg-slate-900 rounded-xl w-full max-w-[768px] shadow-2xl border border-gray-200 dark:border-slate-700/50 relative animate-modal-enter"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Capa colorida */}
@@ -403,10 +403,10 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
 
         {/* Cover picker (posicionado absolutamente) */}
         {showCoverPicker && (
-          <div className="absolute top-2 right-12 z-40 bg-slate-800 rounded-lg border border-slate-700/50 p-3 shadow-2xl w-64 animate-fade-in">
+          <div className="absolute top-2 right-12 z-40 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-3 shadow-2xl w-64 animate-fade-in">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-white">Capa</span>
-              <button onClick={() => setShowCoverPicker(false)} className="text-slate-400 hover:text-white">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">Capa</span>
+              <button onClick={() => setShowCoverPicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                 <X size={14} />
               </button>
             </div>
@@ -423,7 +423,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
             {coverColor && (
               <button
                 onClick={() => saveCover('')}
-                className="mt-2 w-full text-xs text-slate-400 hover:text-white py-1 rounded bg-slate-700 hover:bg-slate-600 transition-colors"
+                className="mt-2 w-full text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white py-1 rounded bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
               >
                 Remover capa
               </button>
@@ -434,7 +434,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
         {/* Botão fechar */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
         >
           <X size={16} />
         </button>
@@ -447,19 +447,19 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
             <div className="relative mb-4">
               <button
                 onClick={() => setShowStatusPicker(!showStatusPicker)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors ${currentStatusOpt.color} text-sm font-medium`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors ${currentStatusOpt.color} text-sm font-medium`}
               >
                 <span className={`w-2 h-2 rounded-full ${currentStatusOpt.dot}`} />
                 {currentStatusOpt.label}
                 <ChevronDown size={13} className="text-slate-400 ml-0.5" />
               </button>
               {showStatusPicker && (
-                <div className="absolute top-full mt-1 left-0 z-30 bg-slate-800 border border-slate-700/50 rounded-lg shadow-2xl py-1 min-w-[170px] animate-fade-in">
+                <div className="absolute top-full mt-1 left-0 z-30 bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-lg shadow-2xl py-1 min-w-[170px] animate-fade-in">
                   {STATUS_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => { setStatus(opt.value); setShowStatusPicker(false); }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-slate-700/50 ${opt.color} ${status === opt.value ? 'bg-slate-700/30' : ''}`}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-slate-700/50 ${opt.color} ${status === opt.value ? 'bg-slate-700/30' : ''}`}
                     >
                       <span className={`w-2 h-2 rounded-full ${opt.dot} flex-shrink-0`} />
                       {opt.label}
@@ -492,7 +492,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                 placeholder="Título da tarefa..."
                 rows={1}
                 autoFocus
-                className={`w-full bg-slate-800/60 border rounded-lg px-3 py-2.5 text-xl font-bold text-white resize-none focus:outline-none mb-1 transition-colors ${
+                className={`w-full bg-slate-800/60 border rounded-lg px-3 py-2.5 text-xl font-bold text-gray-900 dark:text-white resize-none focus:outline-none mb-1 transition-colors ${
                   titleError
                     ? 'border-red-500/60 placeholder-red-400/50'
                     : 'border-slate-700/50 focus:border-emerald-500/50 placeholder-slate-600'
@@ -505,7 +505,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
             </>
           ) : (
             <h2
-              className="text-xl font-bold text-white mb-4 cursor-pointer hover:bg-slate-800/50 rounded-lg px-2 py-1 -mx-2 transition-colors"
+              className="text-xl font-bold text-gray-900 dark:text-white mb-4 cursor-pointer hover:bg-slate-800/50 rounded-lg px-2 py-1 -mx-2 transition-colors"
               onClick={() => setIsEditingTitle(true)}
             >
               {title}
@@ -526,7 +526,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
               <button
                 key={label}
                 onClick={fn}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 {icon} {label}
               </button>
@@ -535,10 +535,10 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
 
           {/* ── Popover: Etiquetas ─────────────────────────── */}
           {showLabelPicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Etiquetas</span>
-                <button onClick={() => setShowLabelPicker(false)} className="text-slate-400 hover:text-white"><X size={14} /></button>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Etiquetas</span>
+                <button onClick={() => setShowLabelPicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"><X size={14} /></button>
               </div>
               <div className="space-y-1.5">
                 {LABEL_PRESETS.map((preset) => {
@@ -548,7 +548,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                     <button
                       key={preset.name}
                       onClick={() => toggleLabel(preset)}
-                      className="w-full flex items-center gap-2 rounded-md p-1.5 hover:bg-slate-700/50 transition-colors"
+                      className="w-full flex items-center gap-2 rounded-md p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors"
                     >
                       <div className={`flex-1 h-8 rounded-md flex items-center px-3 text-sm font-medium text-white ${colors.bg}`}>
                         <span className={`w-2 h-2 rounded-full ${colors.dot} mr-2`} />{preset.name}
@@ -563,16 +563,16 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
 
           {/* ── Popover: Data ──────────────────────────────── */}
           {showDatePicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Data de Entrega</span>
-                <button onClick={() => setShowDatePicker(false)} className="text-slate-400 hover:text-white"><X size={14} /></button>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Data de Entrega</span>
+                <button onClick={() => setShowDatePicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"><X size={14} /></button>
               </div>
               <input
                 type="date"
                 value={dueDate ? new Date(dueDate).toISOString().split('T')[0] : ''}
                 onChange={(e) => saveDueDate(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700/50 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 [color-scheme:dark]"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700/50 rounded-md px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50 [color-scheme:dark]"
               />
               {dueDate && (
                 <button onClick={() => saveDueDate('')} className="mt-2 text-xs text-red-400 hover:text-red-300 transition-colors">
@@ -584,24 +584,24 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
 
           {/* ── Popover: Prioridade ────────────────────────── */}
           {showPriorityPicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Prioridade</span>
-                <button onClick={() => setShowPriorityPicker(false)} className="text-slate-400 hover:text-white"><X size={14} /></button>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Prioridade</span>
+                <button onClick={() => setShowPriorityPicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"><X size={14} /></button>
               </div>
               <div className="space-y-1.5">
                 {PRIORITY_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => savePriority(opt.value)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${priority === opt.value ? 'bg-slate-700 ring-1 ring-emerald-500/50' : 'hover:bg-slate-700/50'}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${priority === opt.value ? 'bg-slate-700 ring-1 ring-emerald-500/50' : 'hover:bg-gray-100 dark:hover:bg-slate-700/50'}`}
                   >
                     <span>{opt.icon}</span>
                     <span className={`${opt.color} font-medium`}>{opt.label}</span>
                   </button>
                 ))}
                 {priority && (
-                  <button onClick={() => savePriority('')} className="w-full text-xs text-slate-400 hover:text-white py-1 mt-1 transition-colors">
+                  <button onClick={() => savePriority('')} className="w-full text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white py-1 mt-1 transition-colors">
                     Remover prioridade
                   </button>
                 )}
@@ -611,10 +611,10 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
 
           {/* ── Popover: Membro ────────────────────────────── */}
           {showAssigneePicker && (
-            <div className="mb-4 bg-slate-800 rounded-lg border border-slate-700/50 p-4 shadow-xl animate-fade-in">
+            <div className="mb-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 p-4 shadow-xl animate-fade-in">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-white">Atribuir a</span>
-                <button onClick={() => setShowAssigneePicker(false)} className="text-slate-400 hover:text-white"><X size={14} /></button>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">Atribuir a</span>
+                <button onClick={() => setShowAssigneePicker(false)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"><X size={14} /></button>
               </div>
               <div className="space-y-1 max-h-48 overflow-y-auto">
                 {assignableMembers.length === 0 ? (
@@ -624,13 +624,13 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                     <button
                       key={m.id}
                       onClick={() => saveAssignee(assigneeId === m.userId ? undefined : (m.userId ?? undefined))}
-                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-700/50 transition-colors"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700/50 transition-colors"
                     >
                       <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-[11px] text-white font-bold shrink-0">
                         {m.user!.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-sm text-white truncate">{m.user!.name}</p>
+                        <p className="text-sm text-gray-900 dark:text-white truncate">{m.user!.name}</p>
                         <p className="text-[10px] text-slate-500 truncate">{m.user!.email}</p>
                       </div>
                       {assigneeId === m.userId && <Check size={14} className="text-emerald-400 shrink-0" />}
@@ -641,7 +641,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
               {assigneeId && (
                 <button
                   onClick={() => saveAssignee(undefined)}
-                  className="mt-2 w-full text-xs text-slate-400 hover:text-white py-1 rounded bg-slate-700 hover:bg-slate-600 transition-colors"
+                  className="mt-2 w-full text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white py-1 rounded bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
                 >
                   Remover atribuição
                 </button>
@@ -668,7 +668,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                 })}
                 <button
                   onClick={() => setShowLabelPicker(true)}
-                  className="w-7 h-6 rounded-md bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                  className="w-7 h-6 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <Plus size={12} />
                 </button>
@@ -698,7 +698,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                   <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Prioridade</span>
                   <button
                     onClick={() => setShowPriorityPicker(true)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-slate-800 hover:bg-slate-700 transition-colors ${currentPriorityOpt.color}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors ${currentPriorityOpt.color}`}
                   >
                     <span>{currentPriorityOpt.icon}</span>{currentPriorityOpt.label}
                   </button>
@@ -713,12 +713,12 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
               <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Responsável</span>
               <button
                 onClick={() => setShowAssigneePicker(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
               >
                 <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold">
                   {currentAssignee.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-sm text-white">{currentAssignee.name}</span>
+                <span className="text-sm text-gray-900 dark:text-white">{currentAssignee.name}</span>
               </button>
             </div>
           )}
@@ -733,9 +733,9 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <AlignLeft size={16} className="text-slate-400" />
-                  <span className="text-sm font-semibold text-white">Descrição</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">Descrição</span>
                   {!isNew && description && !isEditingDesc && (
-                    <button onClick={() => setIsEditingDesc(true)} className="text-slate-400 hover:text-white ml-auto">
+                    <button onClick={() => setIsEditingDesc(true)} className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white ml-auto">
                       <Pencil size={12} />
                     </button>
                   )}
@@ -748,12 +748,12 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                       placeholder="Adicione uma descrição mais detalhada..."
                       rows={isNew ? 3 : 4}
                       autoFocus={!isNew && isEditingDesc}
-                      className="w-full bg-slate-800 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 resize-y transition-colors"
+                      className="w-full bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50 resize-y transition-colors"
                     />
                     {!isNew && (
                       <div className="flex gap-2 mt-2">
                         <button onClick={saveDescription} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-md transition-colors">Salvar</button>
-                        <button onClick={() => { setIsEditingDesc(false); setDescription(task?.description ?? ''); }} className="px-3 py-1.5 text-slate-400 hover:text-white text-sm transition-colors">Cancelar</button>
+                        <button onClick={() => { setIsEditingDesc(false); setDescription(task?.description ?? ''); }} className="px-3 py-1.5 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">Cancelar</button>
                       </div>
                     )}
                   </div>
@@ -773,7 +773,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <CheckSquare size={16} className="text-slate-400" />
-                  <span className="text-sm font-semibold text-white">Checklist</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">Checklist</span>
                   {checkTotal > 0 && (
                     <>
                       <span className="text-xs text-slate-500 ml-auto">{checkPercent}%</span>
@@ -788,7 +788,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                 </div>
                 {checkTotal > 0 && (
                   <>
-                    <div className="h-1.5 bg-slate-800 rounded-full mb-3 overflow-hidden">
+                    <div className="h-1.5 bg-gray-200 dark:bg-slate-800 rounded-full mb-3 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${checkPercent === 100 ? 'bg-emerald-500' : 'bg-emerald-600'}`}
                         style={{ width: `${checkPercent}%` }}
@@ -806,7 +806,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                           return (
                             <div key={item.id}>
                               {/* Root item */}
-                              <div className="flex items-center gap-1.5 group/ci px-1 py-1 rounded hover:bg-slate-800/30">
+                              <div className="flex items-center gap-1.5 group/ci px-1 py-1 rounded hover:bg-gray-50 dark:hover:bg-slate-800/30">
                                 {/* Expand toggle */}
                                 <button
                                   onClick={() => hasSubs && toggleExpandItem(item.id)}
@@ -854,7 +854,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                                   {subs
                                     .filter((sub) => !(hideCompleted && sub.checked))
                                     .map((sub) => (
-                                    <div key={sub.id} className="flex items-center gap-2 group/sub px-1 py-1 rounded hover:bg-slate-800/30">
+                                    <div key={sub.id} className="flex items-center gap-2 group/sub px-1 py-1 rounded hover:bg-gray-50 dark:hover:bg-slate-800/30">
                                       <button onClick={() => toggleCheckItem(sub.id)} className="shrink-0 text-slate-400 hover:text-emerald-400 transition-colors">
                                         {sub.checked
                                           ? <CheckCircle2 size={15} className="text-emerald-500" />
@@ -876,7 +876,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                                         onChange={(e) => setNewSubItemText(e.target.value)}
                                         placeholder="Sub-item..."
                                         autoFocus
-                                        className="flex-1 bg-slate-800 border border-slate-700/50 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                        className="flex-1 bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
                                         onKeyDown={(e) => {
                                           if (e.key === 'Enter') addSubItem(item.id);
                                           if (e.key === 'Escape') { setNewSubItemParent(null); setNewSubItemText(''); }
@@ -902,7 +902,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                     value={newCheckItem}
                     onChange={(e) => setNewCheckItem(e.target.value)}
                     placeholder={checkTotal === 0 ? 'Adicionar primeiro item...' : 'Adicionar item...'}
-                    className="flex-1 bg-slate-800 border border-slate-700/50 rounded-md px-2 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="flex-1 bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-md px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
                     onKeyDown={(e) => { if (e.key === 'Enter') addCheckItem(); }}
                   />
                   <button
@@ -919,7 +919,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <Paperclip size={16} className="text-slate-400" />
-                    <span className="text-sm font-semibold text-white">Anexos</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">Anexos</span>
                     {attachments.length > 0 && (
                       <span className="text-xs text-slate-500 ml-auto">{attachments.length} arquivo{attachments.length !== 1 ? 's' : ''}</span>
                     )}
@@ -972,7 +972,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                         return (
                           <div
                             key={att.id}
-                            className="group/att relative bg-slate-800 rounded-lg border border-slate-700/50 overflow-hidden hover:border-slate-600 transition-colors"
+                            className="group/att relative bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700/50 overflow-hidden hover:border-slate-600 transition-colors"
                           >
                             {/* Preview area */}
                             {cat === 'image' ? (
@@ -1046,7 +1046,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                   <div className="space-y-1">
                     <button
                       onClick={() => setShowMovePicker(!showMovePicker)}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors text-left"
                     >
                       <ArrowRight size={14} /> Mover
                     </button>
@@ -1057,7 +1057,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                             key={s}
                             onClick={() => handleMove(s)}
                             className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
-                              task?.status === s ? 'bg-emerald-600/20 text-emerald-400' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                              task?.status === s ? 'bg-emerald-600/20 text-emerald-400' : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700/50'
                             }`}
                           >
                             {lbl}
@@ -1067,7 +1067,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                     )}
                     <button
                       onClick={() => navigator.clipboard.writeText(`${title}\n${description}`)}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 hover:text-white transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors text-left"
                     >
                       <Copy size={14} /> Copiar
                     </button>
@@ -1103,7 +1103,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Activity size={16} className="text-slate-400" />
-                  <span className="text-sm font-semibold text-white">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
                     {isNew ? 'Nota Inicial' : 'Atividade'}
                   </span>
                 </div>
@@ -1116,7 +1116,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
                     value={commentText}
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder={isNew ? 'Adicionar nota inicial...' : 'Escreva um comentário...'}
-                    className="flex-1 bg-slate-800 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                    className="flex-1 bg-slate-800 border border-gray-200 dark:border-slate-700/50 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
                   />
                 </div>
                 {!isNew && activities.map((a) => (
@@ -1147,7 +1147,7 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800"
+                className="px-4 py-2 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-slate-800"
               >
                 Cancelar
               </button>

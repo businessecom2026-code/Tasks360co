@@ -33,9 +33,9 @@ export function UserManagement() {
   };
 
   const roleBadgeColors: Record<string, string> = {
-    GESTOR: 'bg-purple-900/40 text-purple-400',
-    COLABORADOR: 'bg-blue-900/40 text-blue-400',
-    CLIENTE: 'bg-gray-700 text-gray-300',
+    GESTOR: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400',
+    COLABORADOR: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400',
+    CLIENTE: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
   };
 
   if (isLoading) return <LoadingSpinner className="h-64" text="Carregando membros..." />;
@@ -45,8 +45,8 @@ export function UserManagement() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users size={20} className="text-blue-400" />
-          <h3 className="text-white font-semibold">Membros do Workspace</h3>
-          <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">
+          <h3 className="text-gray-900 dark:text-white font-semibold">Membros do Workspace</h3>
+          <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
             {members.length}
           </span>
         </div>
@@ -56,14 +56,14 @@ export function UserManagement() {
         {members.map((member) => (
           <div
             key={member.id}
-            className="bg-gray-800 border border-gray-700 rounded-lg p-3 flex items-center justify-between"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
                 {member.user?.name?.charAt(0).toUpperCase() || '?'}
               </div>
               <div>
-                <p className="text-sm text-white">{member.user?.name || member.invitedEmail || 'Pendente'}</p>
+                <p className="text-sm text-gray-900 dark:text-white">{member.user?.name || member.invitedEmail || 'Pendente'}</p>
                 <p className="text-xs text-gray-500">{member.user?.email || member.invitedEmail}</p>
               </div>
             </div>
@@ -76,8 +76,8 @@ export function UserManagement() {
 
               <span className={`text-xs px-2 py-0.5 rounded flex items-center gap-1 ${
                 member.inviteAccepted
-                  ? 'bg-green-900/40 text-green-400'
-                  : 'bg-yellow-900/40 text-yellow-400'
+                  ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400'
+                  : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400'
               }`}>
                 {member.inviteAccepted ? <Check size={10} /> : <UserPlus size={10} />}
                 {member.inviteAccepted ? 'Ativo' : 'Pendente'}
