@@ -43,6 +43,7 @@ export interface User {
   avatar?: string;
   activeWorkspaceId?: string;
   googleConnected?: boolean;
+  googleCalConnected?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -180,6 +181,20 @@ export interface LoginResponse {
 export interface WorkspaceWithMembership extends Workspace {
   membership: Membership;
   memberCount?: number;
+}
+
+export interface CalendarEvent {
+  id: string;
+  googleEventId?: string;
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+  location?: string;
+  allDay: boolean;
+  status: string;
+  htmlLink?: string;
+  recurrence?: string;
 }
 
 export interface BillingOverview {

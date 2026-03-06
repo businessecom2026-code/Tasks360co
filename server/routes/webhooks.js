@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { revolutPay } from '../services/revolut.js';
 import { sendPaymentConfirmationEmail } from '../services/email.js';
+import { incrementalSync } from '../services/googleCalendar.js';
 
 export function webhookRoutes(prisma) {
   const router = Router();
@@ -184,6 +185,50 @@ export function webhookRoutes(prisma) {
       res.json({ action: 'no_action' });
     } catch (err) {
       console.error('[Webhook:GoogleTasks]', err);
+      res.status(500).json({ error: 'Webhook processing failed' });
+    }
+  });
+
+  /**
+   * POST /api/webhooks/google-calendar
+   * Handles Google Calendar push notifications (Watch channel).
+   * Triggers incremental sync for the user who owns the channel.
+   */
+  router.post('/google-calendar', async (req, res) => {
+    try {
+      const channelId = req.headers['x-goog-channel-id'];
+      const resourceState = req.headers['x-goog-resource-state'];
+
+      console.log(`[Webhook:GoogleCal] Channel: ${channelId}, State: ${resourceState}`);
+
+      // Ignore sync confirmation messages
+      if (resourceState === 'sync') {
+        return res.status(200).json({ action: 'sync_confirmed' });
+      }
+
+      if (!channelId) {
+        return res.status(400).json({ error: 'Missing channel ID' });
+      }
+
+      // Find user by watch channel ID
+      const user = await prisma.user.findFirst({
+        where: { googleCalWatchChannelId: channelId },
+        select: { id: true },
+      });
+
+      if (!user) {
+        console.warn(`[Webhook:GoogleCal] No user found for channel ${channelId}`);
+        return res.status(200).json({ action: 'no_user' });
+      }
+
+      // Trigger incremental sync (non-blocking)
+      incrementalSync(user.id, prisma).catch((err) =>
+        console.error(`[Webhook:GoogleCal] Sync failed for user ${user.id}:`, err.message)
+      );
+
+      res.status(200).json({ action: 'sync_triggered' });
+    } catch (err) {
+      console.error('[Webhook:GoogleCal]', err);
       res.status(500).json({ error: 'Webhook processing failed' });
     }
   });

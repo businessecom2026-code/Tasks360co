@@ -16,7 +16,9 @@ import { webhookRoutes } from './server/routes/webhooks.js';
 import { notificationRoutes } from './server/routes/notifications.js';
 import { attachmentRoutes } from './server/routes/attachments.js';
 import { recordingRoutes } from './server/routes/recordings.js';
+import { calendarRoutes } from './server/routes/calendar.js';
 import { processRecurringBilling } from './server/services/billing.js';
+import { renewExpiringWatches } from './server/services/googleCalendar.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -156,6 +158,7 @@ async function startServer() {
   app.use('/api/meetings', authMiddleware, tenantGuard(prisma), meetingRoutes(prisma));
   app.use('/api/recordings', authMiddleware, tenantGuard(prisma), recordingRoutes(prisma));
   app.use('/api/billing', authMiddleware, tenantGuard(prisma), billingRoutes(prisma));
+  app.use('/api/calendar', calendarRoutes(prisma));
   app.use('/api/notifications', authMiddleware, notificationRoutes(prisma));
 
   // ─── Serve uploaded files ──────────────────────────────────────
@@ -192,6 +195,14 @@ async function startServer() {
     console.log(`[Cron:Billing] Scheduled recurring billing — next run at ${next.toISOString()}`);
   };
   scheduleBillingCron();
+
+  // ─── Google Calendar watch renewal cron (every 6 hours) ───
+  setInterval(() => {
+    renewExpiringWatches(prisma).catch((err) =>
+      console.error('[Cron:CalWatch] Failed:', err.message)
+    );
+  }, 6 * 60 * 60 * 1000);
+  console.log('[Cron:CalWatch] Watch renewal scheduled every 6 hours');
 
   // ─── Graceful shutdown ─────────────────────────────────────────
   process.on('SIGTERM', async () => {

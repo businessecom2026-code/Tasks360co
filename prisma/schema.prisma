@@ -67,9 +67,17 @@ model User {
   googleAccessToken    String?
   googleRefreshToken   String?
   googleTokenExpiresAt DateTime?
+  // Google Calendar (encrypted tokens stored separately from Tasks tokens)
+  googleCalAccessToken    String?
+  googleCalRefreshToken   String?
+  googleCalTokenExpires   DateTime?
+  googleCalSyncToken      String?     // Incremental sync token for delta pulls
+  googleCalWatchChannelId String?     // Push notification channel ID
+  googleCalWatchExpiry    DateTime?   // Channel expiration (renew via cron)
   memberships          Membership[]
   assignedTasks        Task[]       @relation("AssignedTasks")
   notifications        Notification[]
+  calendarEvents       CalendarEvent[]
   emailVerified        Boolean      @default(false)
   verificationToken    String?
   createdAt            DateTime     @default(now())
@@ -220,4 +228,27 @@ model PasswordReset {
   token     String
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model CalendarEvent {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId     String?
+  googleEventId   String?   // Google Calendar event ID for sync
+  title           String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  location        String?
+  allDay          Boolean   @default(false)
+  recurrence      String?   // RRULE string (iCal compatible)
+  status          String    @default("confirmed") // confirmed, tentative, cancelled
+  lastSyncedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, googleEventId])
+  @@index([userId, startTime])
+  @@index([workspaceId])
 }

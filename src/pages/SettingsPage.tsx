@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, User, CreditCard, RefreshCw, Link, Unlink, Loader2, ExternalLink } from 'lucide-react';
+import { Save, User, CreditCard, RefreshCw, Link, Unlink, Loader2, ExternalLink, Calendar } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { useAuthStore } from '../stores/useAuthStore';
 import { api } from '../lib/api';
@@ -16,6 +16,9 @@ export function SettingsPage() {
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState<string | null>(null);
+  const [isConnectingCal, setIsConnectingCal] = useState(false);
+  const [calSyncing, setCalSyncing] = useState(false);
+  const [calResult, setCalResult] = useState<string | null>(null);
 
   useEffect(() => {
     api.get<Subscription>('/billing/subscription').then((res) => {
@@ -31,6 +34,16 @@ export function SettingsPage() {
     }
     if (params.get('google_error')) {
       setSyncResult('Erro ao conectar Google Tasks. Tente novamente.');
+      window.history.replaceState({}, '', '/settings');
+    }
+    // Google Calendar callbacks
+    if (params.get('google_cal_connected') === 'true') {
+      fetchMe();
+      setCalResult('Google Calendar conectado com sucesso!');
+      window.history.replaceState({}, '', '/settings');
+    }
+    if (params.get('google_cal_error')) {
+      setCalResult('Erro ao conectar Google Calendar. Tente novamente.');
       window.history.replaceState({}, '', '/settings');
     }
   }, [fetchMe]);
@@ -296,6 +309,113 @@ export function SettingsPage() {
               )}
               <p className="text-xs text-gray-600">
                 Integração via OAuth 2.0 com resolução de conflitos "Last Write Wins".
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Google Calendar settings */}
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar size={18} className="text-orange-400" />
+            <h3 className="text-gray-900 dark:text-white font-semibold">Google Calendar</h3>
+          </div>
+
+          {user?.googleCalConnected ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                <Link size={16} className="text-green-600 dark:text-green-400" />
+                <span className="text-green-600 dark:text-green-400 text-sm font-medium">Google Calendar conectado</span>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    setCalSyncing(true);
+                    setCalResult(null);
+                    const res = await api.post<{ stats: { synced: number; created: number; updated: number; deleted: number } }>('/calendar/sync', {});
+                    setCalSyncing(false);
+                    if (res.success && res.data) {
+                      const s = res.data.stats;
+                      setCalResult(`Sincronizado! ${s.synced} processados, ${s.created} criados, ${s.updated} atualizados, ${s.deleted} removidos`);
+                    } else {
+                      setCalResult(res.error || 'Erro ao sincronizar');
+                    }
+                  }}
+                  disabled={calSyncing}
+                  className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {calSyncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                  {calSyncing ? 'Sincronizando...' : 'Sincronizar Agenda'}
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setCalSyncing(true);
+                    const res = await api.post('/calendar/watch', {});
+                    setCalSyncing(false);
+                    if (res.success) {
+                      setCalResult('Push notifications ativadas. Eventos serão sincronizados automaticamente.');
+                    } else {
+                      setCalResult(res.error || 'Erro ao ativar push');
+                    }
+                  }}
+                  disabled={calSyncing}
+                  className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <ExternalLink size={16} />
+                  Ativar Push
+                </button>
+
+                <button
+                  onClick={async () => {
+                    setIsConnectingCal(true);
+                    const res = await api.delete('/calendar/disconnect');
+                    setIsConnectingCal(false);
+                    if (res.success) {
+                      fetchMe();
+                      setCalResult('Google Calendar desconectado');
+                    }
+                  }}
+                  disabled={isConnectingCal}
+                  className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-700 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Unlink size={16} />
+                  Desconectar
+                </button>
+              </div>
+
+              {calResult && (
+                <p className={`text-sm ${calResult.includes('Erro') ? 'text-red-400' : 'text-blue-400'}`}>{calResult}</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Conecte o Google Calendar para visualizar e criar eventos diretamente do Task360.
+              </p>
+              <button
+                onClick={async () => {
+                  setIsConnectingCal(true);
+                  const res = await api.get<{ url: string }>('/calendar/auth');
+                  setIsConnectingCal(false);
+                  if (res.success && res.data?.url) {
+                    window.location.href = res.data.url;
+                  } else {
+                    setCalResult(res.error || 'Google OAuth não disponível');
+                  }
+                }}
+                disabled={isConnectingCal}
+                className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                {isConnectingCal ? <Loader2 size={16} className="animate-spin" /> : <Calendar size={16} />}
+                Conectar Google Calendar
+              </button>
+              {calResult && (
+                <p className="text-sm text-yellow-400">{calResult}</p>
+              )}
+              <p className="text-xs text-gray-500">
+                Scopes: calendar.events (ler/criar) + calendar.readonly. Tokens criptografados com AES-256-GCM.
               </p>
             </div>
           )}

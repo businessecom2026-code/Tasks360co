@@ -76,6 +76,7 @@ export function authRoutes(prisma) {
           id: true, name: true, email: true, role: true,
           avatar: true, activeWorkspaceId: true,
           googleRefreshToken: true,
+          googleCalRefreshToken: true,
           createdAt: true, updatedAt: true,
         },
       });
@@ -84,9 +85,13 @@ export function authRoutes(prisma) {
         return res.status(404).json({ error: 'Usuário não encontrado' });
       }
 
-      // Add googleConnected flag without exposing tokens
-      const { googleRefreshToken, ...safeUser } = user;
-      res.json({ ...safeUser, googleConnected: !!googleRefreshToken });
+      // Add connected flags without exposing tokens
+      const { googleRefreshToken, googleCalRefreshToken, ...safeUser } = user;
+      res.json({
+        ...safeUser,
+        googleConnected: !!googleRefreshToken,
+        googleCalConnected: !!googleCalRefreshToken,
+      });
     } catch (err) {
       console.error('[Auth:me]', err);
       res.status(500).json({ error: 'Erro interno do servidor' });
