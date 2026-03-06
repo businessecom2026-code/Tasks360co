@@ -8,6 +8,7 @@ import { KanbanPage } from './pages/KanbanPage';
 import { MeetingsPage } from './pages/MeetingsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { CheckoutResultPage } from './pages/CheckoutResultPage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AdminGuard } from './components/common/AdminGuard';
 
@@ -20,6 +21,8 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/checkout/success" element={<CheckoutResultPage />} />
+          <Route path="/checkout/cancelled" element={<CheckoutResultPage />} />
 
           {/* Protected routes */}
           <Route element={<AppLayout />}>

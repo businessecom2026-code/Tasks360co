@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { createManualCharge } from '../services/billing.js';
-import { requireRole, requireWorkspaceRole, requireSuperAdmin } from '../middleware/roleGuard.js';
+import { createManualCharge, getOrder } from '../services/billing.js';
+import { requireWorkspaceRole, requireSuperAdmin } from '../middleware/roleGuard.js';
 
 export function billingRoutes(prisma) {
   const router = Router();
@@ -40,6 +40,44 @@ export function billingRoutes(prisma) {
     } catch (err) {
       console.error('[Billing:updateSubscription]', err);
       res.status(500).json({ error: 'Erro ao atualizar assinatura' });
+    }
+  });
+
+  // GET /api/billing/checkout-status/:orderId — check Revolut order status
+  router.get('/checkout-status/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+
+    try {
+      // Check local membership first
+      const membership = await prisma.membership.findFirst({
+        where: { revolutOrderId: orderId },
+        select: { paymentStatus: true, inviteAccepted: true, invitedEmail: true },
+      });
+
+      if (membership) {
+        return res.json({
+          orderId,
+          paymentStatus: membership.paymentStatus,
+          inviteAccepted: membership.inviteAccepted,
+          email: membership.invitedEmail,
+        });
+      }
+
+      // If not found locally, try Revolut API
+      const order = await getOrder(orderId);
+      if (order) {
+        return res.json({
+          orderId,
+          paymentStatus: order.state === 'completed' ? 'PAID' : order.state?.toUpperCase() || 'PENDING',
+          inviteAccepted: order.state === 'completed',
+          revolut: { state: order.state, completedAt: order.completed_at },
+        });
+      }
+
+      res.status(404).json({ error: 'Pedido não encontrado' });
+    } catch (err) {
+      console.error('[Billing:checkoutStatus]', err);
+      res.status(500).json({ error: 'Erro ao verificar status do pagamento' });
     }
   });
 
@@ -83,7 +121,6 @@ export function billingRoutes(prisma) {
     const { workspaceId, amount, description } = req.body;
 
     try {
-      // If no amount specified, get the workspace subscription total
       let chargeAmount = amount;
       if (!chargeAmount) {
         const sub = await prisma.subscription.findUnique({ where: { workspaceId } });

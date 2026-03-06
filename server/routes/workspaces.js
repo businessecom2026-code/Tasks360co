@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createSeatCheckout } from '../services/billing.js';
+import { createSeatCheckout } from '../services/revolut.js';
 import { createNotification } from '../services/notifications.js';
 import { sendInviteEmail } from '../services/email.js';
 

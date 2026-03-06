@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyWebhookSignature } from '../services/billing.js';
+import { revolutPay } from '../services/revolut.js';
 import { sendPaymentConfirmationEmail } from '../services/email.js';
 
 export function webhookRoutes(prisma) {
@@ -7,28 +7,27 @@ export function webhookRoutes(prisma) {
 
   /**
    * POST /api/webhooks/revolut
-   * Handles Revolut payment events.
-   * After payment_success, activates the membership invite.
+   * Handles Revolut payment events (ORDER_COMPLETED / payment_success).
+   * After confirmed payment, activates the membership invite and recalculates subscription.
    */
   router.post('/revolut', async (req, res) => {
     try {
-      // Verify webhook signature (skips if REVOLUT_WEBHOOK_SECRET not configured)
+      // 1. Verify webhook signature
       const signature = req.headers['revolut-signature'] || req.headers['x-revolut-signature'];
       const rawBody = JSON.stringify(req.body);
-      if (!verifyWebhookSignature(rawBody, signature)) {
+      if (!revolutPay.verifyWebhookSignature(rawBody, signature)) {
         console.error('[Webhook:Revolut] Invalid signature — rejecting');
         return res.status(401).json({ error: 'Invalid webhook signature' });
       }
 
-      const { event, order, order_id: rootOrderId } = req.body;
+      // 2. Parse event
+      const { eventType, orderId, metadata } = revolutPay.parseWebhookEvent(req.body);
+      const { workspaceId, email } = metadata;
 
-      console.log(`[Webhook:Revolut] Event: ${event}`, JSON.stringify(order || {}).slice(0, 200));
+      console.log(`[Webhook:Revolut] Event: ${eventType}`, JSON.stringify(metadata).slice(0, 200));
 
-      if (event === 'ORDER_COMPLETED' || event === 'payment_success') {
-        const orderId = order?.id || rootOrderId;
-        const metadata = order?.metadata || {};
-        const { workspaceId, email } = metadata;
-
+      // 3. Only process payment completion events
+      if (eventType === 'ORDER_COMPLETED' || eventType === 'payment_success') {
         // Primary lookup: by revolutOrderId (idempotent, anti-replay)
         let membership = orderId
           ? await prisma.membership.findFirst({
@@ -51,6 +50,7 @@ export function webhookRoutes(prisma) {
         } else {
           const targetWorkspaceId = membership.workspaceId;
 
+          // 4. Activate membership
           await prisma.membership.update({
             where: { id: membership.id },
             data: {
@@ -61,7 +61,7 @@ export function webhookRoutes(prisma) {
             },
           });
 
-          // Recalculate subscription
+          // 5. Recalculate subscription totals
           const activeCount = await prisma.membership.count({
             where: { workspaceId: targetWorkspaceId, inviteAccepted: true, paymentStatus: 'PAID' },
           });
@@ -78,7 +78,7 @@ export function webhookRoutes(prisma) {
             `[Webhook:Revolut] Membership activated — order: ${orderId}, email: ${membership.invitedEmail}, workspace: ${targetWorkspaceId}`
           );
 
-          // Send payment confirmation email (non-blocking)
+          // 6. Send payment confirmation email (non-blocking)
           if (membership.invitedEmail) {
             const ws = await prisma.workspace.findUnique({ where: { id: targetWorkspaceId } });
             sendPaymentConfirmationEmail({
@@ -88,6 +88,20 @@ export function webhookRoutes(prisma) {
             }).catch((e) =>
               console.error('[Webhook:Revolut] Falha ao enviar payment email:', e)
             );
+          }
+        }
+      } else if (eventType === 'ORDER_PAYMENT_FAILED') {
+        // Handle failed payments
+        if (orderId) {
+          const membership = await prisma.membership.findFirst({
+            where: { revolutOrderId: orderId, paymentStatus: 'PENDING' },
+          });
+          if (membership) {
+            await prisma.membership.update({
+              where: { id: membership.id },
+              data: { paymentStatus: 'FAILED' },
+            });
+            console.log(`[Webhook:Revolut] Payment failed for order ${orderId}`);
           }
         }
       }
@@ -113,7 +127,6 @@ export function webhookRoutes(prisma) {
       if (resourceState === 'update' && taskData) {
         const { googleTaskId, title, notes, status, updatedAt: googleUpdatedAt } = taskData;
 
-        // Find local task linked to this Google Task
         const localTask = await prisma.task.findFirst({
           where: { googleTaskId },
         });
@@ -123,14 +136,12 @@ export function webhookRoutes(prisma) {
           const localTime = new Date(localTask.updatedAt).getTime();
           const diffMs = Math.abs(googleTime - localTime);
 
-          // Conflict resolution: if difference < 2s, prioritize local ("Quem cria vai na frente")
           if (diffMs < 2000) {
             console.log(`[Webhook:GoogleTasks] Conflict within 2s threshold — keeping local version`);
             res.json({ action: 'skipped', reason: 'local_priority' });
             return;
           }
 
-          // Google wins (was updated more recently)
           if (googleTime > localTime) {
             const statusMap = {
               completed: 'DONE',
