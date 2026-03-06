@@ -21,7 +21,7 @@
     "test:coverage": "NODE_ENV=test vitest run --coverage",
     "replit:setup": "bash scripts/replit-setup.sh",
     "replit:start": "bash scripts/replit-start.sh",
-    "replit:build": "npm install --include=dev && npx prisma generate && npm run build"
+    "replit:build": "npm ci --include=dev && npx prisma generate && npm run build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
