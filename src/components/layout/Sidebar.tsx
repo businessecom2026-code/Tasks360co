@@ -9,8 +9,8 @@ import {
 } from 'lucide-react';
 import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { isAdminUser } from '../common/AdminGuard';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -22,14 +22,8 @@ const navItems = [
 
 export function Sidebar() {
   const { user, logout } = useAuthStore();
-  const { currentWorkspace } = useWorkspaceStore();
-  const workspaceRole = currentWorkspace?.membership?.roleInWorkspace;
 
-  // Admin nav visible to: SUPER_ADMIN (global), GESTOR (workspace), CLIENTE (workspace — invite only)
-  const hasAdminAccess =
-    user?.role === 'SUPER_ADMIN' ||
-    workspaceRole === 'GESTOR' ||
-    workspaceRole === 'CLIENTE';
+  const hasAdminAccess = isAdminUser(user?.email);
 
   return (
     <aside className="hidden md:flex w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex-col h-screen shrink-0">

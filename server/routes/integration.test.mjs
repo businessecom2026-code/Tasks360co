@@ -977,6 +977,27 @@ describe('Teste de Integração Completo — Todos os Roles', () => {
           .set(withAuth('cliente'));
         expect(res.status).toBe(403);
       });
+
+      it('SUPER_ADMIN com email diferente de admin@ecom360.co é bloqueado', async () => {
+        const fakeAdmin = { id: 'user-fake-sa', email: 'hacker@evil.co', role: 'SUPER_ADMIN' };
+        const fakeToken = jwt.sign(fakeAdmin, JWT_SECRET, { expiresIn: '1h' });
+
+        // Mock user lookup for fake admin
+        prisma.user.findUnique.mockImplementation(({ where }) => {
+          if (where.id === fakeAdmin.id || where.email === fakeAdmin.email) {
+            return { ...fakeAdmin, name: 'Fake Admin', password: '$2a$10$hashed' };
+          }
+          const u = Object.values(users).find((u) => u.email === where.email || u.id === where.id);
+          if (!u) return null;
+          return { ...u, password: '$2a$10$hashed' };
+        });
+
+        const res = await request(app)
+          .get('/api/billing/overview')
+          .set({ Authorization: `Bearer ${fakeToken}` });
+        expect(res.status).toBe(403);
+        expect(res.body.error).toContain('administrador');
+      });
     });
 
     describe('POST /manual-charge — cobrança manual (SUPER_ADMIN only)', () => {

@@ -9,6 +9,7 @@ import { MeetingsPage } from './pages/MeetingsPage';
 import { AdminPage } from './pages/AdminPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { AdminGuard } from './components/common/AdminGuard';
 
 export default function App() {
   return (
@@ -25,8 +26,12 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/kanban" element={<KanbanPage />} />
             <Route path="/meetings" element={<MeetingsPage />} />
-            <Route path="/admin" element={<AdminPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+
+            {/* Admin — restricted to admin@ecom360.co */}
+            <Route element={<AdminGuard />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

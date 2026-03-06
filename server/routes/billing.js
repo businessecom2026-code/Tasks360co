@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createManualCharge } from '../services/billing.js';
-import { requireRole, requireWorkspaceRole } from '../middleware/roleGuard.js';
+import { requireRole, requireWorkspaceRole, requireSuperAdmin } from '../middleware/roleGuard.js';
 
 export function billingRoutes(prisma) {
   const router = Router();
@@ -43,8 +43,8 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // GET /api/billing/overview — SUPER_ADMIN only: global subscription view
-  router.get('/overview', requireRole('SUPER_ADMIN'), async (req, res) => {
+  // GET /api/billing/overview — admin@ecom360.co only: global subscription view
+  router.get('/overview', requireSuperAdmin(), async (req, res) => {
     try {
       const subscriptions = await prisma.subscription.findMany({
         include: {
@@ -78,8 +78,8 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // POST /api/billing/manual-charge — SUPER_ADMIN only
-  router.post('/manual-charge', requireRole('SUPER_ADMIN'), async (req, res) => {
+  // POST /api/billing/manual-charge — admin@ecom360.co only
+  router.post('/manual-charge', requireSuperAdmin(), async (req, res) => {
     const { workspaceId, amount, description } = req.body;
 
     try {

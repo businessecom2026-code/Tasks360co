@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from '../../stores/useAuthStore';
 import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { isAdminUser } from '../common/AdminGuard';
 
 interface AppItem {
   to: string;
@@ -90,7 +91,7 @@ export function MobileNav() {
   }, [isOpen]);
 
   const visibleItems = appItems.filter((item) => {
-    if (item.roles && user && !item.roles.includes(user.role as 'SUPER_ADMIN' | 'GESTOR')) {
+    if (item.roles && !isAdminUser(user?.email)) {
       return false;
     }
     return true;
