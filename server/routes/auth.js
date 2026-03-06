@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { generateToken, authMiddleware } from '../middleware/auth.js';
 import { getAuthUrl, exchangeCodeForTokens, disconnectGoogle, getUserTokens } from '../services/googleAuth.js';
 import { fullSync } from '../services/syncEngine.js';
+import { sendWelcomeEmail } from '../services/email.js';
 
 export function authRoutes(prisma) {
   const router = Router();
@@ -53,6 +54,11 @@ export function authRoutes(prisma) {
 
       const token = generateToken(user);
       const { password: _, ...safeUser } = user;
+
+      // Send welcome email (non-blocking)
+      sendWelcomeEmail({ to: email, name }).catch((e) =>
+        console.error('[Auth:register] Falha ao enviar welcome email:', e)
+      );
 
       res.status(201).json({ token, user: safeUser });
     } catch (err) {

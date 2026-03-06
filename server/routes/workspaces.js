@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createSeatCheckout } from '../services/billing.js';
 import { createNotification } from '../services/notifications.js';
+import { sendInviteEmail } from '../services/email.js';
 
 export function workspaceRoutes(prisma) {
   const router = Router();
@@ -180,6 +181,21 @@ export function workspaceRoutes(prisma) {
           data: { workspaceId, membershipId: membership.id },
         }).catch(() => {});
       }
+
+      // Send invite email (non-blocking)
+      const workspace = existingUser
+        ? null // already fetched above for notification
+        : await prisma.workspace.findUnique({ where: { id: workspaceId } });
+      const wsName = workspace?.name || workspaceId;
+
+      sendInviteEmail({
+        to: email,
+        inviterName: req.user.name || req.user.email,
+        workspaceName: wsName,
+        checkoutUrl: checkout.checkoutUrl,
+      }).catch((e) =>
+        console.error('[Workspaces:invite] Falha ao enviar invite email:', e)
+      );
 
       res.status(201).json({
         membership,

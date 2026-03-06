@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { verifyWebhookSignature } from '../services/billing.js';
+import { sendPaymentConfirmationEmail } from '../services/email.js';
 
 export function webhookRoutes(prisma) {
   const router = Router();
@@ -76,6 +77,18 @@ export function webhookRoutes(prisma) {
           console.log(
             `[Webhook:Revolut] Membership activated — order: ${orderId}, email: ${membership.invitedEmail}, workspace: ${targetWorkspaceId}`
           );
+
+          // Send payment confirmation email (non-blocking)
+          if (membership.invitedEmail) {
+            const ws = await prisma.workspace.findUnique({ where: { id: targetWorkspaceId } });
+            sendPaymentConfirmationEmail({
+              to: membership.invitedEmail,
+              workspaceName: ws?.name || targetWorkspaceId,
+              amount: membership.costPerSeat || 3.0,
+            }).catch((e) =>
+              console.error('[Webhook:Revolut] Falha ao enviar payment email:', e)
+            );
+          }
         }
       }
 
