@@ -11,13 +11,21 @@ export function generateToken(user) {
 }
 
 export function authMiddleware(req, res, next) {
+  // Support Bearer token in header or ?token= query param (for SSE)
+  let token = null;
   const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) {
+
+  if (header && header.startsWith('Bearer ')) {
+    token = header.split(' ')[1];
+  } else if (req.query.token) {
+    token = req.query.token;
+  }
+
+  if (!token) {
     return res.status(401).json({ error: 'Token não fornecido' });
   }
 
   try {
-    const token = header.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();

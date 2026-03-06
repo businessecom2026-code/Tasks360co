@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task360 Engine — Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { gray: { 750: 'rgb(42,45,52)', 850: 'rgb(30,32,38)', 950: 'rgb(10,12,16)' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 999px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .tab-btn.active { background: #2563eb; color: white; }
+    .screen { display: none; }
+    .screen.active { display: flex; }
+  </style>
+</head>
+<body class="bg-gray-950 text-white antialiased">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- NAVIGATION BAR (Screen Switcher)                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="screen-nav" class="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800 px-4 py-2 flex items-center gap-2 overflow-x-auto" style="display:none">
+  <span class="text-xs text-gray-500 shrink-0 mr-2">TELAS:</span>
+  <button onclick="showScreen('login')" class="tab-btn text-xs px-3 py-1.5 rounded-md bg-gray-800 text-gray-400 hover:text-white transition shrink-0">Login</button>
+  <button onclick="showScreen('dashboard')" class="tab-btn text-xs px-3 py-1.5 rounded-md bg-gray-800 text-gray-400 hover:text-white transition shrink-0 active">Dashboard</button>
+  <button onclick="showScreen('kanban')" class="tab-btn text-xs px-3 py-1.5 rounded-md bg-gray-800 text-gray-400 hover:text-white transition shrink-0">Kanban</button>
+  <button onclick="showScreen('meetings')" class="tab-btn text-xs px-3 py-1.5 rounded-md bg-gray-800 text-gray-400 hover:text-white transition shrink-0">Reuniões</button>
+  <button onclick="showScreen('admin')" class="tab-btn text-xs px-3 py-1.5 rounded-md bg-gray-800 text-gray-400 hover:text-white transition shrink-0">Admin</button>
+  <button onclick="showScreen('settings')" class="tab-btn text-xs px-3 py-1.5 rounded-md bg-gray-800 text-gray-400 hover:text-white transition shrink-0">Settings</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN: LOGIN                                          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="screen-login" class="screen active min-h-screen items-center justify-center p-4">
+  <div class="w-full max-w-sm mx-auto">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold">Task<span class="text-blue-500">360</span></h1>
+      <p class="text-gray-500 text-sm mt-1">Gestão de tarefas inteligente</p>
+    </div>
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">E-mail</label>
+        <input type="email" value="admin@ecom360.co" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Senha</label>
+        <input type="password" value="admin123" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <button onclick="showScreen('dashboard')" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+        Entrar
+      </button>
+    </div>
+    <p class="text-center text-xs text-gray-600 mt-4">Task360 Engine &copy; 2026</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SIDEBAR (shared for all app screens)                   -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<template id="sidebar-template">
+  <aside class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col h-full shrink-0">
+    <div class="p-4 border-b border-gray-800">
+      <h1 class="text-xl font-bold">Task<span class="text-blue-500">360</span></h1>
+      <p class="text-xs text-gray-500 mt-0.5">Engine v1.0</p>
+    </div>
+    <div class="border-b border-gray-800 px-3 py-2 flex items-center gap-2">
+      <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      <select class="bg-transparent text-white text-sm font-medium w-full appearance-none cursor-pointer focus:outline-none">
+        <option>Ecom360</option>
+        <option>Projeto Alpha</option>
+      </select>
+      <svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </div>
+    <nav class="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+      <a onclick="showScreen('dashboard')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer transition-colors" data-screen="dashboard">
+        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        Dashboard
+      </a>
+      <a onclick="showScreen('kanban')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer transition-colors" data-screen="kanban">
+        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+        Kanban
+      </a>
+      <a onclick="showScreen('meetings')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer transition-colors" data-screen="meetings">
+        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        Reuniões
+      </a>
+      <a onclick="showScreen('admin')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer transition-colors" data-screen="admin">
+        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Admin
+      </a>
+      <a onclick="showScreen('settings')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer transition-colors" data-screen="settings">
+        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Configurações
+      </a>
+    </nav>
+    <div class="p-3 border-t border-gray-800">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">A</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm text-white truncate">Admin Task360</p>
+          <p class="text-xs text-gray-500 truncate">admin@ecom360.co</p>
+        </div>
+        <button onclick="showScreen('login')" class="text-gray-500 hover:text-red-400 transition-colors shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN: DASHBOARD                                      -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="screen-dashboard" class="screen h-screen overflow-hidden" style="padding-top:44px">
+  <div class="flex h-full">
+    <div class="sidebar-slot"></div>
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <header class="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 shrink-0">
+        <div><h2 class="text-lg font-semibold">Dashboard</h2><p class="text-xs text-gray-500">Ecom360</p></div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Buscar..." class="bg-gray-800 border border-gray-700 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 w-48">
+          </div>
+          <button class="relative text-gray-400 hover:text-white p-2">
+            <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+          </button>
+        </div>
+      </header>
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <!-- Stats -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-yellow-600/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+              <div><p class="text-xs text-gray-500">Pendentes</p><p class="text-2xl font-bold">3</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+              <div><p class="text-xs text-gray-500">Em Progresso</p><p class="text-2xl font-bold">2</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></div>
+              <div><p class="text-xs text-gray-500">Em Revisão</p><p class="text-2xl font-bold">1</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+              <div><p class="text-xs text-gray-500">Concluídas</p><p class="text-2xl font-bold">1</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Two columns -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-4"><svg class="w-[18px] h-[18px] text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg><h3 class="font-semibold">Próximas Reuniões</h3></div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between bg-gray-800 rounded-lg p-3"><div><p class="text-sm">Sprint Planning - Semana 10</p><p class="text-xs text-gray-500">2026-03-03 às 09:00</p></div><div class="flex items-center gap-1 text-gray-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg><span class="text-xs">3</span></div></div>
+              <div class="flex items-center justify-between bg-gray-800 rounded-lg p-3"><div><p class="text-sm">Review de Arquitetura</p><p class="text-xs text-gray-500">2026-03-05 às 14:00</p></div><div class="flex items-center gap-1 text-gray-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg><span class="text-xs">2</span></div></div>
+            </div>
+          </div>
+          <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-4"><svg class="w-[18px] h-[18px] text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg><h3 class="font-semibold">Assinatura</h3></div>
+            <div class="space-y-3">
+              <div class="flex justify-between"><span class="text-gray-400 text-sm">Plano Base</span><span class="text-sm">5.00 EUR</span></div>
+              <div class="flex justify-between"><span class="text-gray-400 text-sm">Assentos Ativos</span><span class="text-sm">3</span></div>
+              <div class="flex justify-between border-t border-gray-800 pt-2"><span class="text-gray-300 text-sm font-medium">Total Mensal</span><span class="text-sm font-bold">11.00 EUR</span></div>
+              <div class="flex justify-between"><span class="text-gray-400 text-sm">Auto-renovação</span><span class="text-xs bg-green-900/40 text-green-400 px-2 py-0.5 rounded">Ativa</span></div>
+              <div class="flex justify-between"><span class="text-gray-400 text-sm">Status</span><span class="text-xs bg-blue-900/40 text-blue-400 px-2 py-0.5 rounded">ACTIVE</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN: KANBAN                                         -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="screen-kanban" class="screen h-screen overflow-hidden" style="padding-top:44px">
+  <div class="flex h-full">
+    <div class="sidebar-slot"></div>
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <header class="h-16 bg-gray-900 border-b border-gray-800 flex items-center px-6 shrink-0"><div><h2 class="text-lg font-semibold">Kanban</h2><p class="text-xs text-gray-500">Ecom360</p></div></header>
+      <div class="flex-1 overflow-x-auto p-4">
+        <div class="flex gap-4 h-full min-h-[500px]">
+          <!-- PENDING -->
+          <div class="flex flex-col min-w-[280px] w-[280px] shrink-0 rounded-xl bg-gray-900 border border-gray-800">
+            <div class="flex items-center justify-between p-3 border-b border-gray-800">
+              <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><h3 class="text-sm font-semibold">Pendente</h3><span class="text-xs text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded-full">3</span></div>
+              <button class="text-gray-500 hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg></button>
+            </div>
+            <div class="flex-1 p-2 space-y-2 overflow-y-auto">
+              <div class="bg-gray-800 rounded-lg border border-gray-700 border-l-4 border-l-purple-500 p-3 cursor-pointer hover:bg-gray-750"><h4 class="text-sm font-medium pr-6 mb-1">Integrar Google Tasks API</h4><p class="text-xs text-gray-400 line-clamp-2 mb-2">OAuth2 + sync bi-direcional</p><div class="flex items-center gap-2"><span class="flex items-center gap-1 text-xs text-gray-500"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>10/03/2026</span><div class="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold" title="Admin">A</div></div></div>
+              <div class="bg-gray-800 rounded-lg border border-gray-700 border-l-4 border-l-orange-500 p-3 cursor-pointer hover:bg-gray-750"><h4 class="text-sm font-medium pr-6 mb-1">Testar fluxo Revolut</h4><p class="text-xs text-gray-400 line-clamp-2 mb-2">Checkout session + webhook</p><div class="flex items-center gap-2"><span class="flex items-center gap-1 text-xs text-gray-500"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>14/03/2026</span></div></div>
+              <div class="bg-gray-800 rounded-lg border border-gray-700 border-l-4 border-l-red-500 p-3 cursor-pointer hover:bg-gray-750"><h4 class="text-sm font-medium pr-6 mb-1">Documentar API endpoints</h4><p class="text-xs text-gray-400 line-clamp-2 mb-2">Swagger/OpenAPI spec</p><div class="flex items-center gap-2"><div class="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">M</div></div></div>
+            </div>
+          </div>
+          <!-- IN PROGRESS -->
+          <div class="flex flex-col min-w-[280px] w-[280px] shrink-0 rounded-xl bg-gray-900 border border-gray-800">
+            <div class="flex items-center justify-between p-3 border-b border-gray-800">
+              <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div><h3 class="text-sm font-semibold">Em Progresso</h3><span class="text-xs text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded-full">2</span></div>
+            </div>
+            <div class="flex-1 p-2 space-y-2 overflow-y-auto">
+              <div class="bg-gray-800 rounded-lg border border-gray-700 border-l-4 border-l-blue-500 p-3 cursor-pointer hover:bg-gray-750">
+                <div class="flex items-start justify-between"><h4 class="text-sm font-medium pr-2 mb-1">Implementar Kanban drag-and-drop</h4><svg class="w-3 h-3 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
+                <p class="text-xs text-gray-400 line-clamp-2 mb-2">Usar dnd-kit para arrastar cards</p>
+                <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="flex items-center gap-1 text-xs text-gray-500"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>07/03/2026</span><div class="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">M</div></div></div>
+                <span class="text-[10px] text-gray-600 mt-1 block">v3</span>
+              </div>
+              <div class="bg-gray-800 rounded-lg border border-gray-700 border-l-4 border-l-blue-500 p-3 cursor-pointer hover:bg-gray-750"><h4 class="text-sm font-medium pr-6 mb-1">Setup monitoring (Sentry)</h4><div class="flex items-center gap-2"><span class="flex items-center gap-1 text-xs text-gray-500"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>12/03/2026</span><div class="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">A</div></div></div>
+            </div>
+          </div>
+          <!-- REVIEW -->
+          <div class="flex flex-col min-w-[280px] w-[280px] shrink-0 rounded-xl bg-gray-900 border border-gray-800">
+            <div class="flex items-center justify-between p-3 border-b border-gray-800">
+              <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-purple-500"></div><h3 class="text-sm font-semibold">Revisão</h3><span class="text-xs text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded-full">1</span></div>
+            </div>
+            <div class="flex-1 p-2 space-y-2 overflow-y-auto">
+              <div class="bg-gray-800 rounded-lg border border-gray-700 border-l-4 border-l-yellow-500 p-3 cursor-pointer hover:bg-gray-750"><h4 class="text-sm font-medium pr-6 mb-1">Criar landing page</h4><p class="text-xs text-gray-400 line-clamp-2 mb-2">Design responsivo com Tailwind</p><div class="flex items-center gap-2"><span class="flex items-center gap-1 text-xs text-gray-500"><svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>05/03/2026</span><div class="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">J</div></div><span class="text-[10px] text-gray-600 mt-1 block">v2</span></div>
+            </div>
+          </div>
+          <!-- DONE -->
+          <div class="flex flex-col min-w-[280px] w-[280px] shrink-0 rounded-xl bg-gray-900 border border-gray-800">
+            <div class="flex items-center justify-between p-3 border-b border-gray-800">
+              <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full bg-green-500"></div><h3 class="text-sm font-semibold">Concluído</h3><span class="text-xs text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded-full">1</span></div>
+            </div>
+            <div class="flex-1 p-2 space-y-2 overflow-y-auto">
+              <div class="bg-gray-800 rounded-lg border border-gray-700 border-l-4 border-l-green-500 p-3 cursor-pointer hover:bg-gray-750"><h4 class="text-sm font-medium pr-6 mb-1">Configurar pipeline CI/CD</h4><p class="text-xs text-gray-400 line-clamp-2 mb-2">Setup GitHub Actions para deploy automático</p><div class="flex items-center gap-2"><div class="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">J</div></div></div>
+              <p class="text-center text-xs text-gray-600 py-4">Arraste tarefas para cá</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN: MEETINGS                                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="screen-meetings" class="screen h-screen overflow-hidden" style="padding-top:44px">
+  <div class="flex h-full">
+    <div class="sidebar-slot"></div>
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <header class="h-16 bg-gray-900 border-b border-gray-800 flex items-center px-6 shrink-0"><div><h2 class="text-lg font-semibold">Reuniões</h2><p class="text-xs text-gray-500">Ecom360</p></div></header>
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <div class="flex gap-3">
+          <button class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>Nova Reunião</button>
+          <button class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Processar Gravação com IA</button>
+        </div>
+        <!-- 60-min banner -->
+        <div class="bg-yellow-900/20 border border-yellow-700 rounded-lg p-3 flex items-start gap-3">
+          <svg class="w-[18px] h-[18px] text-yellow-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+          <div><p class="text-sm text-yellow-400 font-medium">Limite de processamento</p><p class="text-xs text-gray-400">Reuniões limitadas a 60 minutos para processamento de IA (Gemini 1.5 Flash).</p></div>
+        </div>
+        <!-- Meeting with AI summary -->
+        <div class="space-y-3">
+          <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+            <h4 class="text-white font-medium">Review de Arquitetura</h4>
+            <div class="flex items-center gap-4 mt-2 text-sm text-gray-400">
+              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>2026-03-05 às 14:00</span>
+              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>2 participante(s)</span>
+              <span class="text-xs bg-gray-700 px-2 py-0.5 rounded">Google Meet</span>
+            </div>
+            <div class="mt-3 bg-gray-900 rounded-lg p-3">
+              <p class="text-xs text-gray-500 mb-1 font-medium">Resumo IA:</p>
+              <p class="text-sm text-gray-300">Discutida a migração para Prisma e a estrutura multi-tenant. Decidido usar Zustand para gerenciamento de workspace.</p>
+            </div>
+            <p class="mt-2 text-xs text-green-500 font-medium">2 tarefa(s) sugerida(s) pela IA</p>
+          </div>
+          <div class="bg-gray-800 border border-gray-700 rounded-lg p-4">
+            <h4 class="text-white font-medium">Sprint Planning - Semana 10</h4>
+            <div class="flex items-center gap-4 mt-2 text-sm text-gray-400">
+              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>2026-03-03 às 09:00</span>
+              <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>3 participante(s)</span>
+              <span class="text-xs bg-gray-700 px-2 py-0.5 rounded">Google Meet</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN: ADMIN                                          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="screen-admin" class="screen h-screen overflow-hidden" style="padding-top:44px">
+  <div class="flex h-full">
+    <div class="sidebar-slot"></div>
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <header class="h-16 bg-gray-900 border-b border-gray-800 flex items-center px-6 shrink-0"><div><h2 class="text-lg font-semibold">Administração</h2><p class="text-xs text-gray-500">Ecom360</p></div></header>
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="flex gap-1 bg-gray-900 rounded-lg p-1 border border-gray-800"><button class="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white">Faturamento</button><button class="px-4 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white">Membros</button></div>
+          <button class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Convidar</button>
+        </div>
+        <!-- Summary cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="text-xs text-gray-500">Receita Mensal Total</p><p class="text-xl font-bold">16.00 EUR</p></div></div></div>
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><div><p class="text-xs text-gray-500">Assentos Ativos</p><p class="text-xl font-bold">4</p></div></div></div>
+          <div class="bg-gray-800 border border-gray-700 rounded-xl p-4"><div class="flex items-center gap-3"><div class="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center"><svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div><div><p class="text-xs text-gray-500">Workspaces Ativos</p><p class="text-xl font-bold">2</p></div></div></div>
+        </div>
+        <!-- Billing table -->
+        <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+          <div class="p-4 border-b border-gray-700"><h3 class="font-semibold">Faturamento por Gestor</h3></div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="text-left text-gray-500 border-b border-gray-700"><th class="px-4 py-3 font-medium">Workspace</th><th class="px-4 py-3 font-medium">Gestor</th><th class="px-4 py-3 font-medium text-right">Base</th><th class="px-4 py-3 font-medium text-right">Assentos</th><th class="px-4 py-3 font-medium text-right">Total/Mês</th><th class="px-4 py-3 font-medium text-center">Auto-Renovar</th><th class="px-4 py-3 font-medium text-center">Ações</th></tr></thead>
+              <tbody>
+                <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 text-white">Ecom360</td><td class="px-4 py-3 text-gray-300">Admin Task360</td><td class="px-4 py-3 text-right text-gray-300">5.00 EUR</td><td class="px-4 py-3 text-right text-gray-300">3</td><td class="px-4 py-3 text-right text-white font-medium">11.00 EUR</td><td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded bg-green-900/40 text-green-400">Sim</span></td><td class="px-4 py-3 text-center"><button class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Cobrar</button></td></tr>
+                <tr class="border-b border-gray-700/50 hover:bg-gray-700/30"><td class="px-4 py-3 text-white">Projeto Alpha</td><td class="px-4 py-3 text-gray-300">Admin Task360</td><td class="px-4 py-3 text-right text-gray-300">5.00 EUR</td><td class="px-4 py-3 text-right text-gray-300">1</td><td class="px-4 py-3 text-right text-white font-medium">5.00 EUR</td><td class="px-4 py-3 text-center"><span class="text-xs px-2 py-0.5 rounded bg-green-900/40 text-green-400">Sim</span></td><td class="px-4 py-3 text-center"><button class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Cobrar</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-lg p-4"><p class="text-xs text-gray-500"><strong class="text-gray-400">Fórmula:</strong> Total = Plano Base (5,00 EUR) + (Convites Ativos × 3,00 EUR)</p></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SCREEN: SETTINGS                                       -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="screen-settings" class="screen h-screen overflow-hidden" style="padding-top:44px">
+  <div class="flex h-full">
+    <div class="sidebar-slot"></div>
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <header class="h-16 bg-gray-900 border-b border-gray-800 flex items-center px-6 shrink-0"><div><h2 class="text-lg font-semibold">Configurações</h2><p class="text-xs text-gray-500">Ecom360</p></div></header>
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 max-w-2xl">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-4"><svg class="w-[18px] h-[18px] text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg><h3 class="font-semibold">Perfil</h3></div>
+          <div class="space-y-4">
+            <div><label class="block text-sm text-gray-400 mb-1">Nome</label><input type="text" value="Admin Task360" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-blue-500"></div>
+            <div><label class="block text-sm text-gray-400 mb-1">E-mail</label><input type="email" value="admin@ecom360.co" disabled class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-gray-500 text-sm cursor-not-allowed"></div>
+            <div><label class="block text-sm text-gray-400 mb-1">Função</label><input type="text" value="SUPER_ADMIN" disabled class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-gray-500 text-sm cursor-not-allowed"></div>
+            <button class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>Salvar Perfil</button>
+          </div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-4"><svg class="w-[18px] h-[18px] text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg><h3 class="font-semibold">Assinatura</h3></div>
+          <div class="flex items-center justify-between bg-gray-800 rounded-lg p-4">
+            <div><p class="text-sm font-medium">Renovação Automática</p><p class="text-gray-500 text-xs mt-0.5">Sua assinatura será renovada automaticamente</p></div>
+            <div class="relative w-12 h-6 rounded-full bg-blue-600 cursor-pointer"><div class="absolute top-0.5 w-5 h-5 bg-white rounded-full translate-x-6 transition-transform"></div></div>
+          </div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-center gap-2 mb-4"><svg class="w-[18px] h-[18px] text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><h3 class="font-semibold">Google Tasks Sync</h3></div>
+          <p class="text-gray-400 text-sm mb-4">Conecte sua conta Google para sincronizar tarefas bidirecionalmente.</p>
+          <button class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Conectar Google Account</button>
+          <p class="text-xs text-gray-600 mt-2">Integração via OAuth 2.0 com resolução de conflitos "Last Write Wins".</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT: Screen Navigation                          -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<script>
+  // Clone sidebar into each app screen
+  document.querySelectorAll('.sidebar-slot').forEach(slot => {
+    const tpl = document.getElementById('sidebar-template');
+    slot.appendChild(tpl.content.cloneNode(true));
+  });
+
+  function showScreen(name) {
+    // Show nav bar once past login
+    document.getElementById('screen-nav').style.display = name === 'login' ? 'none' : 'flex';
+
+    // Switch screens
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + name);
+    if (target) target.classList.add('active');
+
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.textContent.trim().toLowerCase() === name || btn.onclick?.toString().includes(name)) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Update sidebar active link
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+      link.classList.remove('bg-blue-600/20', 'text-blue-400');
+      link.classList.add('text-gray-400');
+      if (link.dataset.screen === name) {
+        link.classList.add('bg-blue-600/20', 'text-blue-400');
+        link.classList.remove('text-gray-400');
+      }
+    });
+  }
+
+  // Start on login
+  showScreen('login');
+</script>
+</body>
+</html>

@@ -28,52 +28,52 @@ export function BillingDashboard() {
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center">
               <DollarSign size={20} className="text-green-400" />
             </div>
             <div>
               <p className="text-xs text-gray-500">Receita Mensal Total</p>
-              <p className="text-xl font-bold text-white">{totalRevenue.toFixed(2)} EUR</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{totalRevenue.toFixed(2)} EUR</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
               <Users size={20} className="text-blue-400" />
             </div>
             <div>
               <p className="text-xs text-gray-500">Assentos Ativos</p>
-              <p className="text-xl font-bold text-white">{totalSeats}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{totalSeats}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
               <TrendingUp size={20} className="text-purple-400" />
             </div>
             <div>
               <p className="text-xs text-gray-500">Workspaces Ativos</p>
-              <p className="text-xl font-bold text-white">{billings.length}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{billings.length}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Billing table */}
-      <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-gray-700">
-          <h3 className="text-white font-semibold">Faturamento por Gestor</h3>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-gray-900 dark:text-white font-semibold">Faturamento por Gestor</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-700">
+              <tr className="text-left text-gray-500 border-b border-gray-200 dark:border-gray-700">
                 <th className="px-4 py-3 font-medium">Workspace</th>
                 <th className="px-4 py-3 font-medium">Gestor</th>
                 <th className="px-4 py-3 font-medium text-right">Base</th>
@@ -86,15 +86,15 @@ export function BillingDashboard() {
             </thead>
             <tbody>
               {billings.map((b) => (
-                <tr key={b.workspaceId} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                  <td className="px-4 py-3 text-white">{b.workspaceName}</td>
-                  <td className="px-4 py-3 text-gray-300">{b.gestorName}</td>
-                  <td className="px-4 py-3 text-right text-gray-300">{b.basePrice.toFixed(2)} EUR</td>
-                  <td className="px-4 py-3 text-right text-gray-300">{b.activeSeats}</td>
-                  <td className="px-4 py-3 text-right text-gray-300">{b.seatCost.toFixed(2)} EUR</td>
-                  <td className="px-4 py-3 text-right text-white font-medium">{b.totalMonthly.toFixed(2)} EUR</td>
+                <tr key={b.workspaceId} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  <td className="px-4 py-3 text-gray-900 dark:text-white">{b.workspaceName}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{b.gestorName}</td>
+                  <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{b.basePrice.toFixed(2)} EUR</td>
+                  <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{b.activeSeats}</td>
+                  <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-300">{b.seatCost.toFixed(2)} EUR</td>
+                  <td className="px-4 py-3 text-right text-gray-900 dark:text-white font-medium">{b.totalMonthly.toFixed(2)} EUR</td>
                   <td className="px-4 py-3 text-center">
-                    <span className={`text-xs px-2 py-0.5 rounded ${b.autoRenew ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded ${b.autoRenew ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'}`}>
                       {b.autoRenew ? 'Sim' : 'Não'}
                     </span>
                   </td>
@@ -124,9 +124,9 @@ export function BillingDashboard() {
       </div>
 
       {/* Formula explanation */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
+      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
         <p className="text-xs text-gray-500">
-          <strong className="text-gray-400">Fórmula:</strong> Total = Plano Base (5,00 EUR) + (Convites Ativos × 3,00 EUR)
+          <strong className="text-gray-600 dark:text-gray-400">Fórmula:</strong> Total = Plano Base (5,00 EUR) + (Convites Ativos × 3,00 EUR)
         </p>
       </div>
     </div>

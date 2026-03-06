@@ -1,14 +1,16 @@
 import { Router } from 'express';
+import { createManualCharge, getOrder, calculateMonthlyTotal } from '../services/billing.js';
+import { revolutPay } from '../services/revolut.js';
+import { requireWorkspaceRole, requireSuperAdmin } from '../middleware/roleGuard.js';
+
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 export function billingRoutes(prisma) {
   const router = Router();
 
-  // GET /api/billing/subscription — get current workspace subscription
+  // GET /api/billing/subscription — all workspace roles can view
   router.get('/subscription', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
+    const workspaceId = req.workspaceId;
 
     try {
       const subscription = await prisma.subscription.findUnique({
@@ -26,13 +28,9 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // PATCH /api/billing/subscription — update subscription (e.g., toggle autoRenew)
-  router.patch('/subscription', async (req, res) => {
-    const workspaceId = req.headers['x-workspace-id'];
-    if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
-    }
-
+  // PATCH /api/billing/subscription — GESTOR only: toggle autoRenew
+  router.patch('/subscription', requireWorkspaceRole('GESTOR'), async (req, res) => {
+    const workspaceId = req.workspaceId;
     const { autoRenew } = req.body;
 
     try {
@@ -48,54 +46,183 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // GET /api/billing/overview — admin: get billing for all workspaces
-  router.get('/overview', async (req, res) => {
-    // Only SUPER_ADMIN or GESTOR can see billing overview
-    if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'GESTOR') {
-      return res.status(403).json({ error: 'Acesso restrito a administradores' });
-    }
+  /**
+   * POST /api/billing/checkout — GESTOR only: create Revolut checkout for workspace subscription.
+   * Creates a payment order for the current monthly total (base + seats).
+   */
+  router.post('/checkout', requireWorkspaceRole('GESTOR'), async (req, res) => {
+    const workspaceId = req.workspaceId;
 
     try {
-      let subscriptions;
+      const subscription = await prisma.subscription.findUnique({ where: { workspaceId } });
+      if (!subscription) {
+        return res.status(404).json({ error: 'Assinatura não encontrada' });
+      }
 
-      if (req.user.role === 'SUPER_ADMIN') {
-        // Super admin sees all
-        subscriptions = await prisma.subscription.findMany({
-          include: {
-            workspace: {
-              include: {
-                memberships: {
-                  where: { roleInWorkspace: 'GESTOR' },
-                  include: { user: { select: { name: true } } },
-                  take: 1,
-                },
-              },
-            },
-          },
-        });
-      } else {
-        // Gestor sees only their workspaces
-        const memberships = await prisma.membership.findMany({
-          where: { userId: req.user.id, roleInWorkspace: 'GESTOR' },
-          select: { workspaceId: true },
-        });
+      const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+      const amount = subscription.totalMonthlyValue;
 
-        const workspaceIds = memberships.map((m) => m.workspaceId);
-        subscriptions = await prisma.subscription.findMany({
-          where: { workspaceId: { in: workspaceIds } },
-          include: {
-            workspace: {
-              include: {
-                memberships: {
-                  where: { roleInWorkspace: 'GESTOR' },
-                  include: { user: { select: { name: true } } },
-                  take: 1,
-                },
-              },
-            },
-          },
+      const order = await revolutPay.createOrder({
+        amount,
+        description: `Task360 — Plano mensal "${workspace?.name || workspaceId}"`,
+        metadata: { workspaceId, type: 'subscription', subscriptionId: subscription.id },
+        successUrl: `${APP_URL}/checkout/success`,
+        failureUrl: `${APP_URL}/checkout/cancelled`,
+      });
+
+      // Store order reference on subscription
+      await prisma.subscription.update({
+        where: { workspaceId },
+        data: { revolutOrderId: order.orderId },
+      });
+
+      console.log(`[Billing] Checkout created for workspace ${workspaceId}: ${amount} EUR — Order: ${order.orderId}`);
+
+      res.json({
+        orderId: order.orderId,
+        checkoutUrl: order.checkoutUrl,
+        amount,
+      });
+    } catch (err) {
+      console.error('[Billing:checkout]', err);
+      res.status(500).json({ error: 'Erro ao criar checkout' });
+    }
+  });
+
+  /**
+   * POST /api/billing/renew — GESTOR only: manually trigger subscription renewal.
+   * Creates a Revolut order for the current billing cycle.
+   */
+  router.post('/renew', requireWorkspaceRole('GESTOR'), async (req, res) => {
+    const workspaceId = req.workspaceId;
+
+    try {
+      const subscription = await prisma.subscription.findUnique({ where: { workspaceId } });
+      if (!subscription) {
+        return res.status(404).json({ error: 'Assinatura não encontrada' });
+      }
+
+      // Recalculate fresh total
+      const activeSeats = await prisma.membership.count({
+        where: { workspaceId, inviteAccepted: true, paymentStatus: 'PAID' },
+      });
+      const amount = calculateMonthlyTotal(activeSeats);
+
+      const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+
+      const order = await revolutPay.createOrder({
+        amount,
+        description: `Task360 — Renovação "${workspace?.name || workspaceId}"`,
+        metadata: { workspaceId, type: 'renewal', subscriptionId: subscription.id },
+        successUrl: `${APP_URL}/checkout/success`,
+        failureUrl: `${APP_URL}/checkout/cancelled`,
+      });
+
+      // Update subscription with new order and period
+      const nextPeriodEnd = new Date();
+      nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+
+      await prisma.subscription.update({
+        where: { workspaceId },
+        data: {
+          revolutOrderId: order.orderId,
+          totalMonthlyValue: amount,
+          seatCount: activeSeats,
+          currentPeriodEnd: nextPeriodEnd,
+        },
+      });
+
+      console.log(`[Billing] Renewal order for workspace ${workspaceId}: ${amount} EUR — Order: ${order.orderId}`);
+
+      res.json({
+        orderId: order.orderId,
+        checkoutUrl: order.checkoutUrl,
+        amount,
+        nextPeriodEnd,
+      });
+    } catch (err) {
+      console.error('[Billing:renew]', err);
+      res.status(500).json({ error: 'Erro ao renovar assinatura' });
+    }
+  });
+
+  // GET /api/billing/checkout-status/:orderId — check Revolut order status
+  router.get('/checkout-status/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+
+    try {
+      // Check local membership first
+      const membership = await prisma.membership.findFirst({
+        where: { revolutOrderId: orderId },
+        select: { paymentStatus: true, inviteAccepted: true, invitedEmail: true },
+      });
+
+      if (membership) {
+        return res.json({
+          orderId,
+          paymentStatus: membership.paymentStatus,
+          inviteAccepted: membership.inviteAccepted,
+          email: membership.invitedEmail,
         });
       }
+
+      // Check subscription orders
+      const subscription = await prisma.subscription.findFirst({
+        where: { revolutOrderId: orderId },
+        select: { status: true, workspaceId: true },
+      });
+
+      if (subscription) {
+        // For subscription orders, check Revolut status
+        const revolutOrder = await getOrder(orderId);
+        const paid = revolutOrder?.state === 'completed';
+        if (paid && subscription.status !== 'ACTIVE') {
+          await prisma.subscription.update({
+            where: { workspaceId: subscription.workspaceId },
+            data: { status: 'ACTIVE' },
+          });
+        }
+        return res.json({
+          orderId,
+          paymentStatus: paid ? 'PAID' : 'PENDING',
+          type: 'subscription',
+        });
+      }
+
+      // If not found locally, try Revolut API
+      const order = await getOrder(orderId);
+      if (order) {
+        return res.json({
+          orderId,
+          paymentStatus: order.state === 'completed' ? 'PAID' : order.state?.toUpperCase() || 'PENDING',
+          inviteAccepted: order.state === 'completed',
+          revolut: { state: order.state, completedAt: order.completed_at },
+        });
+      }
+
+      res.status(404).json({ error: 'Pedido não encontrado' });
+    } catch (err) {
+      console.error('[Billing:checkoutStatus]', err);
+      res.status(500).json({ error: 'Erro ao verificar status do pagamento' });
+    }
+  });
+
+  // GET /api/billing/overview — admin@ecom360.co only: global subscription view
+  router.get('/overview', requireSuperAdmin(), async (req, res) => {
+    try {
+      const subscriptions = await prisma.subscription.findMany({
+        include: {
+          workspace: {
+            include: {
+              memberships: {
+                where: { roleInWorkspace: 'GESTOR' },
+                include: { user: { select: { name: true } } },
+                take: 1,
+              },
+            },
+          },
+        },
+      });
 
       const overview = subscriptions.map((sub) => ({
         workspaceId: sub.workspaceId,
@@ -106,6 +233,8 @@ export function billingRoutes(prisma) {
         seatCost: Math.max(0, (sub.seatCount - 1) * 3.0),
         totalMonthly: sub.totalMonthlyValue,
         autoRenew: sub.autoRenew,
+        status: sub.status,
+        currentPeriodEnd: sub.currentPeriodEnd,
       }));
 
       res.json(overview);
@@ -115,29 +244,30 @@ export function billingRoutes(prisma) {
     }
   });
 
-  // POST /api/billing/manual-charge — admin: generate manual charge via Revolut
-  router.post('/manual-charge', async (req, res) => {
+  // POST /api/billing/manual-charge — admin@ecom360.co only
+  router.post('/manual-charge', requireSuperAdmin(), async (req, res) => {
     const { workspaceId, amount, description } = req.body;
 
-    if (req.user.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Acesso restrito a Super Admins' });
-    }
-
     try {
-      // In production: Create Revolut payment order
-      // const order = await revolutService.createOrder({
-      //   amount: amount || subscription.totalMonthlyValue * 100,
-      //   currency: 'EUR',
-      //   description: description || 'Cobrança manual Task360',
-      //   metadata: { workspaceId },
-      // });
+      let chargeAmount = amount;
+      if (!chargeAmount) {
+        const sub = await prisma.subscription.findUnique({ where: { workspaceId } });
+        chargeAmount = sub?.totalMonthlyValue || 5.0;
+      }
 
-      console.log(`[Billing] Manual charge triggered for workspace ${workspaceId}: ${amount || 'auto'} EUR`);
+      const result = await createManualCharge({
+        workspaceId,
+        amount: chargeAmount,
+        description: description || `Cobrança manual Task360`,
+      });
+
+      console.log(`[Billing] Manual charge created for workspace ${workspaceId}: ${chargeAmount} EUR — Order: ${result.orderId}`);
 
       res.json({
         success: true,
-        message: 'Cobrança manual enviada (stub - integrar Revolut API)',
-        // In production: orderId: order.id, paymentUrl: order.checkout_url
+        orderId: result.orderId,
+        checkoutUrl: result.checkoutUrl,
+        amount: chargeAmount,
       });
     } catch (err) {
       console.error('[Billing:manualCharge]', err);

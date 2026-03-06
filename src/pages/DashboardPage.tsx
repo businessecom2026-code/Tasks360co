@@ -9,14 +9,21 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { Header } from '../components/layout/Header';
+import { TaskStatusChart } from '../components/kanban/TaskStatusChart';
 import { useTaskStore } from '../stores/useTaskStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
+import { useAuthStore } from '../stores/useAuthStore';
 import { api } from '../lib/api';
 import type { Meeting, Subscription } from '../types';
 
 export function DashboardPage() {
   const { tasks, fetchTasks } = useTaskStore();
   const { currentWorkspace } = useWorkspaceStore();
+  const { user } = useAuthStore();
+
+  const workspaceRole = currentWorkspace?.membership?.roleInWorkspace;
+  const canViewSubscription =
+    user?.role === 'SUPER_ADMIN' || workspaceRole === 'GESTOR';
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
@@ -51,7 +58,7 @@ export function DashboardPage() {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4"
             >
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 ${stat.bg} rounded-lg flex items-center justify-center`}>
@@ -59,19 +66,22 @@ export function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">{stat.label}</p>
-                  <p className="text-2xl font-bold text-white">{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
+        {/* Task status donut chart */}
+        <TaskStatusChart />
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Upcoming meetings */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <Video size={18} className="text-blue-400" />
-              <h3 className="text-white font-semibold">Próximas Reuniões</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold">Próximas Reuniões</h3>
             </div>
             {meetings.length === 0 ? (
               <p className="text-gray-500 text-sm py-4 text-center">Sem reuniões agendadas</p>
@@ -80,10 +90,10 @@ export function DashboardPage() {
                 {meetings.slice(0, 5).map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between bg-gray-800 rounded-lg p-3"
+                    className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
                   >
                     <div>
-                      <p className="text-sm text-white">{m.title}</p>
+                      <p className="text-sm text-gray-900 dark:text-white">{m.title}</p>
                       <p className="text-xs text-gray-500">{m.date} às {m.time}</p>
                     </div>
                     <div className="flex items-center gap-1 text-gray-500">
@@ -96,34 +106,34 @@ export function DashboardPage() {
             )}
           </div>
 
-          {/* Subscription info */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+          {/* Subscription info — GESTOR / SUPER_ADMIN only */}
+          {canViewSubscription && <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={18} className="text-green-400" />
-              <h3 className="text-white font-semibold">Assinatura</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold">Assinatura</h3>
             </div>
             {subscription ? (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Plano Base</span>
-                  <span className="text-white text-sm">{subscription.basePrice.toFixed(2)} EUR</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">Plano Base</span>
+                  <span className="text-gray-900 dark:text-white text-sm">{subscription.basePrice.toFixed(2)} EUR</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Assentos Ativos</span>
-                  <span className="text-white text-sm">{subscription.seatCount}</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">Assentos Ativos</span>
+                  <span className="text-gray-900 dark:text-white text-sm">{subscription.seatCount}</span>
                 </div>
-                <div className="flex justify-between border-t border-gray-800 pt-2">
-                  <span className="text-gray-300 text-sm font-medium">Total Mensal</span>
-                  <span className="text-white text-sm font-bold">{subscription.totalMonthlyValue.toFixed(2)} EUR</span>
+                <div className="flex justify-between border-t border-gray-200 dark:border-gray-800 pt-2">
+                  <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Total Mensal</span>
+                  <span className="text-gray-900 dark:text-white text-sm font-bold">{subscription.totalMonthlyValue.toFixed(2)} EUR</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Auto-renovação</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">Auto-renovação</span>
                   <span className={`text-xs px-2 py-0.5 rounded ${subscription.autoRenew ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
                     {subscription.autoRenew ? 'Ativa' : 'Desativada'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Status</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">Status</span>
                   <span className="text-xs bg-blue-900/40 text-blue-400 px-2 py-0.5 rounded">
                     {subscription.status}
                   </span>
@@ -132,7 +142,7 @@ export function DashboardPage() {
             ) : (
               <p className="text-gray-500 text-sm py-4 text-center">Sem assinatura ativa</p>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </>

@@ -1,4 +1,7 @@
 import { Router } from 'express';
+import { createSeatCheckout } from '../services/revolut.js';
+import { createNotification } from '../services/notifications.js';
+import { sendInviteEmail } from '../services/email.js';
 
 export function workspaceRoutes(prisma) {
   const router = Router();
@@ -25,7 +28,11 @@ export function workspaceRoutes(prisma) {
           workspaceId: m.workspaceId,
           roleInWorkspace: m.roleInWorkspace,
           inviteAccepted: m.inviteAccepted,
-          costPerMonth: m.costPerMonth,
+          paymentStatus: m.paymentStatus,
+          costPerSeat: m.costPerSeat,
+          invitedEmail: m.invitedEmail,
+          revolutOrderId: m.revolutOrderId,
+          paidAt: m.paidAt,
           createdAt: m.createdAt,
           updatedAt: m.updatedAt,
         },
@@ -59,7 +66,8 @@ export function workspaceRoutes(prisma) {
               userId: req.user.id,
               roleInWorkspace: 'GESTOR',
               inviteAccepted: true,
-              costPerMonth: 0, // Owner doesn't pay seat cost
+              paymentStatus: 'PAID',
+              costPerSeat: 0, // Owner doesn't pay seat cost
             },
           },
           subscription: {
@@ -91,28 +99,33 @@ export function workspaceRoutes(prisma) {
 
   // POST /api/workspaces/invite — invite a member (gated by Revolut checkout)
   router.post('/invite', async (req, res) => {
-    const { workspaceId, email, roleInWorkspace } = req.body;
+    const workspaceId = req.headers['x-workspace-id'] || req.body.workspaceId;
+    const { email, roleInWorkspace } = req.body;
 
     if (!workspaceId || !email) {
       return res.status(400).json({ error: 'workspaceId e email obrigatórios' });
     }
 
     try {
-      // Verify caller is GESTOR of this workspace
+      // GESTOR or CLIENTE can invite (COLABORADOR cannot)
       const callerMembership = await prisma.membership.findUnique({
         where: {
           userId_workspaceId: { userId: req.user.id, workspaceId },
         },
       });
 
-      if (!callerMembership || callerMembership.roleInWorkspace !== 'GESTOR') {
-        return res.status(403).json({ error: 'Apenas Gestores podem convidar membros' });
+      const canInvite = callerMembership &&
+        (callerMembership.roleInWorkspace === 'GESTOR' ||
+         callerMembership.roleInWorkspace === 'CLIENTE');
+
+      if (!canInvite) {
+        return res.status(403).json({ error: 'Apenas Gestores e Clientes podem convidar membros' });
       }
 
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({ where: { email } });
 
-      // Check if already invited
+      // Check if already a member or already invited
       if (existingUser) {
         const existingMembership = await prisma.membership.findUnique({
           where: {
@@ -124,31 +137,69 @@ export function workspaceRoutes(prisma) {
         }
       }
 
-      // In production: Create Revolut Checkout Session for 3.00 EUR
-      // const checkoutSession = await revolutService.createCheckout({
-      //   amount: 300, currency: 'EUR',
-      //   metadata: { workspaceId, email, roleInWorkspace }
-      // });
+      // Check for pending invite by email (user doesn't exist yet)
+      const pendingInvite = await prisma.membership.findFirst({
+        where: { workspaceId, invitedEmail: email },
+      });
+      if (pendingInvite) {
+        return res.status(409).json({ error: 'Já existe um convite pendente para este e-mail' });
+      }
 
-      // For now, create membership as pending (awaiting payment webhook)
+      // Create Revolut checkout session for seat payment (3.00 EUR)
+      const checkout = await createSeatCheckout({
+        workspaceId,
+        email,
+        roleInWorkspace: roleInWorkspace || 'COLABORADOR',
+      });
+
+      // Create membership as pending (invite blocked until Revolut payment_success webhook)
       const membership = await prisma.membership.create({
         data: {
-          userId: existingUser?.id || 'pending',
+          userId: existingUser?.id || null,
           workspaceId,
           roleInWorkspace: roleInWorkspace || 'COLABORADOR',
           inviteAccepted: false,
-          costPerMonth: 3.0,
+          paymentStatus: 'PENDING',
+          costPerSeat: 3.0,
           invitedEmail: email,
+          revolutOrderId: checkout.orderId,
         },
       });
 
       // Update subscription seat count
       await recalculateSubscription(prisma, workspaceId);
 
+      // Notify invited user if they exist (non-blocking)
+      if (existingUser) {
+        const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+        createNotification(prisma, {
+          userId: existingUser.id,
+          workspaceId,
+          type: 'invite_received',
+          title: 'Convite recebido',
+          body: `Você foi convidado para o workspace "${workspace?.name}"`,
+          data: { workspaceId, membershipId: membership.id },
+        }).catch(() => {});
+      }
+
+      // Send invite email (non-blocking)
+      const workspace = existingUser
+        ? null // already fetched above for notification
+        : await prisma.workspace.findUnique({ where: { id: workspaceId } });
+      const wsName = workspace?.name || workspaceId;
+
+      sendInviteEmail({
+        to: email,
+        inviterName: req.user.name || req.user.email,
+        workspaceName: wsName,
+        checkoutUrl: checkout.checkoutUrl,
+      }).catch((e) =>
+        console.error('[Workspaces:invite] Falha ao enviar invite email:', e)
+      );
+
       res.status(201).json({
         membership,
-        // In production: checkoutUrl: checkoutSession.url
-        checkoutUrl: `https://checkout.revolut.com/stub?workspace=${workspaceId}&email=${email}`,
+        checkoutUrl: checkout.checkoutUrl,
       });
     } catch (err) {
       console.error('[Workspaces:invite]', err);
@@ -221,7 +272,7 @@ export function workspaceRoutes(prisma) {
  */
 async function recalculateSubscription(prisma, workspaceId) {
   const activeMemberships = await prisma.membership.count({
-    where: { workspaceId, inviteAccepted: true },
+    where: { workspaceId, inviteAccepted: true, paymentStatus: 'PAID' },
   });
 
   const basePrice = 5.0;
