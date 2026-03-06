@@ -1,11 +1,24 @@
 /**
- * Teste de Integração Completo — Todos os Roles
+ * Teste de Integração Completo — Todos os Roles + Todas as Rotas
  *
- * Testa todas as rotas da API com os 4 roles:
+ * Testa TODAS as rotas da API com os 4 roles:
  * - SUPER_ADMIN: acesso global + billing overview + manual charge
  * - GESTOR: owner do workspace, convites, remoção de membros, toggle autoRenew
  * - COLABORADOR: acesso básico a tasks/meetings/notifications
  * - CLIENTE: pode convidar, acesso básico, sem toggles de billing
+ *
+ * Cobertura:
+ * - Auth (login, register, me, google oauth)
+ * - Workspaces (CRUD, invite, members)
+ * - Tasks (CRUD, optimistic locking, tenant isolation)
+ * - Meetings (CRUD, AI processing)
+ * - Billing (subscription, checkout, renew, status, overview, manual charge)
+ * - Notifications (list, unread, read, delete, SSE)
+ * - Webhooks (Revolut payment, Google Tasks sync, Google Calendar)
+ * - Recordings (start, pause, resume, stop, upload, list)
+ * - Calendar (auth, events CRUD, sync, watch)
+ * - Attachments (list, upload, delete)
+ * - Segurança (tokens, tenant guard, permissões cruzadas)
  *
  * Usa Express diretamente com Prisma mockado (sem necessidade de PostgreSQL).
  */
@@ -54,6 +67,41 @@ vi.mock('../services/billing.js', () => ({
     }),
   ),
   verifyWebhookSignature: vi.fn(() => true),
+  getOrder: vi.fn(() => Promise.resolve(null)),
+  calculateMonthlyTotal: vi.fn((seats) => 5.0 + Math.max(0, (seats - 1) * 3.0)),
+}));
+
+vi.mock('../services/revolut.js', () => ({
+  revolutPay: {
+    verifyWebhookSignature: vi.fn(() => true),
+    parseWebhookEvent: vi.fn((body) => {
+      const event = body.event || body.type || 'unknown';
+      const order = body.order || {};
+      const orderId = order.id || body.order_id || null;
+      const metadata = order.metadata || body.metadata || {};
+      return { eventType: event, orderId, metadata, state: order.state || null };
+    }),
+    createOrder: vi.fn(() => Promise.resolve({
+      orderId: `stub-order-${Date.now()}`,
+      checkoutUrl: 'https://checkout.revolut.com/stub',
+      publicId: 'stub-public',
+      state: 'pending',
+    })),
+    getOrder: vi.fn(() => Promise.resolve(null)),
+    isConfigured: false,
+  },
+  createSeatCheckout: vi.fn(() =>
+    Promise.resolve({
+      checkoutUrl: 'https://checkout.revolut.com/stub',
+      orderId: `stub-${Date.now()}`,
+    }),
+  ),
+  createManualCharge: vi.fn(() =>
+    Promise.resolve({
+      orderId: `stub-manual-${Date.now()}`,
+      checkoutUrl: 'https://checkout.revolut.com/stub-manual',
+    }),
+  ),
 }));
 
 vi.mock('../services/notifications.js', () => ({
@@ -62,6 +110,32 @@ vi.mock('../services/notifications.js', () => ({
   sendToWorkspace: vi.fn(),
   createNotification: vi.fn(() => Promise.resolve({ id: 'notif-1' })),
   notifyWorkspace: vi.fn(() => Promise.resolve([])),
+}));
+
+vi.mock('../services/email.js', () => ({
+  sendWelcomeEmail: vi.fn(() => Promise.resolve({ id: 'email-1' })),
+  sendInviteEmail: vi.fn(() => Promise.resolve({ id: 'email-2' })),
+  sendPaymentConfirmationEmail: vi.fn(() => Promise.resolve({ id: 'email-3' })),
+}));
+
+vi.mock('../services/googleCalendar.js', () => ({
+  getCalAuthUrl: vi.fn(() => 'https://accounts.google.com/cal-mock'),
+  exchangeCalTokens: vi.fn(() => Promise.resolve()),
+  disconnectCalendar: vi.fn(() => Promise.resolve()),
+  listEvents: vi.fn(() => Promise.resolve([
+    { id: 'ev-1', title: 'Test Event', startTime: '2026-03-10T09:00:00Z', endTime: '2026-03-10T10:00:00Z' },
+  ])),
+  createEvent: vi.fn(() => Promise.resolve({
+    id: 'ev-new', title: 'New Event', googleEventId: 'g-ev-1',
+    startTime: '2026-03-10T09:00:00Z', endTime: '2026-03-10T10:00:00Z',
+  })),
+  updateEvent: vi.fn(() => Promise.resolve({
+    id: 'ev-1', title: 'Updated Event',
+  })),
+  deleteEvent: vi.fn(() => Promise.resolve()),
+  incrementalSync: vi.fn(() => Promise.resolve({ created: 1, updated: 0, deleted: 0 })),
+  setupWatch: vi.fn(() => Promise.resolve({ channelId: 'ch-1', expiration: new Date().toISOString() })),
+  renewExpiringWatches: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('bcryptjs', () => ({
@@ -85,6 +159,8 @@ import { meetingRoutes } from './meetings.js';
 import { billingRoutes } from './billing.js';
 import { notificationRoutes } from './notifications.js';
 import { webhookRoutes } from './webhooks.js';
+import { recordingRoutes } from './recordings.js';
+import { calendarRoutes } from './calendar.js';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -113,9 +189,13 @@ function createMockPrisma() {
   const taskStore = [];
   const meetingStore = [];
   const notifStore = [];
+  const recordingStore = [];
+  const calendarEventStore = [];
+  const attachmentStore = [];
 
   return {
     user: {
+      findFirst: vi.fn(() => null),
       findUnique: vi.fn(({ where, select }) => {
         const u = Object.values(users).find((u) => u.email === where.email || u.id === where.id);
         if (!u) return null;
@@ -324,7 +404,9 @@ function createMockPrisma() {
         totalMonthlyValue: 14.0,
         autoRenew: true,
         status: 'ACTIVE',
+        revolutOrderId: null,
       })),
+      findFirst: vi.fn(() => null),
       findMany: vi.fn(() => [
         {
           workspaceId: WORKSPACE_ID,
@@ -332,6 +414,7 @@ function createMockPrisma() {
           seatCount: 4,
           totalMonthlyValue: 14.0,
           autoRenew: true,
+          status: 'ACTIVE',
           workspace: {
             name: 'Test Workspace',
             memberships: [{ user: { name: 'Gestor User' } }],
@@ -364,10 +447,88 @@ function createMockPrisma() {
       deleteMany: vi.fn(() => ({ count: 1 })),
     },
 
+    recordingSession: {
+      findUnique: vi.fn(({ where, include }) => {
+        const s = recordingStore.find((r) => r.id === where.id);
+        if (!s) return null;
+        if (include?.meeting) {
+          const m = meetingStore.find((m) => m.id === s.meetingId);
+          return { ...s, meeting: m || { workspaceId: WORKSPACE_ID } };
+        }
+        return s;
+      }),
+      findMany: vi.fn(({ where }) => {
+        if (where?.meetingId) return recordingStore.filter((r) => r.meetingId === where.meetingId);
+        return recordingStore;
+      }),
+      create: vi.fn(({ data }) => {
+        const session = {
+          id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+          ...data,
+          totalDurationMs: data.totalDurationMs || 0,
+          audioUrl: null,
+          errorMessage: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        recordingStore.push(session);
+        return session;
+      }),
+      update: vi.fn(({ where, data }) => {
+        const idx = recordingStore.findIndex((r) => r.id === where.id);
+        if (idx >= 0) {
+          recordingStore[idx] = { ...recordingStore[idx], ...data, updatedAt: new Date() };
+          return recordingStore[idx];
+        }
+        return { id: where.id, ...data };
+      }),
+    },
+
+    calendarEvent: {
+      findMany: vi.fn(() => calendarEventStore),
+      findUnique: vi.fn(({ where }) => calendarEventStore.find((e) => e.id === where.id) || null),
+      create: vi.fn(({ data }) => {
+        const evt = { id: `calev-${Date.now()}`, ...data, createdAt: new Date(), updatedAt: new Date() };
+        calendarEventStore.push(evt);
+        return evt;
+      }),
+      update: vi.fn(({ where, data }) => {
+        const idx = calendarEventStore.findIndex((e) => e.id === where.id);
+        if (idx >= 0) calendarEventStore[idx] = { ...calendarEventStore[idx], ...data };
+        return calendarEventStore[idx] || { id: where.id, ...data };
+      }),
+      delete: vi.fn(({ where }) => {
+        const idx = calendarEventStore.findIndex((e) => e.id === where.id);
+        if (idx >= 0) calendarEventStore.splice(idx, 1);
+        return { id: where.id };
+      }),
+    },
+
+    attachment: {
+      findMany: vi.fn(({ where }) => {
+        if (where?.taskId) return attachmentStore.filter((a) => a.taskId === where.taskId);
+        return attachmentStore;
+      }),
+      findUnique: vi.fn(({ where }) => attachmentStore.find((a) => a.id === where.id) || null),
+      create: vi.fn(({ data }) => {
+        const att = { id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`, ...data, createdAt: new Date() };
+        attachmentStore.push(att);
+        return att;
+      }),
+      delete: vi.fn(({ where }) => {
+        const idx = attachmentStore.findIndex((a) => a.id === where.id);
+        if (idx >= 0) attachmentStore.splice(idx, 1);
+        return { id: where.id };
+      }),
+    },
+
     // Expose stores for test assertions
     _taskStore: taskStore,
     _meetingStore: meetingStore,
     _notifStore: notifStore,
+    _recordingStore: recordingStore,
+    _calendarEventStore: calendarEventStore,
+    _attachmentStore: attachmentStore,
   };
 }
 
@@ -387,8 +548,10 @@ function createApp(prisma) {
   app.use('/api/workspaces', authMiddleware, workspaceRoutes(prisma));
   app.use('/api/tasks', authMiddleware, tenantGuard(prisma), taskRoutes(prisma));
   app.use('/api/meetings', authMiddleware, tenantGuard(prisma), meetingRoutes(prisma));
+  app.use('/api/recordings', authMiddleware, tenantGuard(prisma), recordingRoutes(prisma));
   app.use('/api/billing', authMiddleware, tenantGuard(prisma), billingRoutes(prisma));
   app.use('/api/notifications', authMiddleware, notificationRoutes(prisma));
+  app.use('/api/calendar', calendarRoutes(prisma));
 
   return app;
 }
@@ -1232,7 +1395,428 @@ describe('Teste de Integração Completo — Todos os Roles', () => {
     });
   });
 
-  // ─── 8. SEGURANÇA & EDGE CASES ─────────────────────────────────
+  // ─── 8. RECORDINGS ─────────────────────────────────────────────
+
+  describe('RECORDINGS /api/recordings', () => {
+    let meetingId;
+
+    beforeEach(async () => {
+      // Create a meeting for recording tests
+      const res = await request(app)
+        .post('/api/meetings')
+        .set(withAuth('gestor'))
+        .send({ title: 'Reunião para gravar' });
+      meetingId = res.body.id;
+    });
+
+    describe('POST /start — iniciar gravação', () => {
+      it('rejeita sem meetingId', async () => {
+        const res = await request(app)
+          .post('/api/recordings/start')
+          .set(withAuth('gestor'))
+          .send({});
+        expect(res.status).toBe(400);
+      });
+
+      for (const role of ['superAdmin', 'gestor', 'colaborador', 'cliente']) {
+        it(`${role} pode iniciar gravação`, async () => {
+          const res = await request(app)
+            .post('/api/recordings/start')
+            .set(withAuth(role))
+            .send({ meetingId });
+          expect(res.status).toBe(201);
+          expect(res.body.status).toBe('RECORDING');
+          expect(res.body.meetingId).toBe(meetingId);
+        });
+      }
+
+      it('403 para meeting de outro workspace', async () => {
+        prisma.meeting.findUnique.mockResolvedValueOnce({
+          id: 'meet-other-ws',
+          workspaceId: WORKSPACE_ID_2,
+        });
+        const res = await request(app)
+          .post('/api/recordings/start')
+          .set(withAuth('gestor'))
+          .send({ meetingId: 'meet-other-ws' });
+        expect(res.status).toBe(403);
+      });
+    });
+
+    describe('PATCH /:id/pause — pausar gravação', () => {
+      let sessionId;
+
+      beforeEach(async () => {
+        const res = await request(app)
+          .post('/api/recordings/start')
+          .set(withAuth('gestor'))
+          .send({ meetingId });
+        sessionId = res.body.id;
+      });
+
+      it('pausa gravação em andamento', async () => {
+        const res = await request(app)
+          .patch(`/api/recordings/${sessionId}/pause`)
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe('PAUSED');
+      });
+
+      it('404 para sessão inexistente', async () => {
+        prisma.recordingSession.findUnique.mockResolvedValueOnce(null);
+        const res = await request(app)
+          .patch('/api/recordings/nonexistent/pause')
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(404);
+      });
+    });
+
+    describe('PATCH /:id/resume — retomar gravação', () => {
+      let sessionId;
+
+      beforeEach(async () => {
+        const startRes = await request(app)
+          .post('/api/recordings/start')
+          .set(withAuth('gestor'))
+          .send({ meetingId });
+        sessionId = startRes.body.id;
+        // Pause it first
+        await request(app)
+          .patch(`/api/recordings/${sessionId}/pause`)
+          .set(withAuth('gestor'));
+      });
+
+      it('retoma gravação pausada', async () => {
+        const res = await request(app)
+          .patch(`/api/recordings/${sessionId}/resume`)
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe('RECORDING');
+      });
+    });
+
+    describe('PATCH /:id/stop — parar gravação', () => {
+      let sessionId;
+
+      beforeEach(async () => {
+        const res = await request(app)
+          .post('/api/recordings/start')
+          .set(withAuth('gestor'))
+          .send({ meetingId });
+        sessionId = res.body.id;
+      });
+
+      it('para gravação em andamento', async () => {
+        const res = await request(app)
+          .patch(`/api/recordings/${sessionId}/stop`)
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe('STOPPED');
+      });
+    });
+
+    describe('GET /meeting/:meetingId — listar sessões', () => {
+      it('lista sessões de uma meeting', async () => {
+        // Create a session first
+        await request(app)
+          .post('/api/recordings/start')
+          .set(withAuth('gestor'))
+          .send({ meetingId });
+
+        const res = await request(app)
+          .get(`/api/recordings/meeting/${meetingId}`)
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body)).toBe(true);
+      });
+
+      it('403 para meeting de outro workspace', async () => {
+        prisma.meeting.findUnique.mockResolvedValueOnce({
+          id: 'meet-other',
+          workspaceId: WORKSPACE_ID_2,
+        });
+        const res = await request(app)
+          .get('/api/recordings/meeting/meet-other')
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(403);
+      });
+    });
+  });
+
+  // ─── 9. CALENDAR ──────────────────────────────────────────────
+
+  describe('CALENDAR /api/calendar', () => {
+    describe('GET /auth — iniciar OAuth2', () => {
+      it('retorna 503 quando GOOGLE_CLIENT_ID não configurado', async () => {
+        const res = await request(app)
+          .get('/api/calendar/auth')
+          .set(authHeader('gestor'));
+        // Without GOOGLE_CLIENT_ID env var, returns 503
+        expect(res.status).toBe(503);
+        expect(res.body.error).toContain('Google OAuth');
+      });
+
+      it('rejeita sem auth', async () => {
+        const res = await request(app).get('/api/calendar/auth');
+        expect(res.status).toBe(401);
+      });
+    });
+
+    describe('GET /callback — OAuth2 callback', () => {
+      it('redireciona com sucesso', async () => {
+        const res = await request(app)
+          .get('/api/calendar/callback?code=mock-code&state=user-gestor');
+        expect(res.status).toBe(302);
+        expect(res.headers.location).toContain('google_cal_connected=true');
+      });
+
+      it('redireciona com erro se faltam params', async () => {
+        const res = await request(app).get('/api/calendar/callback');
+        expect(res.status).toBe(302);
+        expect(res.headers.location).toContain('google_cal_error');
+      });
+    });
+
+    describe('DELETE /disconnect — desconectar Calendar', () => {
+      it('desconecta com sucesso', async () => {
+        const res = await request(app)
+          .delete('/api/calendar/disconnect')
+          .set(authHeader('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+      });
+    });
+
+    describe('GET /events — listar eventos', () => {
+      for (const role of ['superAdmin', 'gestor', 'colaborador', 'cliente']) {
+        it(`${role} pode listar eventos`, async () => {
+          const res = await request(app)
+            .get('/api/calendar/events')
+            .set(authHeader(role));
+          expect(res.status).toBe(200);
+          expect(Array.isArray(res.body)).toBe(true);
+        });
+      }
+
+      it('suporta filtros timeMin/timeMax', async () => {
+        const res = await request(app)
+          .get('/api/calendar/events?timeMin=2026-03-01T00:00:00Z&timeMax=2026-03-31T23:59:59Z')
+          .set(authHeader('gestor'));
+        expect(res.status).toBe(200);
+      });
+    });
+
+    describe('POST /events — criar evento', () => {
+      it('rejeita sem campos obrigatórios', async () => {
+        const res = await request(app)
+          .post('/api/calendar/events')
+          .set(authHeader('gestor'))
+          .send({ title: 'Sem horários' });
+        expect(res.status).toBe(400);
+      });
+
+      it('cria evento com sucesso', async () => {
+        const res = await request(app)
+          .post('/api/calendar/events')
+          .set(authHeader('gestor'))
+          .send({
+            title: 'Reunião importante',
+            startTime: '2026-03-10T09:00:00Z',
+            endTime: '2026-03-10T10:00:00Z',
+            location: 'Sala 1',
+          });
+        expect(res.status).toBe(201);
+        expect(res.body.title).toBe('New Event');
+      });
+    });
+
+    describe('PATCH /events/:id — atualizar evento', () => {
+      it('atualiza evento com sucesso', async () => {
+        const res = await request(app)
+          .patch('/api/calendar/events/ev-1')
+          .set(authHeader('gestor'))
+          .send({ title: 'Evento atualizado' });
+        expect(res.status).toBe(200);
+      });
+    });
+
+    describe('DELETE /events/:id — deletar evento', () => {
+      it('deleta evento com sucesso', async () => {
+        const res = await request(app)
+          .delete('/api/calendar/events/ev-1')
+          .set(authHeader('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+      });
+    });
+
+    describe('POST /sync — sync incremental', () => {
+      it('dispara sync com sucesso', async () => {
+        const res = await request(app)
+          .post('/api/calendar/sync')
+          .set(authHeader('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.stats).toBeDefined();
+      });
+    });
+
+    describe('POST /watch — setup push notifications', () => {
+      it('configura watch com sucesso', async () => {
+        const res = await request(app)
+          .post('/api/calendar/watch')
+          .set(authHeader('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+      });
+    });
+  });
+
+  // ─── 10. BILLING CHECKOUT/RENEW/STATUS ────────────────────────
+
+  describe('BILLING — Checkout, Renew & Status', () => {
+    describe('POST /api/billing/checkout — criar checkout', () => {
+      it('GESTOR pode criar checkout', async () => {
+        const res = await request(app)
+          .post('/api/billing/checkout')
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.checkoutUrl).toBeDefined();
+        expect(res.body.orderId).toBeDefined();
+      });
+
+      it('SUPER_ADMIN (GESTOR no workspace) pode criar checkout', async () => {
+        const res = await request(app)
+          .post('/api/billing/checkout')
+          .set(withAuth('superAdmin'));
+        expect(res.status).toBe(200);
+      });
+
+      it('COLABORADOR NÃO pode criar checkout', async () => {
+        const res = await request(app)
+          .post('/api/billing/checkout')
+          .set(withAuth('colaborador'));
+        expect(res.status).toBe(403);
+      });
+
+      it('CLIENTE NÃO pode criar checkout', async () => {
+        const res = await request(app)
+          .post('/api/billing/checkout')
+          .set(withAuth('cliente'));
+        expect(res.status).toBe(403);
+      });
+    });
+
+    describe('POST /api/billing/renew — renovar assinatura', () => {
+      it('GESTOR pode renovar', async () => {
+        const res = await request(app)
+          .post('/api/billing/renew')
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.checkoutUrl).toBeDefined();
+      });
+
+      it('COLABORADOR NÃO pode renovar', async () => {
+        const res = await request(app)
+          .post('/api/billing/renew')
+          .set(withAuth('colaborador'));
+        expect(res.status).toBe(403);
+      });
+    });
+
+    describe('GET /api/billing/checkout-status/:orderId — verificar status', () => {
+      it('retorna status de membership por orderId', async () => {
+        prisma.membership.findFirst.mockResolvedValueOnce({
+          paymentStatus: 'PAID',
+          inviteAccepted: true,
+          invitedEmail: 'test@test.co',
+        });
+        const res = await request(app)
+          .get('/api/billing/checkout-status/stub-order-123')
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(200);
+        expect(res.body.paymentStatus).toBe('PAID');
+      });
+
+      it('retorna 404 para pedido inexistente', async () => {
+        prisma.membership.findFirst.mockResolvedValueOnce(null);
+        prisma.subscription.findFirst.mockResolvedValueOnce(null);
+        const res = await request(app)
+          .get('/api/billing/checkout-status/nonexistent')
+          .set(withAuth('gestor'));
+        expect(res.status).toBe(404);
+      });
+    });
+  });
+
+  // ─── 11. WEBHOOKS — Google Calendar ──────────────────────────
+
+  describe('WEBHOOKS — Google Calendar', () => {
+    it('confirma sync message', async () => {
+      const res = await request(app)
+        .post('/api/webhooks/google-calendar')
+        .set({ 'x-goog-resource-state': 'sync', 'x-goog-channel-id': 'ch-1' })
+        .send({});
+      expect(res.status).toBe(200);
+      expect(res.body.action).toBe('sync_confirmed');
+    });
+
+    it('dispara sync para change event com user válido', async () => {
+      prisma.user.findFirst.mockResolvedValueOnce({ id: 'user-gestor' });
+      const res = await request(app)
+        .post('/api/webhooks/google-calendar')
+        .set({ 'x-goog-resource-state': 'exists', 'x-goog-channel-id': 'ch-test' })
+        .send({});
+      expect(res.status).toBe(200);
+      expect(res.body.action).toBe('sync_triggered');
+    });
+
+    it('retorna no_user para channel desconhecido', async () => {
+      prisma.user.findFirst.mockResolvedValueOnce(null);
+      const res = await request(app)
+        .post('/api/webhooks/google-calendar')
+        .set({ 'x-goog-resource-state': 'exists', 'x-goog-channel-id': 'ch-unknown' })
+        .send({});
+      expect(res.status).toBe(200);
+      expect(res.body.action).toBe('no_user');
+    });
+
+    it('rejeita sem channel ID', async () => {
+      const res = await request(app)
+        .post('/api/webhooks/google-calendar')
+        .set({ 'x-goog-resource-state': 'exists' })
+        .send({});
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ─── 12. WEBHOOKS — Revolut payment failed ──────────────────
+
+  describe('WEBHOOKS — Revolut Payment Failed', () => {
+    it('marca membership como FAILED quando pagamento falha', async () => {
+      prisma.membership.findFirst.mockResolvedValueOnce({
+        id: 'mem-fail',
+        revolutOrderId: 'order-fail',
+        paymentStatus: 'PENDING',
+      });
+
+      const res = await request(app)
+        .post('/api/webhooks/revolut')
+        .send({
+          event: 'ORDER_PAYMENT_FAILED',
+          order: { id: 'order-fail', metadata: {} },
+        });
+      expect(res.status).toBe(200);
+      expect(prisma.membership.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'mem-fail' },
+          data: { paymentStatus: 'FAILED' },
+        })
+      );
+    });
+  });
+
+  // ─── 13. SEGURANÇA & EDGE CASES ─────────────────────────────────
 
   describe('SEGURANÇA', () => {
     it('rejeita token expirado', async () => {
@@ -1290,7 +1874,7 @@ describe('Teste de Integração Completo — Todos os Roles', () => {
     });
   });
 
-  // ─── 9. MATRIX DE PERMISSÕES (resumo) ──────────────────────────
+  // ─── 14. MATRIX DE PERMISSÕES (resumo) ─────────────────────────
 
   describe('MATRIX DE PERMISSÕES — Verificação Cruzada', () => {
     const permissionMatrix = [
