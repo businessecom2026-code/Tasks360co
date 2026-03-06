@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, User, CreditCard, RefreshCw, Link, Unlink, Loader2 } from 'lucide-react';
+import { Save, User, CreditCard, RefreshCw, Link, Unlink, Loader2, ExternalLink } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { useAuthStore } from '../stores/useAuthStore';
 import { api } from '../lib/api';
@@ -14,6 +14,8 @@ export function SettingsPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutMsg, setCheckoutMsg] = useState<string | null>(null);
 
   useEffect(() => {
     api.get<Subscription>('/billing/subscription').then((res) => {
@@ -49,6 +51,25 @@ export function SettingsPage() {
     const res = await api.patch<Subscription>('/billing/subscription', { autoRenew: newValue });
     if (res.success && res.data) {
       setSubscription(res.data);
+    }
+  };
+
+  const handleCheckout = async (type: 'checkout' | 'renew') => {
+    setIsCheckingOut(true);
+    setCheckoutMsg(null);
+    const res = await api.post<{ checkoutUrl: string; amount: number; orderId: string }>(
+      `/billing/${type}`, {}
+    );
+    setIsCheckingOut(false);
+    if (res.success && res.data?.checkoutUrl) {
+      if (res.data.checkoutUrl.includes('stub=true')) {
+        setCheckoutMsg(`Modo sandbox: pagamento de ${res.data.amount.toFixed(2)} EUR simulado com sucesso.`);
+      } else {
+        window.open(res.data.checkoutUrl, '_blank');
+        setCheckoutMsg('Checkout Revolut aberto em nova aba. Complete o pagamento.');
+      }
+    } else {
+      setCheckoutMsg(res.error || 'Erro ao criar checkout');
     }
   };
 
@@ -157,6 +178,36 @@ export function SettingsPage() {
                   </span>
                 </div>
               )}
+
+              {/* Checkout / Renew buttons */}
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleCheckout('checkout')}
+                    disabled={isCheckingOut}
+                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {isCheckingOut ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
+                    Pagar Plano
+                  </button>
+                  <button
+                    onClick={() => handleCheckout('renew')}
+                    disabled={isCheckingOut}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    {isCheckingOut ? <Loader2 size={16} className="animate-spin" /> : <ExternalLink size={16} />}
+                    Renovar
+                  </button>
+                </div>
+                {checkoutMsg && (
+                  <p className={`text-sm ${checkoutMsg.includes('Erro') ? 'text-red-400' : 'text-green-400'}`}>
+                    {checkoutMsg}
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Pagamento processado via Revolut Business. Checkout seguro com HMAC-SHA256.
+                </p>
+              </div>
             </div>
           </div>
         )}

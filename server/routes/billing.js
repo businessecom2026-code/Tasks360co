@@ -1,6 +1,9 @@
 import { Router } from 'express';
-import { createManualCharge, getOrder } from '../services/billing.js';
+import { createManualCharge, getOrder, calculateMonthlyTotal } from '../services/billing.js';
+import { revolutPay } from '../services/revolut.js';
 import { requireWorkspaceRole, requireSuperAdmin } from '../middleware/roleGuard.js';
+
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 export function billingRoutes(prisma) {
   const router = Router();
@@ -43,6 +46,106 @@ export function billingRoutes(prisma) {
     }
   });
 
+  /**
+   * POST /api/billing/checkout — GESTOR only: create Revolut checkout for workspace subscription.
+   * Creates a payment order for the current monthly total (base + seats).
+   */
+  router.post('/checkout', requireWorkspaceRole('GESTOR'), async (req, res) => {
+    const workspaceId = req.workspaceId;
+
+    try {
+      const subscription = await prisma.subscription.findUnique({ where: { workspaceId } });
+      if (!subscription) {
+        return res.status(404).json({ error: 'Assinatura não encontrada' });
+      }
+
+      const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+      const amount = subscription.totalMonthlyValue;
+
+      const order = await revolutPay.createOrder({
+        amount,
+        description: `Task360 — Plano mensal "${workspace?.name || workspaceId}"`,
+        metadata: { workspaceId, type: 'subscription', subscriptionId: subscription.id },
+        successUrl: `${APP_URL}/checkout/success`,
+        failureUrl: `${APP_URL}/checkout/cancelled`,
+      });
+
+      // Store order reference on subscription
+      await prisma.subscription.update({
+        where: { workspaceId },
+        data: { revolutOrderId: order.orderId },
+      });
+
+      console.log(`[Billing] Checkout created for workspace ${workspaceId}: ${amount} EUR — Order: ${order.orderId}`);
+
+      res.json({
+        orderId: order.orderId,
+        checkoutUrl: order.checkoutUrl,
+        amount,
+      });
+    } catch (err) {
+      console.error('[Billing:checkout]', err);
+      res.status(500).json({ error: 'Erro ao criar checkout' });
+    }
+  });
+
+  /**
+   * POST /api/billing/renew — GESTOR only: manually trigger subscription renewal.
+   * Creates a Revolut order for the current billing cycle.
+   */
+  router.post('/renew', requireWorkspaceRole('GESTOR'), async (req, res) => {
+    const workspaceId = req.workspaceId;
+
+    try {
+      const subscription = await prisma.subscription.findUnique({ where: { workspaceId } });
+      if (!subscription) {
+        return res.status(404).json({ error: 'Assinatura não encontrada' });
+      }
+
+      // Recalculate fresh total
+      const activeSeats = await prisma.membership.count({
+        where: { workspaceId, inviteAccepted: true, paymentStatus: 'PAID' },
+      });
+      const amount = calculateMonthlyTotal(activeSeats);
+
+      const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+
+      const order = await revolutPay.createOrder({
+        amount,
+        description: `Task360 — Renovação "${workspace?.name || workspaceId}"`,
+        metadata: { workspaceId, type: 'renewal', subscriptionId: subscription.id },
+        successUrl: `${APP_URL}/checkout/success`,
+        failureUrl: `${APP_URL}/checkout/cancelled`,
+      });
+
+      // Update subscription with new order and period
+      const nextPeriodEnd = new Date();
+      nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+
+      await prisma.subscription.update({
+        where: { workspaceId },
+        data: {
+          revolutOrderId: order.orderId,
+          totalMonthlyValue: amount,
+          seatCount: activeSeats,
+          currentPeriodEnd: nextPeriodEnd,
+        },
+      });
+
+      console.log(`[Billing] Renewal order for workspace ${workspaceId}: ${amount} EUR — Order: ${order.orderId}`);
+
+      res.json({
+        orderId: order.orderId,
+        checkoutUrl: order.checkoutUrl,
+        amount,
+        nextPeriodEnd,
+      });
+    } catch (err) {
+      console.error('[Billing:renew]', err);
+      res.status(500).json({ error: 'Erro ao renovar assinatura' });
+    }
+  });
+
   // GET /api/billing/checkout-status/:orderId — check Revolut order status
   router.get('/checkout-status/:orderId', async (req, res) => {
     const { orderId } = req.params;
@@ -60,6 +163,29 @@ export function billingRoutes(prisma) {
           paymentStatus: membership.paymentStatus,
           inviteAccepted: membership.inviteAccepted,
           email: membership.invitedEmail,
+        });
+      }
+
+      // Check subscription orders
+      const subscription = await prisma.subscription.findFirst({
+        where: { revolutOrderId: orderId },
+        select: { status: true, workspaceId: true },
+      });
+
+      if (subscription) {
+        // For subscription orders, check Revolut status
+        const revolutOrder = await getOrder(orderId);
+        const paid = revolutOrder?.state === 'completed';
+        if (paid && subscription.status !== 'ACTIVE') {
+          await prisma.subscription.update({
+            where: { workspaceId: subscription.workspaceId },
+            data: { status: 'ACTIVE' },
+          });
+        }
+        return res.json({
+          orderId,
+          paymentStatus: paid ? 'PAID' : 'PENDING',
+          type: 'subscription',
         });
       }
 
@@ -107,6 +233,8 @@ export function billingRoutes(prisma) {
         seatCost: Math.max(0, (sub.seatCount - 1) * 3.0),
         totalMonthly: sub.totalMonthlyValue,
         autoRenew: sub.autoRenew,
+        status: sub.status,
+        currentPeriodEnd: sub.currentPeriodEnd,
       }));
 
       res.json(overview);

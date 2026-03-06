@@ -12,9 +12,9 @@ export function webhookRoutes(prisma) {
    */
   router.post('/revolut', async (req, res) => {
     try {
-      // 1. Verify webhook signature
+      // 1. Verify webhook signature (use preserved raw body for correct HMAC)
       const signature = req.headers['revolut-signature'] || req.headers['x-revolut-signature'];
-      const rawBody = JSON.stringify(req.body);
+      const rawBody = req.rawBody || JSON.stringify(req.body);
       if (!revolutPay.verifyWebhookSignature(rawBody, signature)) {
         console.error('[Webhook:Revolut] Invalid signature — rejecting');
         return res.status(401).json({ error: 'Invalid webhook signature' });
@@ -43,7 +43,22 @@ export function webhookRoutes(prisma) {
         }
 
         if (!membership) {
-          console.warn(`[Webhook:Revolut] No matching membership for order ${orderId}`);
+          // Check if this is a subscription/renewal order
+          const type = metadata.type;
+          if ((type === 'subscription' || type === 'renewal') && workspaceId) {
+            const sub = await prisma.subscription.findUnique({ where: { workspaceId } });
+            if (sub && sub.revolutOrderId === orderId) {
+              const nextPeriodEnd = new Date();
+              nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+              await prisma.subscription.update({
+                where: { workspaceId },
+                data: { status: 'ACTIVE', currentPeriodEnd: nextPeriodEnd },
+              });
+              console.log(`[Webhook:Revolut] Subscription activated — workspace: ${workspaceId}, order: ${orderId}`);
+            }
+          } else {
+            console.warn(`[Webhook:Revolut] No matching membership for order ${orderId}`);
+          }
         } else if (membership.paymentStatus === 'PAID') {
           // Anti-replay: already processed
           console.warn(`[Webhook:Revolut] Order ${orderId} already processed — skipping`);

@@ -16,6 +16,7 @@ import { webhookRoutes } from './server/routes/webhooks.js';
 import { notificationRoutes } from './server/routes/notifications.js';
 import { attachmentRoutes } from './server/routes/attachments.js';
 import { recordingRoutes } from './server/routes/recordings.js';
+import { processRecurringBilling } from './server/services/billing.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,7 +60,16 @@ async function startServer() {
     },
     credentials: true,
   }));
-  app.use(express.json({ limit: '50mb' }));
+  // Parse JSON with raw body preservation for webhook signature verification
+  app.use(express.json({
+    limit: '50mb',
+    verify: (req, _res, buf) => {
+      // Store raw body for routes that need HMAC signature verification
+      if (req.originalUrl?.startsWith('/api/webhooks')) {
+        req.rawBody = buf.toString('utf8');
+      }
+    },
+  }));
 
   // ─── Healthcheck (no auth, no DB required for liveness) ───────
   app.get('/health', async (_req, res) => {
@@ -157,6 +167,31 @@ async function startServer() {
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
   });
+
+  // ─── Recurring billing cron (daily at 03:00 UTC) ──────────────
+  const BILLING_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const scheduleBillingCron = () => {
+    const now = new Date();
+    const next = new Date(now);
+    next.setUTCHours(3, 0, 0, 0);
+    if (next <= now) next.setDate(next.getDate() + 1);
+    const delay = next.getTime() - now.getTime();
+
+    setTimeout(() => {
+      processRecurringBilling(prisma).catch((err) =>
+        console.error('[Cron:Billing] Failed:', err.message)
+      );
+      // Schedule next run every 24h
+      setInterval(() => {
+        processRecurringBilling(prisma).catch((err) =>
+          console.error('[Cron:Billing] Failed:', err.message)
+        );
+      }, BILLING_INTERVAL_MS);
+    }, delay);
+
+    console.log(`[Cron:Billing] Scheduled recurring billing — next run at ${next.toISOString()}`);
+  };
+  scheduleBillingCron();
 
   // ─── Graceful shutdown ─────────────────────────────────────────
   process.on('SIGTERM', async () => {
