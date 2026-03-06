@@ -8,7 +8,7 @@
  *   ENCRYPTION_KEY — 64-char hex string (32 bytes). Auto-generated if missing.
  */
 
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;        // GCM recommended IV length
@@ -30,8 +30,7 @@ function getEncryptionKey() {
     console.warn('[TokenEncryption] ENCRYPTION_KEY must be 64 hex chars — falling back to JWT_SECRET derivation');
   }
 
-  // Fallback: derive from JWT_SECRET using simple hash
-  const { createHash } = await import('node:crypto');
+  // Fallback: derive from JWT_SECRET using SHA-256 hash
   const secret = process.env.JWT_SECRET || 'task360-default-key';
   return createHash('sha256').update(secret).digest();
 }
