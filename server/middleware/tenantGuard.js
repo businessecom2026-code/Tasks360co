@@ -15,6 +15,7 @@ export function tenantGuard(prisma) {
     }
 
     if (!workspaceId) {
+      console.warn(`[TenantGuard] Missing X-Workspace-Id header for user ${req.user?.id} on ${req.method} ${req.originalUrl}`);
       return res.status(400).json({ error: 'X-Workspace-Id header obrigatório' });
     }
 
@@ -30,6 +31,7 @@ export function tenantGuard(prisma) {
       });
 
       if (!membership || !membership.inviteAccepted || membership.paymentStatus !== 'PAID') {
+        console.warn(`[TenantGuard] Access denied for user ${req.user.id} to workspace ${workspaceId} — membership: ${membership ? `accepted=${membership.inviteAccepted}, payment=${membership.paymentStatus}` : 'not found'}`);
         return res.status(403).json({ error: 'Acesso negado a este workspace' });
       }
 

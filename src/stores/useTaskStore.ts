@@ -7,7 +7,7 @@ interface TaskState {
   isLoading: boolean;
   syncingTaskIds: Set<string>;
   fetchTasks: () => Promise<void>;
-  addTask: (task: Partial<Task>) => Promise<Task | null>;
+  addTask: (task: Partial<Task>) => Promise<{ task: Task } | { error: string } | null>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<boolean>;
   moveTask: (id: string, status: TaskStatus) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
@@ -59,11 +59,12 @@ export const useTaskStore = create<TaskState>()((set, get) => ({
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === tempId ? res.data! : t)),
       }));
-      return res.data;
+      return { task: res.data };
     }
     // Rollback: remove o placeholder se API falhou
+    console.error('[TaskStore:addTask] Failed:', res.error);
     set((state) => ({ tasks: state.tasks.filter((t) => t.id !== tempId) }));
-    return null;
+    return { error: res.error || 'Erro desconhecido' };
   },
 
   updateTask: async (id, updates) => {

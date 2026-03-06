@@ -364,13 +364,14 @@ export function TaskModal({ task, initialStatus, onClose, onSave, onUpdate }: Pr
       color:       cardColor,
     });
     setIsSaving(false);
-    if (result) {
+    if (result && 'task' in result) {
       // Card já apareceu optimisticamente — fecha o modal
-      onSave?.(result);
+      onSave?.(result.task);
       onClose();
     } else {
       // API falhou — card foi revertido, mostra erro sem fechar o modal
-      setSaveError('Erro ao criar tarefa. Verifique a conexão e tente novamente.');
+      const errorMsg = result && 'error' in result ? result.error : 'Erro desconhecido';
+      setSaveError(`Erro ao criar tarefa: ${errorMsg}`);
     }
   };
 
