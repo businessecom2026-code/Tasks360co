@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Task, TaskStatus } from '../types';
 import { api } from '../lib/api';
+import { useToastStore } from './useToastStore';
+import { useLocaleStore } from './useLocaleStore';
 
 interface TaskState {
   tasks: Task[];
@@ -59,6 +61,8 @@ export const useTaskStore = create<TaskState>()((set, get) => ({
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === tempId ? res.data! : t)),
       }));
+      const { t } = useLocaleStore.getState();
+      useToastStore.getState().addToast({ type: 'success', message: t('toast.taskCreated') });
       return { task: res.data };
     }
     // Rollback: remove o placeholder se API falhou
@@ -73,6 +77,8 @@ export const useTaskStore = create<TaskState>()((set, get) => ({
       set((state) => ({
         tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...res.data } : t)),
       }));
+      const { t } = useLocaleStore.getState();
+      useToastStore.getState().addToast({ type: 'success', message: t('toast.taskUpdated') });
       return true;
     }
     return false;
@@ -96,7 +102,11 @@ export const useTaskStore = create<TaskState>()((set, get) => ({
     set((state) => ({
       tasks: state.tasks.filter((t) => t.id !== id),
     }));
-    await api.delete(`/tasks/${id}`);
+    const res = await api.delete(`/tasks/${id}`);
+    if (res.success) {
+      const { t } = useLocaleStore.getState();
+      useToastStore.getState().addToast({ type: 'success', message: t('toast.taskDeleted') });
+    }
   },
 
   setSyncing: (id, syncing) => {

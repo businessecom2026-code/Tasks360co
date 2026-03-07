@@ -4,23 +4,22 @@ import { generateToken, authMiddleware } from '../middleware/auth.js';
 import { getAuthUrl, exchangeCodeForTokens, disconnectGoogle, getUserTokens } from '../services/googleAuth.js';
 import { fullSync } from '../services/syncEngine.js';
 import { sendWelcomeEmail } from '../services/email.js';
+import { t } from '../lib/i18n.js';
+import { validate } from '../middleware/validate.js';
+import { loginSchema, registerSchema, updateProfileSchema } from '../schemas/auth.js';
 
 export function authRoutes(prisma) {
   const router = Router();
 
   // POST /api/auth/login
-  router.post('/login', async (req, res) => {
+  router.post('/login', validate(loginSchema), async (req, res) => {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'E-mail e senha obrigatórios' });
-    }
 
     try {
       const user = await prisma.user.findUnique({ where: { email } });
 
       if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ error: 'Credenciais inválidas' });
+        return res.status(401).json({ error: t(req.locale, 'errors.invalidCredentials') });
       }
 
       const token = generateToken(user);
@@ -29,22 +28,18 @@ export function authRoutes(prisma) {
       res.json({ token, user: safeUser });
     } catch (err) {
       console.error('[Auth:login]', err);
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ error: t(req.locale, 'errors.internalError') });
     }
   });
 
   // POST /api/auth/register
-  router.post('/register', async (req, res) => {
+  router.post('/register', validate(registerSchema), async (req, res) => {
     const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Nome, e-mail e senha obrigatórios' });
-    }
 
     try {
       const existing = await prisma.user.findUnique({ where: { email } });
       if (existing) {
-        return res.status(409).json({ error: 'E-mail já cadastrado' });
+        return res.status(409).json({ error: t(req.locale, 'errors.emailAlreadyRegistered') });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -63,7 +58,7 @@ export function authRoutes(prisma) {
       res.status(201).json({ token, user: safeUser });
     } catch (err) {
       console.error('[Auth:register]', err);
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ error: t(req.locale, 'errors.internalError') });
     }
   });
 
@@ -82,7 +77,7 @@ export function authRoutes(prisma) {
       });
 
       if (!user) {
-        return res.status(404).json({ error: 'Usuário não encontrado' });
+        return res.status(404).json({ error: t(req.locale, 'errors.userNotFound') });
       }
 
       // Add connected flags without exposing tokens
@@ -94,14 +89,14 @@ export function authRoutes(prisma) {
       });
     } catch (err) {
       console.error('[Auth:me]', err);
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ error: t(req.locale, 'errors.internalError') });
     }
   });
 
   // GET /api/auth/google — start Google OAuth2 flow (requires auth)
   router.get('/google', authMiddleware, (req, res) => {
     if (!process.env.GOOGLE_CLIENT_ID) {
-      return res.status(503).json({ error: 'Google OAuth não configurado (GOOGLE_CLIENT_ID ausente)' });
+      return res.status(503).json({ error: t(req.locale, 'errors.googleOAuthNotConfigured') });
     }
 
     const url = getAuthUrl(req.user.id);
@@ -132,7 +127,7 @@ export function authRoutes(prisma) {
       res.json({ success: true, message: 'Google Tasks desconectado' });
     } catch (err) {
       console.error('[Auth:googleDisconnect]', err);
-      res.status(500).json({ error: 'Erro ao desconectar Google' });
+      res.status(500).json({ error: t(req.locale, 'errors.googleDisconnectError') });
     }
   });
 
@@ -140,25 +135,25 @@ export function authRoutes(prisma) {
   router.post('/google/sync', authMiddleware, async (req, res) => {
     const workspaceId = req.headers['x-workspace-id'];
     if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
+      return res.status(400).json({ error: t(req.locale, 'errors.workspaceIdRequired') });
     }
 
     try {
       const tokens = await getUserTokens(req.user.id, prisma);
       if (!tokens) {
-        return res.status(400).json({ error: 'Conta Google não conectada' });
+        return res.status(400).json({ error: t(req.locale, 'errors.googleNotConnected') });
       }
 
       const stats = await fullSync(prisma, workspaceId, tokens);
       res.json({ success: true, stats });
     } catch (err) {
       console.error('[Auth:googleSync]', err);
-      res.status(500).json({ error: 'Erro ao sincronizar com Google Tasks' });
+      res.status(500).json({ error: t(req.locale, 'errors.googleSyncError') });
     }
   });
 
   // PATCH /api/auth/me (protected)
-  router.patch('/me', authMiddleware, async (req, res) => {
+  router.patch('/me', authMiddleware, validate(updateProfileSchema), async (req, res) => {
     const { name, activeWorkspaceId } = req.body;
     const data = {};
 
@@ -179,7 +174,7 @@ export function authRoutes(prisma) {
       res.json(user);
     } catch (err) {
       console.error('[Auth:updateMe]', err);
-      res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ error: t(req.locale, 'errors.internalError') });
     }
   });
 

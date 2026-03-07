@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { createManualCharge, getOrder, calculateMonthlyTotal } from '../services/billing.js';
 import { revolutPay } from '../services/revolut.js';
 import { requireWorkspaceRole, requireSuperAdmin } from '../middleware/roleGuard.js';
+import { t } from '../lib/i18n.js';
+import { validate } from '../middleware/validate.js';
+import { updateSubscriptionSchema } from '../schemas/billing.js';
 
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
@@ -18,18 +21,18 @@ export function billingRoutes(prisma) {
       });
 
       if (!subscription) {
-        return res.status(404).json({ error: 'Assinatura não encontrada' });
+        return res.status(404).json({ error: t(req.locale, 'errors.subscriptionNotFound') });
       }
 
       res.json(subscription);
     } catch (err) {
       console.error('[Billing:subscription]', err);
-      res.status(500).json({ error: 'Erro ao buscar assinatura' });
+      res.status(500).json({ error: t(req.locale, 'errors.fetchSubscriptionError') });
     }
   });
 
   // PATCH /api/billing/subscription — GESTOR only: toggle autoRenew
-  router.patch('/subscription', requireWorkspaceRole('GESTOR'), async (req, res) => {
+  router.patch('/subscription', requireWorkspaceRole('GESTOR'), validate(updateSubscriptionSchema), async (req, res) => {
     const workspaceId = req.workspaceId;
     const { autoRenew } = req.body;
 
@@ -42,7 +45,7 @@ export function billingRoutes(prisma) {
       res.json(subscription);
     } catch (err) {
       console.error('[Billing:updateSubscription]', err);
-      res.status(500).json({ error: 'Erro ao atualizar assinatura' });
+      res.status(500).json({ error: t(req.locale, 'errors.updateSubscriptionError') });
     }
   });
 
@@ -56,7 +59,7 @@ export function billingRoutes(prisma) {
     try {
       const subscription = await prisma.subscription.findUnique({ where: { workspaceId } });
       if (!subscription) {
-        return res.status(404).json({ error: 'Assinatura não encontrada' });
+        return res.status(404).json({ error: t(req.locale, 'errors.subscriptionNotFound') });
       }
 
       const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
@@ -85,7 +88,7 @@ export function billingRoutes(prisma) {
       });
     } catch (err) {
       console.error('[Billing:checkout]', err);
-      res.status(500).json({ error: 'Erro ao criar checkout' });
+      res.status(500).json({ error: t(req.locale, 'errors.createCheckoutError') });
     }
   });
 
@@ -99,7 +102,7 @@ export function billingRoutes(prisma) {
     try {
       const subscription = await prisma.subscription.findUnique({ where: { workspaceId } });
       if (!subscription) {
-        return res.status(404).json({ error: 'Assinatura não encontrada' });
+        return res.status(404).json({ error: t(req.locale, 'errors.subscriptionNotFound') });
       }
 
       // Recalculate fresh total
@@ -142,7 +145,7 @@ export function billingRoutes(prisma) {
       });
     } catch (err) {
       console.error('[Billing:renew]', err);
-      res.status(500).json({ error: 'Erro ao renovar assinatura' });
+      res.status(500).json({ error: t(req.locale, 'errors.renewSubscriptionError') });
     }
   });
 
@@ -200,10 +203,10 @@ export function billingRoutes(prisma) {
         });
       }
 
-      res.status(404).json({ error: 'Pedido não encontrado' });
+      res.status(404).json({ error: t(req.locale, 'errors.orderNotFound') });
     } catch (err) {
       console.error('[Billing:checkoutStatus]', err);
-      res.status(500).json({ error: 'Erro ao verificar status do pagamento' });
+      res.status(500).json({ error: t(req.locale, 'errors.checkPaymentStatusError') });
     }
   });
 
@@ -240,7 +243,7 @@ export function billingRoutes(prisma) {
       res.json(overview);
     } catch (err) {
       console.error('[Billing:overview]', err);
-      res.status(500).json({ error: 'Erro ao buscar faturamento' });
+      res.status(500).json({ error: t(req.locale, 'errors.fetchBillingError') });
     }
   });
 
@@ -271,7 +274,7 @@ export function billingRoutes(prisma) {
       });
     } catch (err) {
       console.error('[Billing:manualCharge]', err);
-      res.status(500).json({ error: 'Erro ao gerar cobrança' });
+      res.status(500).json({ error: t(req.locale, 'errors.createChargeError') });
     }
   });
 

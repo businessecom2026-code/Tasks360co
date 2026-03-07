@@ -5,6 +5,7 @@ import { UserManagement } from '../components/admin/UserManagement';
 import { InviteModal } from '../components/workspace/InviteModal';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useLocaleStore } from '../stores/useLocaleStore';
 import { UserPlus } from 'lucide-react';
 
 type Tab = 'billing' | 'members';
@@ -14,6 +15,7 @@ export function AdminPage() {
   const [showInvite, setShowInvite] = useState(false);
   const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuthStore();
+  const { t } = useLocaleStore();
 
   const workspaceRole = currentWorkspace?.membership?.roleInWorkspace;
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
@@ -24,25 +26,25 @@ export function AdminPage() {
   const canSeeBilling = isSuperAdmin;
 
   const tabs: { id: Tab; label: string }[] = [
-    ...(canSeeBilling ? [{ id: 'billing' as Tab, label: 'Faturamento' }] : []),
-    { id: 'members' as Tab, label: 'Membros' },
+    ...(canSeeBilling ? [{ id: 'billing' as Tab, label: t('admin.tabs.billing') }] : []),
+    { id: 'members' as Tab, label: t('admin.tabs.members') },
   ];
 
   return (
     <>
-      <Header title="Administração" />
+      <Header title={t('admin.title')} />
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* CLIENTE view: only invite button, no tabs */}
         {isCliente && !canSeeTabs ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
             <p className="text-gray-400 text-sm">
-              Adicione um convidado ao workspace para colaborar.
+              {t('admin.clienteHint')}
             </p>
             <button
               onClick={() => setShowInvite(true)}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
             >
-              <UserPlus size={16} /> Adicionar Convidado
+              <UserPlus size={16} /> {t('admin.addGuest')}
             </button>
           </div>
         ) : (
@@ -69,7 +71,7 @@ export function AdminPage() {
                 onClick={() => setShowInvite(true)}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
-                <UserPlus size={16} /> Convidar
+                <UserPlus size={16} /> {t('admin.invite')}
               </button>
             </div>
 

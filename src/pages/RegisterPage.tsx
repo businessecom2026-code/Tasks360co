@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { UserPlus, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useLocaleStore } from '../stores/useLocaleStore';
 import { api } from '../lib/api';
 import type { LoginResponse } from '../types';
 
 export function RegisterPage() {
   const { isAuthenticated } = useAuthStore();
+  const { t } = useLocaleStore();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -26,12 +28,12 @@ export function RegisterPage() {
     setError(null);
 
     if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+      setError(t('auth.register.errors.passwordMin'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
+      setError(t('auth.register.errors.passwordMismatch'));
       return;
     }
 
@@ -52,7 +54,7 @@ export function RegisterPage() {
       });
       setTimeout(() => navigate('/dashboard'), 1500);
     } else {
-      setError(res.error || 'Erro ao registrar');
+      setError(res.error || t('auth.register.errors.generic'));
     }
 
     setIsLoading(false);
@@ -66,7 +68,7 @@ export function RegisterPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Task<span className="text-blue-500">360</span>
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Criar nova conta</p>
+          <p className="text-gray-500 text-sm mt-1">{t('auth.register.subtitle')}</p>
         </div>
 
         {success ? (
@@ -75,9 +77,9 @@ export function RegisterPage() {
               <CheckCircle2 size={28} className="text-green-400" />
             </div>
             <div>
-              <h3 className="text-gray-900 dark:text-white font-semibold mb-1">Conta criada!</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold mb-1">{t('auth.register.success.title')}</h3>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
-                A redirecionar para o dashboard...
+                {t('auth.register.success.message')}
               </p>
             </div>
           </div>
@@ -87,36 +89,36 @@ export function RegisterPage() {
             className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 space-y-4"
           >
             <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Nome</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('auth.register.nameLabel')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Seu nome completo"
+                placeholder={t('auth.register.namePlaceholder')}
                 required
                 className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">E-mail</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('auth.register.emailLabel')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
+                placeholder={t('auth.register.emailPlaceholder')}
                 required
                 className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Senha</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('auth.register.passwordLabel')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t('auth.register.passwordPlaceholder')}
                 required
                 minLength={6}
                 className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
@@ -124,12 +126,12 @@ export function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Confirmar Senha</label>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">{t('auth.register.confirmPasswordLabel')}</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repita a senha"
+                placeholder={t('auth.register.confirmPasswordPlaceholder')}
                 required
                 className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
               />
@@ -148,7 +150,7 @@ export function RegisterPage() {
               className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
             >
               <UserPlus size={16} />
-              {isLoading ? 'Criando conta...' : 'Criar Conta'}
+              {isLoading ? t('auth.register.submitting') : t('auth.register.submitButton')}
             </button>
 
             <div className="text-center">
@@ -157,14 +159,14 @@ export function RegisterPage() {
                 className="text-sm text-gray-500 hover:text-blue-400 transition-colors inline-flex items-center gap-1"
               >
                 <ArrowLeft size={14} />
-                Já tenho conta
+                {t('auth.register.hasAccount')}
               </Link>
             </div>
           </form>
         )}
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4">
-          Task360 Engine &copy; {new Date().getFullYear()}
+          {t('common.copyrightShort', { year: new Date().getFullYear() })}
         </p>
       </div>
     </div>

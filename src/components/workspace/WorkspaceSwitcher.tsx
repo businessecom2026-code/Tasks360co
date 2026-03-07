@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { ChevronDown, Building2 } from 'lucide-react';
 import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
+import { useLocaleStore } from '../../stores/useLocaleStore';
 
 export function WorkspaceSwitcher() {
   const { workspaces, currentWorkspace, fetchWorkspaces, switchWorkspace, isLoading } =
     useWorkspaceStore();
+  const { t } = useLocaleStore();
 
   useEffect(() => {
     fetchWorkspaces();
@@ -13,7 +15,7 @@ export function WorkspaceSwitcher() {
   if (isLoading) {
     return (
       <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-500 animate-pulse">
-        Carregando workspaces...
+        {t('workspace.switcher.loading')}
       </div>
     );
   }
@@ -21,7 +23,7 @@ export function WorkspaceSwitcher() {
   if (workspaces.length === 0) {
     return (
       <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-500">
-        Nenhum workspace disponível
+        {t('workspace.switcher.empty')}
       </div>
     );
   }

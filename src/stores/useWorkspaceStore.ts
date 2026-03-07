@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { WorkspaceWithMembership, Membership } from '../types';
 import { api } from '../lib/api';
+import { useToastStore } from './useToastStore';
+import { useLocaleStore } from './useLocaleStore';
 
 interface WorkspaceState {
   workspaces: WorkspaceWithMembership[];
@@ -73,6 +75,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             isLoading: false,
           }));
           localStorage.setItem('activeWorkspaceId', workspace.id);
+          const { t } = useLocaleStore.getState();
+          useToastStore.getState().addToast({ type: 'success', message: t('toast.workspaceCreated') });
           return workspace;
         }
 
@@ -116,6 +120,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         if (res.success && res.data) {
           // Refresh members list to show pending invite
           get().fetchMembers();
+          const { t } = useLocaleStore.getState();
+          useToastStore.getState().addToast({ type: 'success', message: t('toast.inviteSent') });
           return { checkoutUrl: res.data.checkoutUrl };
         }
 

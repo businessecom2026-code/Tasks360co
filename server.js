@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
@@ -7,6 +8,8 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from './server/middleware/auth.js';
 import { tenantGuard } from './server/middleware/tenantGuard.js';
+import { i18nMiddleware } from './server/middleware/i18n.js';
+import { globalLimiter, authLimiter, uploadLimiter } from './server/middleware/rateLimit.js';
 import { authRoutes } from './server/routes/auth.js';
 import { workspaceRoutes } from './server/routes/workspaces.js';
 import { taskRoutes } from './server/routes/tasks.js';
@@ -17,6 +20,7 @@ import { notificationRoutes } from './server/routes/notifications.js';
 import { attachmentRoutes } from './server/routes/attachments.js';
 import { recordingRoutes } from './server/routes/recordings.js';
 import { calendarRoutes } from './server/routes/calendar.js';
+import { localeRoutes } from './server/routes/locale.js';
 import { processRecurringBilling } from './server/services/billing.js';
 import { renewExpiringWatches } from './server/services/googleCalendar.js';
 
@@ -62,6 +66,13 @@ async function startServer() {
     },
     credentials: true,
   }));
+  // Cookie parsing + i18n locale detection
+  app.use(cookieParser());
+  app.use(i18nMiddleware);
+
+  // Rate limiting (after i18n so req.locale is available for error messages)
+  app.use(globalLimiter);
+
   // Parse JSON with raw body preservation for webhook signature verification
   app.use(express.json({
     limit: '50mb',
@@ -145,16 +156,22 @@ async function startServer() {
 
   await seedAdmin();
 
+  // ─── Locale routes (no auth required) ────────────────────────────
+  app.use('/api/locale', localeRoutes());
+
   // ─── Webhook routes (no auth required) ─────────────────────────
   app.use('/api/webhooks', webhookRoutes(prisma));
 
   // ─── Auth routes (auth applied per-route inside router) ───────────
+  app.use('/api/auth/login', authLimiter);
+  app.use('/api/auth/register', authLimiter);
   app.use('/api/auth', authRoutes(prisma));
 
   // ─── Protected API routes ──────────────────────────────────────
   app.use('/api/workspaces', authMiddleware, workspaceRoutes(prisma));
   app.use('/api/tasks', authMiddleware, tenantGuard(prisma), taskRoutes(prisma));
   app.use('/api/tasks', authMiddleware, tenantGuard(prisma), attachmentRoutes(prisma));
+  app.use('/api/meetings/process', uploadLimiter);
   app.use('/api/meetings', authMiddleware, tenantGuard(prisma), meetingRoutes(prisma));
   app.use('/api/recordings', authMiddleware, tenantGuard(prisma), recordingRoutes(prisma));
   app.use('/api/billing', authMiddleware, tenantGuard(prisma), billingRoutes(prisma));

@@ -15,22 +15,23 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { isAdminUser } from '../common/AdminGuard';
+import { useLocaleStore } from '../../stores/useLocaleStore';
 
-interface AppItem {
+interface AppItemDef {
   to: string;
   icon: typeof LayoutDashboard;
-  label: string;
+  labelKey: string;
   color: string;
   iconColor: string;
   activeRing: string;
   roles?: readonly ('SUPER_ADMIN' | 'GESTOR')[];
 }
 
-const appItems: AppItem[] = [
+const appItems: AppItemDef[] = [
   {
     to: '/dashboard',
     icon: LayoutDashboard,
-    label: 'Dashboard',
+    labelKey: 'layout.mobileNav.dashboard',
     color: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
     activeRing: 'ring-emerald-500/50',
@@ -38,7 +39,7 @@ const appItems: AppItem[] = [
   {
     to: '/kanban',
     icon: Columns3,
-    label: 'Kanban',
+    labelKey: 'layout.mobileNav.kanban',
     color: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
     activeRing: 'ring-blue-500/50',
@@ -46,7 +47,7 @@ const appItems: AppItem[] = [
   {
     to: '/meetings',
     icon: Video,
-    label: 'Reunioes',
+    labelKey: 'layout.mobileNav.meetings',
     color: 'bg-purple-500/15',
     iconColor: 'text-purple-400',
     activeRing: 'ring-purple-500/50',
@@ -54,7 +55,7 @@ const appItems: AppItem[] = [
   {
     to: '/settings',
     icon: Settings,
-    label: 'Config',
+    labelKey: 'layout.mobileNav.config',
     color: 'bg-slate-500/15',
     iconColor: 'text-slate-400',
     activeRing: 'ring-slate-500/50',
@@ -62,7 +63,7 @@ const appItems: AppItem[] = [
   {
     to: '/admin',
     icon: Shield,
-    label: 'Admin',
+    labelKey: 'layout.mobileNav.admin',
     color: 'bg-red-500/15',
     iconColor: 'text-red-400',
     activeRing: 'ring-red-500/50',
@@ -73,6 +74,7 @@ const appItems: AppItem[] = [
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const { t } = useLocaleStore();
   const location = useLocation();
 
   // Close menu on route change
@@ -187,7 +189,7 @@ export function MobileNav() {
                       <span className={`text-[11px] font-medium truncate max-w-full transition-colors ${
                         isActive ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-slate-500 group-hover:text-gray-700 dark:group-hover:text-slate-300'
                       }`}>
-                        {item.label}
+                        {t(item.labelKey)}
                       </span>
                     </div>
                   )}
@@ -203,8 +205,8 @@ export function MobileNav() {
               >
                 <Columns3 size={18} className="text-emerald-400 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-gray-900 dark:text-white">Abrir Kanban</p>
-                  <p className="text-[10px] text-gray-500 dark:text-slate-500">Gerir tarefas</p>
+                  <p className="text-xs font-medium text-gray-900 dark:text-white">{t('layout.mobileNav.openKanban')}</p>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-500">{t('layout.mobileNav.manageTasks')}</p>
                 </div>
               </NavLink>
               <NavLink
@@ -213,8 +215,8 @@ export function MobileNav() {
               >
                 <Video size={18} className="text-purple-400 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-gray-900 dark:text-white">Reunioes</p>
-                  <p className="text-[10px] text-gray-500 dark:text-slate-500">Agendar & IA</p>
+                  <p className="text-xs font-medium text-gray-900 dark:text-white">{t('layout.mobileNav.meetingsAction')}</p>
+                  <p className="text-[10px] text-gray-500 dark:text-slate-500">{t('layout.mobileNav.meetingsHint')}</p>
                 </div>
               </NavLink>
             </div>
@@ -232,7 +234,7 @@ export function MobileNav() {
                 <button
                   onClick={logout}
                   className="p-2.5 rounded-xl text-gray-500 dark:text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                  title="Sair"
+                  title={t('common.logout')}
                 >
                   <LogOut size={18} />
                 </button>

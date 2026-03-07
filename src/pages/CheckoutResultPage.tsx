@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { useLocaleStore } from '../stores/useLocaleStore';
 import { api } from '../lib/api';
 
 export function CheckoutResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLocaleStore();
 
   const isSuccess = location.pathname.includes('success');
   const isCancelled = location.pathname.includes('cancelled');
@@ -77,9 +79,9 @@ export function CheckoutResultPage() {
         {status === 'loading' && (
           <>
             <Loader2 size={48} className="mx-auto text-blue-500 animate-spin" />
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Verificando Pagamento...</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t('checkout.loading.title')}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Aguarde enquanto confirmamos seu pagamento com a Revolut.
+              {t('checkout.loading.description')}
             </p>
           </>
         )}
@@ -89,9 +91,9 @@ export function CheckoutResultPage() {
             <div className="w-16 h-16 bg-green-100 dark:bg-green-600 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle size={32} className="text-green-600 dark:text-white" />
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Pagamento Confirmado!</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t('checkout.paid.title')}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              O assento foi ativado com sucesso. O membro convidado já pode acessar o workspace.
+              {t('checkout.paid.description')}
             </p>
           </>
         )}
@@ -99,9 +101,9 @@ export function CheckoutResultPage() {
         {status === 'pending' && (
           <>
             <Loader2 size={48} className="mx-auto text-yellow-500 animate-spin" />
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Pagamento em Processamento</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t('checkout.pending.title')}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Seu pagamento está sendo processado. O convite será ativado automaticamente após a confirmação.
+              {t('checkout.pending.description')}
             </p>
           </>
         )}
@@ -111,9 +113,9 @@ export function CheckoutResultPage() {
             <div className="w-16 h-16 bg-red-100 dark:bg-red-600/20 rounded-full flex items-center justify-center mx-auto">
               <XCircle size={32} className="text-red-600 dark:text-red-400" />
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Pagamento Falhou</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t('checkout.failed.title')}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Não foi possível processar o pagamento. Tente novamente pelo painel de administração.
+              {t('checkout.failed.description')}
             </p>
           </>
         )}
@@ -123,9 +125,9 @@ export function CheckoutResultPage() {
             <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto">
               <XCircle size={32} className="text-gray-500 dark:text-gray-400" />
             </div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Checkout Cancelado</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t('checkout.cancelled.title')}</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              O processo de pagamento foi cancelado. O convite permanece pendente e pode ser reprocessado.
+              {t('checkout.cancelled.description')}
             </p>
           </>
         )}
@@ -135,7 +137,7 @@ export function CheckoutResultPage() {
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
         >
           <ArrowLeft size={16} />
-          Voltar ao Painel
+          {t('checkout.backButton')}
         </button>
       </div>
     </div>

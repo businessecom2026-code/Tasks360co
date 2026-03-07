@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { createSeatCheckout } from '../services/revolut.js';
 import { createNotification } from '../services/notifications.js';
 import { sendInviteEmail } from '../services/email.js';
+import { t } from '../lib/i18n.js';
+import { validate } from '../middleware/validate.js';
+import { createWorkspaceSchema, inviteSchema } from '../schemas/workspaces.js';
 
 export function workspaceRoutes(prisma) {
   const router = Router();
@@ -42,17 +45,13 @@ export function workspaceRoutes(prisma) {
       res.json(workspaces);
     } catch (err) {
       console.error('[Workspaces:list]', err);
-      res.status(500).json({ error: 'Erro ao listar workspaces' });
+      res.status(500).json({ error: t(req.locale, 'errors.listWorkspacesError') });
     }
   });
 
   // POST /api/workspaces — create a new workspace
-  router.post('/', async (req, res) => {
+  router.post('/', validate(createWorkspaceSchema), async (req, res) => {
     const { name } = req.body;
-
-    if (!name) {
-      return res.status(400).json({ error: 'Nome obrigatório' });
-    }
 
     try {
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -93,17 +92,17 @@ export function workspaceRoutes(prisma) {
       res.status(201).json(workspace);
     } catch (err) {
       console.error('[Workspaces:create]', err);
-      res.status(500).json({ error: 'Erro ao criar workspace' });
+      res.status(500).json({ error: t(req.locale, 'errors.createWorkspaceError') });
     }
   });
 
   // POST /api/workspaces/invite — invite a member (gated by Revolut checkout)
-  router.post('/invite', async (req, res) => {
+  router.post('/invite', validate(inviteSchema), async (req, res) => {
     const workspaceId = req.headers['x-workspace-id'] || req.body.workspaceId;
     const { email, roleInWorkspace } = req.body;
 
     if (!workspaceId || !email) {
-      return res.status(400).json({ error: 'workspaceId e email obrigatórios' });
+      return res.status(400).json({ error: t(req.locale, 'errors.workspaceIdEmailRequired') });
     }
 
     try {
@@ -119,7 +118,7 @@ export function workspaceRoutes(prisma) {
          callerMembership.roleInWorkspace === 'CLIENTE');
 
       if (!canInvite) {
-        return res.status(403).json({ error: 'Apenas Gestores e Clientes podem convidar membros' });
+        return res.status(403).json({ error: t(req.locale, 'errors.onlyGestorsCanInvite') });
       }
 
       // Check if user already exists
@@ -133,7 +132,7 @@ export function workspaceRoutes(prisma) {
           },
         });
         if (existingMembership) {
-          return res.status(409).json({ error: 'Usuário já é membro deste workspace' });
+          return res.status(409).json({ error: t(req.locale, 'errors.alreadyMember') });
         }
       }
 
@@ -142,7 +141,7 @@ export function workspaceRoutes(prisma) {
         where: { workspaceId, invitedEmail: email },
       });
       if (pendingInvite) {
-        return res.status(409).json({ error: 'Já existe um convite pendente para este e-mail' });
+        return res.status(409).json({ error: t(req.locale, 'errors.pendingInviteExists') });
       }
 
       // Create Revolut checkout session for seat payment (3.00 EUR)
@@ -203,7 +202,7 @@ export function workspaceRoutes(prisma) {
       });
     } catch (err) {
       console.error('[Workspaces:invite]', err);
-      res.status(500).json({ error: 'Erro ao processar convite' });
+      res.status(500).json({ error: t(req.locale, 'errors.processInviteError') });
     }
   });
 
@@ -211,7 +210,7 @@ export function workspaceRoutes(prisma) {
   router.get('/members', async (req, res) => {
     const workspaceId = req.headers['x-workspace-id'];
     if (!workspaceId) {
-      return res.status(400).json({ error: 'X-Workspace-Id obrigatório' });
+      return res.status(400).json({ error: t(req.locale, 'errors.workspaceIdRequired') });
     }
 
     try {
@@ -228,7 +227,7 @@ export function workspaceRoutes(prisma) {
       res.json(members);
     } catch (err) {
       console.error('[Workspaces:members]', err);
-      res.status(500).json({ error: 'Erro ao listar membros' });
+      res.status(500).json({ error: t(req.locale, 'errors.listMembersError') });
     }
   });
 
@@ -240,7 +239,7 @@ export function workspaceRoutes(prisma) {
       });
 
       if (!membership) {
-        return res.status(404).json({ error: 'Membro não encontrado' });
+        return res.status(404).json({ error: t(req.locale, 'errors.memberNotFound') });
       }
 
       // Verify caller is GESTOR
@@ -251,7 +250,7 @@ export function workspaceRoutes(prisma) {
       });
 
       if (!callerMembership || callerMembership.roleInWorkspace !== 'GESTOR') {
-        return res.status(403).json({ error: 'Apenas Gestores podem remover membros' });
+        return res.status(403).json({ error: t(req.locale, 'errors.onlyGestorsCanRemove') });
       }
 
       await prisma.membership.delete({ where: { id: req.params.id } });
@@ -260,7 +259,7 @@ export function workspaceRoutes(prisma) {
       res.json({ success: true });
     } catch (err) {
       console.error('[Workspaces:removeMember]', err);
-      res.status(500).json({ error: 'Erro ao remover membro' });
+      res.status(500).json({ error: t(req.locale, 'errors.removeMemberError') });
     }
   });
 

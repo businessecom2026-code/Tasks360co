@@ -10,18 +10,21 @@ import {
 import { WorkspaceSwitcher } from '../workspace/WorkspaceSwitcher';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { LanguageSelector } from '../common/LanguageSelector';
 import { isAdminUser } from '../common/AdminGuard';
+import { useLocaleStore } from '../../stores/useLocaleStore';
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/kanban', icon: Columns3, label: 'Kanban' },
-  { to: '/meetings', icon: Video, label: 'Reuniões' },
-  { to: '/admin', icon: Shield, label: 'Admin', requiresAdminAccess: true },
-  { to: '/settings', icon: Settings, label: 'Configurações' },
+  { to: '/dashboard', icon: LayoutDashboard, labelKey: 'layout.sidebar.dashboard' },
+  { to: '/kanban', icon: Columns3, labelKey: 'layout.sidebar.kanban' },
+  { to: '/meetings', icon: Video, labelKey: 'layout.sidebar.meetings' },
+  { to: '/admin', icon: Shield, labelKey: 'layout.sidebar.admin', requiresAdminAccess: true },
+  { to: '/settings', icon: Settings, labelKey: 'layout.sidebar.settings' },
 ];
 
 export function Sidebar() {
   const { user, logout } = useAuthStore();
+  const { t } = useLocaleStore();
 
   const hasAdminAccess = isAdminUser(user?.email);
 
@@ -59,7 +62,7 @@ export function Sidebar() {
               }
             >
               <item.icon size={18} />
-              {item.label}
+              {t(item.labelKey)}
             </NavLink>
           );
         })}
@@ -75,11 +78,12 @@ export function Sidebar() {
             <p className="text-sm text-gray-900 dark:text-white truncate">{user?.name}</p>
             <p className="text-xs text-gray-500 truncate">{user?.email}</p>
           </div>
+          <LanguageSelector />
           <ThemeToggle />
           <button
             onClick={logout}
             className="text-gray-500 hover:text-red-400 transition-colors shrink-0"
-            title="Sair"
+            title={t('common.logout')}
           >
             <LogOut size={16} />
           </button>

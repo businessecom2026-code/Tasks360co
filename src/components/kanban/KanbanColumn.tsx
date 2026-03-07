@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Plus, PartyPopper, X } from 'lucide-react';
 import type { Task, TaskStatus } from '../../types';
 import { TaskCard } from './TaskCard';
 import { useTaskStore } from '../../stores/useTaskStore';
+import { useLocaleStore } from '../../stores/useLocaleStore';
 
 interface Props {
   status: TaskStatus;
@@ -42,8 +43,9 @@ function ConfettiParticle({ index }: { index: number }) {
   );
 }
 
-export function KanbanColumn({ status, title, tasks, color, accentColor, onEditTask }: Props) {
+export const KanbanColumn = memo(function KanbanColumn({ status, title, tasks, color, accentColor, onEditTask }: Props) {
   const { addTask } = useTaskStore();
+  const { t } = useLocaleStore();
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
@@ -128,7 +130,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
         <button
           onClick={() => setIsAddingCard(true)}
           className={`flex items-center justify-center w-6 h-6 rounded-md ${accentColor} text-white/80 hover:text-white hover:scale-110 active:scale-95 transition-all duration-200`}
-          title="Adicionar tarefa"
+          title={t('kanban.column.addTask')}
         >
           <Plus size={14} strokeWidth={2.5} />
         </button>
@@ -152,7 +154,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
                 if (e.key === 'Enter') handleQuickAdd();
                 if (e.key === 'Escape') { setIsAddingCard(false); setNewCardTitle(''); }
               }}
-              placeholder="Título da tarefa..."
+              placeholder={t('kanban.column.quickAddPlaceholder')}
               className="w-full bg-transparent border-none text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none"
             />
             <div className="flex items-center gap-2">
@@ -160,7 +162,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
                 onClick={handleQuickAdd}
                 className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-md transition-colors"
               >
-                Adicionar
+                {t('kanban.column.addTaskTitle')}
               </button>
               <button
                 onClick={() => { setIsAddingCard(false); setNewCardTitle(''); }}
@@ -179,13 +181,13 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
               <Plus size={18} className="text-gray-400 dark:text-slate-500" />
             </div>
             <p className="text-center text-xs text-gray-400 dark:text-slate-600">
-              Arraste tarefas para cá
+              {t('kanban.column.emptyDrop')}
             </p>
             <button
               onClick={() => setIsAddingCard(true)}
               className="flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
             >
-              <Plus size={12} /> Nova tarefa
+              <Plus size={12} /> {t('kanban.column.emptyAdd')}
             </button>
           </div>
         )}
@@ -197,7 +199,7 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
           onClick={() => setIsAddingCard(true)}
           className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-all border-t border-gray-200 dark:border-slate-800/40 rounded-b-xl"
         >
-          <Plus size={14} /> Adicionar tarefa
+          <Plus size={14} /> {t('kanban.column.addTask')}
         </button>
       )}
 
@@ -207,4 +209,4 @@ export function KanbanColumn({ status, title, tasks, color, accentColor, onEditT
       )}
     </div>
   );
-}
+});

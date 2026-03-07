@@ -13,6 +13,8 @@ import { TaskStatusChart } from '../components/kanban/TaskStatusChart';
 import { useTaskStore } from '../stores/useTaskStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useLocaleStore } from '../stores/useLocaleStore';
+import { formatCurrency } from '../lib/i18n/formatters';
 import { api } from '../lib/api';
 import type { Meeting, Subscription } from '../types';
 
@@ -20,6 +22,7 @@ export function DashboardPage() {
   const { tasks, fetchTasks } = useTaskStore();
   const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuthStore();
+  const { t, locale } = useLocaleStore();
 
   const workspaceRole = currentWorkspace?.membership?.roleInWorkspace;
   const canViewSubscription =
@@ -43,15 +46,15 @@ export function DashboardPage() {
   const done = tasks.filter((t) => t.status === 'DONE').length;
 
   const stats = [
-    { label: 'Pendentes', value: pending, icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-600/20' },
-    { label: 'Em Progresso', value: inProgress, icon: AlertCircle, color: 'text-blue-400', bg: 'bg-blue-600/20' },
-    { label: 'Em Revisão', value: review, icon: CheckSquare, color: 'text-purple-400', bg: 'bg-purple-600/20' },
-    { label: 'Concluídas', value: done, icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-600/20' },
+    { label: t('dashboard.stats.pending'), value: pending, icon: Clock, color: 'text-yellow-400', bg: 'bg-yellow-600/20' },
+    { label: t('dashboard.stats.inProgress'), value: inProgress, icon: AlertCircle, color: 'text-blue-400', bg: 'bg-blue-600/20' },
+    { label: t('dashboard.stats.inReview'), value: review, icon: CheckSquare, color: 'text-purple-400', bg: 'bg-purple-600/20' },
+    { label: t('dashboard.stats.done'), value: done, icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-600/20' },
   ];
 
   return (
     <>
-      <Header title="Dashboard" />
+      <Header title={t('dashboard.title')} />
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Task stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -81,10 +84,10 @@ export function DashboardPage() {
           <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <Video size={18} className="text-blue-400" />
-              <h3 className="text-gray-900 dark:text-white font-semibold">Próximas Reuniões</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold">{t('dashboard.meetings.title')}</h3>
             </div>
             {meetings.length === 0 ? (
-              <p className="text-gray-500 text-sm py-4 text-center">Sem reuniões agendadas</p>
+              <p className="text-gray-500 text-sm py-4 text-center">{t('dashboard.meetings.empty')}</p>
             ) : (
               <div className="space-y-2">
                 {meetings.slice(0, 5).map((m) => (
@@ -94,7 +97,7 @@ export function DashboardPage() {
                   >
                     <div>
                       <p className="text-sm text-gray-900 dark:text-white">{m.title}</p>
-                      <p className="text-xs text-gray-500">{m.date} às {m.time}</p>
+                      <p className="text-xs text-gray-500">{t('dashboard.meetings.dateTime', { date: m.date, time: m.time })}</p>
                     </div>
                     <div className="flex items-center gap-1 text-gray-500">
                       <Users size={12} />
@@ -110,37 +113,37 @@ export function DashboardPage() {
           {canViewSubscription && <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={18} className="text-green-400" />
-              <h3 className="text-gray-900 dark:text-white font-semibold">Assinatura</h3>
+              <h3 className="text-gray-900 dark:text-white font-semibold">{t('dashboard.subscription.title')}</h3>
             </div>
             {subscription ? (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">Plano Base</span>
-                  <span className="text-gray-900 dark:text-white text-sm">{subscription.basePrice.toFixed(2)} EUR</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboard.subscription.basePlan')}</span>
+                  <span className="text-gray-900 dark:text-white text-sm">{formatCurrency(subscription.basePrice, locale)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">Assentos Ativos</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboard.subscription.activeSeats')}</span>
                   <span className="text-gray-900 dark:text-white text-sm">{subscription.seatCount}</span>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 dark:border-gray-800 pt-2">
-                  <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Total Mensal</span>
-                  <span className="text-gray-900 dark:text-white text-sm font-bold">{subscription.totalMonthlyValue.toFixed(2)} EUR</span>
+                  <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">{t('dashboard.subscription.monthlyTotal')}</span>
+                  <span className="text-gray-900 dark:text-white text-sm font-bold">{formatCurrency(subscription.totalMonthlyValue, locale)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">Auto-renovação</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboard.subscription.autoRenew')}</span>
                   <span className={`text-xs px-2 py-0.5 rounded ${subscription.autoRenew ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'}`}>
-                    {subscription.autoRenew ? 'Ativa' : 'Desativada'}
+                    {subscription.autoRenew ? t('dashboard.subscription.autoRenewActive') : t('dashboard.subscription.autoRenewDisabled')}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">Status</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboard.subscription.status')}</span>
                   <span className="text-xs bg-blue-900/40 text-blue-400 px-2 py-0.5 rounded">
                     {subscription.status}
                   </span>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500 text-sm py-4 text-center">Sem assinatura ativa</p>
+              <p className="text-gray-500 text-sm py-4 text-center">{t('dashboard.subscription.empty')}</p>
             )}
           </div>}
         </div>

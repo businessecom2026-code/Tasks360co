@@ -4,12 +4,15 @@ import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
 import { useNotificationStore } from '../../stores/useNotificationStore';
 import { NotificationPanel } from '../notifications/NotificationPanel';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { LanguageSelector } from '../common/LanguageSelector';
+import { useLocaleStore } from '../../stores/useLocaleStore';
 
 interface Props {
   title: string;
 }
 
 export function Header({ title }: Props) {
+  const { t } = useLocaleStore();
   const { currentWorkspace } = useWorkspaceStore();
   const { unreadCount, isOpen, setOpen, fetchUnreadCount, connectSSE, disconnectSSE } =
     useNotificationStore();
@@ -34,7 +37,7 @@ export function Header({ title }: Props) {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
             type="text"
-            placeholder="Buscar..."
+            placeholder={t('common.search')}
             className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg pl-9 pr-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 w-48"
           />
         </div>
@@ -43,6 +46,7 @@ export function Header({ title }: Props) {
           <Search size={18} />
         </button>
 
+        <LanguageSelector />
         <ThemeToggle />
 
         {/* Notifications */}

@@ -161,3 +161,19 @@
 .animate-app-bounce-in {
   animation: app-bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* ─── Toast enter animation ─── */
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-toast-enter {
+  animation: toast-enter 0.3s ease-out;
+}

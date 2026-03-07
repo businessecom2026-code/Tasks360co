@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import type { Task, TaskLabel, TaskPriority } from '../../types';
 import { useTaskStore } from '../../stores/useTaskStore';
+import { useLocaleStore } from '../../stores/useLocaleStore';
+import { formatDate } from '../../lib/i18n/formatters';
 
 interface Props {
   task: Task;
@@ -33,11 +35,11 @@ const LABEL_COLORS: Record<string, { bg: string; text: string; dot: string }> = 
   teal: { bg: 'bg-teal-500/20', text: 'text-teal-300', dot: 'bg-teal-500' },
 };
 
-const PRIORITY_CONFIG: Record<TaskPriority, { icon: string; color: string; label: string }> = {
-  URGENT: { icon: '🔴', color: 'text-red-400', label: 'Urgente' },
-  HIGH: { icon: '🟠', color: 'text-orange-400', label: 'Alta' },
-  MEDIUM: { icon: '🟡', color: 'text-yellow-400', label: 'Média' },
-  LOW: { icon: '🟢', color: 'text-emerald-400', label: 'Baixa' },
+const PRIORITY_CONFIG: Record<TaskPriority, { icon: string; color: string; labelKey: string }> = {
+  URGENT: { icon: '🔴', color: 'text-red-400', labelKey: 'common.priorities.urgent' },
+  HIGH: { icon: '🟠', color: 'text-orange-400', labelKey: 'common.priorities.high' },
+  MEDIUM: { icon: '🟡', color: 'text-yellow-400', labelKey: 'common.priorities.medium' },
+  LOW: { icon: '🟢', color: 'text-emerald-400', labelKey: 'common.priorities.low' },
 };
 
 function getDueDateStatus(dueDate: string): 'overdue' | 'soon' | 'normal' {
@@ -68,6 +70,7 @@ function LabelPill({ label }: { label: TaskLabel }) {
 
 export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay }: Props) {
   const { deleteTask, syncingTaskIds } = useTaskStore();
+  const { t, locale } = useLocaleStore();
   const isSyncing = syncingTaskIds.has(task.id);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -154,9 +157,9 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
             <div className="flex items-center gap-1.5 flex-wrap">
               {/* Priority badge */}
               {priority && PRIORITY_CONFIG[priority] && (
-                <span className={`flex items-center gap-0.5 text-[10px] font-medium ${PRIORITY_CONFIG[priority].color}`} title={PRIORITY_CONFIG[priority].label}>
+                <span className={`flex items-center gap-0.5 text-[10px] font-medium ${PRIORITY_CONFIG[priority].color}`} title={t(PRIORITY_CONFIG[priority].labelKey)}>
                   <Flag size={10} />
-                  {PRIORITY_CONFIG[priority].label}
+                  {t(PRIORITY_CONFIG[priority].labelKey)}
                 </span>
               )}
 
@@ -164,7 +167,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
               {task.dueDate && dueDateStatus && (
                 <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${DUE_DATE_STYLES[dueDateStatus]}`}>
                   {dueDateStatus === 'overdue' ? <Clock size={10} /> : <Calendar size={10} />}
-                  {new Date(task.dueDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                  {formatDate(task.dueDate, locale, { day: '2-digit', month: 'short' })}
                 </span>
               )}
 
@@ -188,7 +191,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
 
               {/* Google sync indicator */}
               {task.googleTaskId && (
-                <span className="flex items-center gap-0.5 text-[10px] text-emerald-500" title="Sincronizado com Google Tasks">
+                <span className="flex items-center gap-0.5 text-[10px] text-emerald-500" title={t('kanban.card.syncTooltip')}>
                   <RefreshCw size={10} />
                 </span>
               )}
@@ -208,7 +211,7 @@ export const TaskCard = memo(function TaskCard({ task, onEdit, isDone, isOverlay
                   deleteTask(task.id);
                 }}
                 className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-400 dark:text-slate-500 hover:text-red-400 transition-all rounded"
-                title="Excluir"
+                title={t('kanban.card.deleteTooltip')}
               >
                 <Trash2 size={12} />
               </button>

@@ -1,6 +1,18 @@
 import type { ApiResponse } from '../types';
+import { useToastStore } from '../stores/useToastStore';
 
 const BASE_URL = '/api';
+
+function getStoredLocale(): string {
+  try {
+    const stored = localStorage.getItem('locale-storage');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.state?.locale || 'pt-BR';
+    }
+  } catch { /* ignore */ }
+  return 'pt-BR';
+}
 
 async function request<T>(
   endpoint: string,
@@ -10,6 +22,7 @@ async function request<T>(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept-Language': getStoredLocale(),
     ...((options.headers as Record<string, string>) || {}),
   };
 
@@ -31,12 +44,19 @@ async function request<T>(
     const data = await res.json();
 
     if (!res.ok) {
-      return { success: false, error: data.error || `Request failed (${res.status})` };
+      const errorMsg = data.error || `Request failed (${res.status})`;
+      // Show toast for non-auth errors (401 redirects to login, no toast needed)
+      if (res.status !== 401) {
+        useToastStore.getState().addToast({ type: 'error', message: errorMsg });
+      }
+      return { success: false, error: errorMsg };
     }
 
     return { success: true, data };
   } catch (err) {
-    return { success: false, error: (err as Error).message };
+    const errorMsg = (err as Error).message;
+    useToastStore.getState().addToast({ type: 'error', message: errorMsg });
+    return { success: false, error: errorMsg };
   }
 }
 

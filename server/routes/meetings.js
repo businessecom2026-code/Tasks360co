@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { processMeeting, validateDuration } from '../services/ai.js';
+import { t } from '../lib/i18n.js';
+import { validate } from '../middleware/validate.js';
+import { createMeetingSchema } from '../schemas/meetings.js';
 
 // Configure multer for in-memory file storage (max 200MB)
 const upload = multer({
@@ -15,7 +18,7 @@ const upload = multer({
     if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Formato não suportado. Use MP3, WAV, WebM, MP4 ou TXT.'));
+      cb(new Error(t(_req.locale, 'errors.unsupportedFormat')));
     }
   },
 });
@@ -36,18 +39,14 @@ export function meetingRoutes(prisma) {
       res.json(meetings);
     } catch (err) {
       console.error('[Meetings:list]', err);
-      res.status(500).json({ error: 'Erro ao listar reuniões' });
+      res.status(500).json({ error: t(req.locale, 'errors.listMeetingsError') });
     }
   });
 
   // POST /api/meetings — create a meeting
-  router.post('/', async (req, res) => {
+  router.post('/', validate(createMeetingSchema), async (req, res) => {
     const workspaceId = req.workspaceId;
     const { title, date, time, participants, link, platform, recordWithAi } = req.body;
-
-    if (!title) {
-      return res.status(400).json({ error: 'Título obrigatório' });
-    }
 
     try {
       const meeting = await prisma.meeting.create({
@@ -66,7 +65,7 @@ export function meetingRoutes(prisma) {
       res.status(201).json(meeting);
     } catch (err) {
       console.error('[Meetings:create]', err);
-      res.status(500).json({ error: 'Erro ao criar reunião' });
+      res.status(500).json({ error: t(req.locale, 'errors.createMeetingError') });
     }
   });
 
@@ -91,14 +90,14 @@ export function meetingRoutes(prisma) {
         console.log(`[Meetings:process] No file, processing meetingId=${meetingId}`);
         aiResult = await processMeeting('', 'text/plain');
       } else {
-        return res.status(400).json({ error: 'Envie um arquivo ou informe o meetingId' });
+        return res.status(400).json({ error: t(req.locale, 'errors.sendFileOrMeetingId') });
       }
 
       // If meetingId provided, update the meeting record with AI results
       if (meetingId) {
         const meeting = await prisma.meeting.findUnique({ where: { id: meetingId } });
         if (!meeting || meeting.workspaceId !== req.workspaceId) {
-          return res.status(403).json({ error: 'Acesso negado a esta reunião' });
+          return res.status(403).json({ error: t(req.locale, 'errors.meetingAccessDenied') });
         }
         await prisma.meeting.update({
           where: { id: meetingId },
@@ -112,7 +111,7 @@ export function meetingRoutes(prisma) {
       res.json(aiResult);
     } catch (err) {
       console.error('[Meetings:process]', err);
-      res.status(500).json({ error: err.message || 'Erro ao processar reunião com IA' });
+      res.status(500).json({ error: err.message || t(req.locale, 'errors.processMeetingError') });
     }
   });
 
@@ -120,7 +119,7 @@ export function meetingRoutes(prisma) {
   router.use((err, _req, res, next) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'Arquivo muito grande. Limite: 200MB.' });
+        return res.status(400).json({ error: t(_req.locale, 'errors.fileTooLargeMeetings') });
       }
       return res.status(400).json({ error: err.message });
     }
@@ -136,18 +135,18 @@ export function meetingRoutes(prisma) {
       const meeting = await prisma.meeting.findUnique({ where: { id: req.params.id } });
 
       if (!meeting) {
-        return res.status(404).json({ error: 'Reunião não encontrada' });
+        return res.status(404).json({ error: t(req.locale, 'errors.meetingNotFound') });
       }
 
       if (meeting.workspaceId !== req.workspaceId) {
-        return res.status(403).json({ error: 'Acesso negado a esta reunião' });
+        return res.status(403).json({ error: t(req.locale, 'errors.meetingAccessDenied') });
       }
 
       await prisma.meeting.delete({ where: { id: req.params.id } });
       res.json({ success: true });
     } catch (err) {
       console.error('[Meetings:delete]', err);
-      res.status(500).json({ error: 'Erro ao excluir reunião' });
+      res.status(500).json({ error: t(req.locale, 'errors.deleteMeetingError') });
     }
   });
 

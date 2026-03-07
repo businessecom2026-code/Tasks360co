@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -28,25 +28,27 @@ import { TaskModal } from './TaskModal';
 import { useTaskStore } from '../../stores/useTaskStore';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { ErrorBoundary } from '../common/ErrorBoundary';
+import { useLocaleStore } from '../../stores/useLocaleStore';
 
 type ViewMode = 'kanban' | 'list';
 
-const COLUMNS: { status: TaskStatus; title: string; color: string; accentColor: string }[] = [
-  { status: 'PENDING',     title: 'Pendente',     color: 'bg-yellow-500',  accentColor: 'bg-yellow-600/30'  },
-  { status: 'IN_PROGRESS', title: 'Em Progresso', color: 'bg-blue-500',    accentColor: 'bg-blue-600/30'    },
-  { status: 'REVIEW',      title: 'Revisao',      color: 'bg-purple-500',  accentColor: 'bg-purple-600/30'  },
-  { status: 'DONE',        title: 'Concluido',    color: 'bg-emerald-500', accentColor: 'bg-emerald-600/30' },
+const COLUMNS: { status: TaskStatus; titleKey: string; color: string; accentColor: string }[] = [
+  { status: 'PENDING',     titleKey: 'kanban.columns.pending',    color: 'bg-yellow-500',  accentColor: 'bg-yellow-600/30'  },
+  { status: 'IN_PROGRESS', titleKey: 'kanban.columns.inProgress', color: 'bg-blue-500',    accentColor: 'bg-blue-600/30'    },
+  { status: 'REVIEW',      titleKey: 'kanban.columns.review',     color: 'bg-purple-500',  accentColor: 'bg-purple-600/30'  },
+  { status: 'DONE',        titleKey: 'kanban.columns.done',       color: 'bg-emerald-500', accentColor: 'bg-emerald-600/30' },
 ];
 
-const PRIORITY_FILTERS: { value: TaskPriority | 'ALL'; label: string; icon: string }[] = [
-  { value: 'ALL',    label: 'Todas',   icon: ''   },
-  { value: 'URGENT', label: 'Urgente', icon: '🔴' },
-  { value: 'HIGH',   label: 'Alta',    icon: '🟠' },
-  { value: 'MEDIUM', label: 'Media',   icon: '🟡' },
-  { value: 'LOW',    label: 'Baixa',   icon: '🟢' },
+const PRIORITY_FILTERS: { value: TaskPriority | 'ALL'; labelKey: string; icon: string }[] = [
+  { value: 'ALL',    labelKey: 'kanban.priorityAll',       icon: ''   },
+  { value: 'URGENT', labelKey: 'common.priorities.urgent', icon: '🔴' },
+  { value: 'HIGH',   labelKey: 'common.priorities.high',   icon: '🟠' },
+  { value: 'MEDIUM', labelKey: 'common.priorities.medium', icon: '🟡' },
+  { value: 'LOW',    labelKey: 'common.priorities.low',    icon: '🟢' },
 ];
 
 export function KanbanBoard() {
+  const { t } = useLocaleStore();
   const { tasks, isLoading, fetchTasks, moveTask, updateTask } = useTaskStore();
   const [viewMode, setViewMode]           = useState<ViewMode>('kanban');
   const [searchQuery, setSearchQuery]     = useState('');
@@ -69,26 +71,37 @@ export function KanbanBoard() {
 
   useEffect(() => { fetchTasks(); }, [fetchTasks]);
 
-  const filteredTasks = tasks.filter((task) => {
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      const matchTitle    = task.title.toLowerCase().includes(q);
-      const matchDesc     = task.description?.toLowerCase().includes(q);
-      const matchAssignee = task.assignee?.name.toLowerCase().includes(q);
-      if (!matchTitle && !matchDesc && !matchAssignee) return false;
-    }
-    if (priorityFilter !== 'ALL' && task.priority !== priorityFilter) return false;
-    return true;
-  });
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle    = task.title.toLowerCase().includes(q);
+        const matchDesc     = task.description?.toLowerCase().includes(q);
+        const matchAssignee = task.assignee?.name.toLowerCase().includes(q);
+        if (!matchTitle && !matchDesc && !matchAssignee) return false;
+      }
+      if (priorityFilter !== 'ALL' && task.priority !== priorityFilter) return false;
+      return true;
+    });
+  }, [tasks, searchQuery, priorityFilter]);
 
-  const openCreate = (status: TaskStatus = 'PENDING') => {
+  // Pre-compute per-column task arrays (avoids re-filtering on each column render)
+  const tasksByColumn = useMemo(() => {
+    const map: Record<TaskStatus, Task[]> = { PENDING: [], IN_PROGRESS: [], REVIEW: [], DONE: [] };
+    for (const task of filteredTasks) {
+      map[task.status].push(task);
+    }
+    return map;
+  }, [filteredTasks]);
+
+  const openCreate = useCallback((status: TaskStatus = 'PENDING') => {
     setCreateInitialStatus(status);
     setModalTask(null);
-  };
+  }, []);
 
-  const openEdit = (task: Task) => setModalTask(task);
+  const openEdit = useCallback((task: Task) => setModalTask(task), []);
 
-  const closeModal = () => setModalTask(undefined);
+  const closeModal = useCallback(() => setModalTask(undefined), []);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const task = event.active.data.current?.task as Task | undefined;
@@ -126,7 +139,7 @@ export function KanbanBoard() {
   const activeFiltersCount = (searchQuery ? 1 : 0) + (priorityFilter !== 'ALL' ? 1 : 0);
 
   if (isLoading) {
-    return <LoadingSpinner className="h-64" text="Carregando tarefas..." />;
+    return <LoadingSpinner className="h-64" text={t('kanban.loading')} />;
   }
 
   return (
@@ -144,7 +157,7 @@ export function KanbanBoard() {
                   : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              <LayoutGrid size={14} /> Kanban
+              <LayoutGrid size={14} /> {t('kanban.viewToggle.kanban')}
             </button>
             <button
               onClick={() => setViewMode('list')}
@@ -154,12 +167,12 @@ export function KanbanBoard() {
                   : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              <List size={14} /> Lista
+              <List size={14} /> {t('kanban.viewToggle.list')}
             </button>
           </div>
 
           <span className="text-xs text-gray-500 dark:text-slate-500">
-            {filteredTasks.length} tarefa{filteredTasks.length !== 1 ? 's' : ''}
+            {t('kanban.taskCount', { count: filteredTasks.length })}
           </span>
         </div>
 
@@ -171,7 +184,7 @@ export function KanbanBoard() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar tarefas..."
+              placeholder={t('kanban.search')}
               className="w-48 bg-gray-100 dark:bg-slate-800/60 border border-gray-300 dark:border-slate-700/50 rounded-lg pl-8 pr-8 py-1.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
             />
             {searchQuery && (
@@ -190,7 +203,7 @@ export function KanbanBoard() {
                 : 'bg-gray-200/60 dark:bg-slate-800/60 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
-            <Filter size={14} /> Filtros
+            <Filter size={14} /> {t('kanban.filters')}
             {activeFiltersCount > 0 && (
               <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[10px] flex items-center justify-center font-bold">
                 {activeFiltersCount}
@@ -203,7 +216,7 @@ export function KanbanBoard() {
             onClick={() => openCreate()}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition-all shadow-sm shadow-emerald-500/20"
           >
-            <Plus size={14} /> Nova Tarefa
+            <Plus size={14} /> {t('kanban.newTask')}
           </button>
         </div>
       </div>
@@ -213,7 +226,7 @@ export function KanbanBoard() {
         <div className="flex items-center gap-4 px-4 py-2.5 border-b border-gray-200 dark:border-slate-800/40 bg-gray-50 dark:bg-slate-900/40 animate-slide-down">
           <div className="flex items-center gap-2">
             <Flag size={12} className="text-gray-400 dark:text-slate-500" />
-            <span className="text-[11px] text-gray-400 dark:text-slate-500 uppercase tracking-wider">Prioridade:</span>
+            <span className="text-[11px] text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t('kanban.priorityLabel')}</span>
             {PRIORITY_FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -225,7 +238,7 @@ export function KanbanBoard() {
                 }`}
               >
                 {f.icon && <span>{f.icon}</span>}
-                {f.label}
+                {t(f.labelKey)}
               </button>
             ))}
           </div>
@@ -234,7 +247,7 @@ export function KanbanBoard() {
               onClick={() => { setSearchQuery(''); setPriorityFilter('ALL'); }}
               className="text-xs text-red-400 hover:text-red-300 transition-colors ml-auto"
             >
-              Limpar filtros
+              {t('kanban.clearFilters')}
             </button>
           )}
         </div>
@@ -254,10 +267,10 @@ export function KanbanBoard() {
                 <KanbanColumn
                   key={col.status}
                   status={col.status}
-                  title={col.title}
+                  title={t(col.titleKey)}
                   color={col.color}
                   accentColor={col.accentColor}
-                  tasks={filteredTasks.filter((t) => t.status === col.status)}
+                  tasks={tasksByColumn[col.status]}
                   onEditTask={openEdit}
                 />
               ))}

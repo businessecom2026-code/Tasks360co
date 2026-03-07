@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { t } from '../lib/i18n.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'task360-secret-change-in-production';
 
@@ -22,7 +23,7 @@ export function authMiddleware(req, res, next) {
   }
 
   if (!token) {
-    return res.status(401).json({ error: 'Token não fornecido' });
+    return res.status(401).json({ error: t(req.locale, 'errors.tokenNotProvided') });
   }
 
   try {
@@ -30,6 +31,6 @@ export function authMiddleware(req, res, next) {
     req.user = decoded;
     next();
   } catch {
-    return res.status(401).json({ error: 'Token inválido ou expirado' });
+    return res.status(401).json({ error: t(req.locale, 'errors.tokenInvalid') });
   }
 }

@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { scheduleSyncToGoogle, deleteFromGoogle } from '../services/syncEngine.js';
 import { getUserTokens } from '../services/googleAuth.js';
 import { createNotification, notifyWorkspace } from '../services/notifications.js';
+import { t } from '../lib/i18n.js';
+import { validate } from '../middleware/validate.js';
+import { createTaskSchema, updateTaskSchema } from '../schemas/tasks.js';
 
 export function taskRoutes(prisma) {
   const router = Router();
@@ -28,18 +31,14 @@ export function taskRoutes(prisma) {
       res.json(tasks);
     } catch (err) {
       console.error('[Tasks:list]', err);
-      res.status(500).json({ error: 'Erro ao listar tarefas' });
+      res.status(500).json({ error: t(req.locale, 'errors.listTasksError') });
     }
   });
 
   // POST /api/tasks — create a task
-  router.post('/', async (req, res) => {
+  router.post('/', validate(createTaskSchema), async (req, res) => {
     const workspaceId = req.workspaceId;
     const { title, description, status, assigneeId, dueDate, color, image, priority, labels, checklist, coverColor } = req.body;
-
-    if (!title) {
-      return res.status(400).json({ error: 'Título obrigatório' });
-    }
 
     try {
       const task = await prisma.task.create({
@@ -90,30 +89,30 @@ export function taskRoutes(prisma) {
       res.status(201).json(task);
     } catch (err) {
       console.error('[Tasks:create]', err);
-      res.status(500).json({ error: 'Erro ao criar tarefa' });
+      res.status(500).json({ error: t(req.locale, 'errors.createTaskError') });
     }
   });
 
   // PATCH /api/tasks/:id — update a task (with optimistic locking)
-  router.patch('/:id', async (req, res) => {
+  router.patch('/:id', validate(updateTaskSchema), async (req, res) => {
     const { id } = req.params;
     const { title, description, status, assigneeId, dueDate, color, image, version, priority, labels, checklist, coverColor } = req.body;
 
     try {
       const existing = await prisma.task.findUnique({ where: { id } });
       if (!existing) {
-        return res.status(404).json({ error: 'Tarefa não encontrada' });
+        return res.status(404).json({ error: t(req.locale, 'errors.taskNotFound') });
       }
 
       // Verify task belongs to the user's workspace
       if (existing.workspaceId !== req.workspaceId) {
-        return res.status(403).json({ error: 'Acesso negado a esta tarefa' });
+        return res.status(403).json({ error: t(req.locale, 'errors.taskAccessDenied') });
       }
 
       // Optimistic locking: if version is provided, check it matches
       if (version !== undefined && existing.version !== version) {
         return res.status(409).json({
-          error: 'Conflito de versão. A tarefa foi modificada por outro usuário.',
+          error: t(req.locale, 'errors.versionConflict'),
           currentVersion: existing.version,
         });
       }
@@ -178,7 +177,7 @@ export function taskRoutes(prisma) {
       res.json(task);
     } catch (err) {
       console.error('[Tasks:update]', err);
-      res.status(500).json({ error: 'Erro ao atualizar tarefa' });
+      res.status(500).json({ error: t(req.locale, 'errors.updateTaskError') });
     }
   });
 
@@ -189,12 +188,12 @@ export function taskRoutes(prisma) {
       const task = await prisma.task.findUnique({ where: { id: req.params.id } });
 
       if (!task) {
-        return res.status(404).json({ error: 'Tarefa não encontrada' });
+        return res.status(404).json({ error: t(req.locale, 'errors.taskNotFound') });
       }
 
       // Verify task belongs to the user's workspace
       if (task.workspaceId !== req.workspaceId) {
-        return res.status(403).json({ error: 'Acesso negado a esta tarefa' });
+        return res.status(403).json({ error: t(req.locale, 'errors.taskAccessDenied') });
       }
 
       await prisma.task.delete({ where: { id: req.params.id } });
@@ -209,7 +208,7 @@ export function taskRoutes(prisma) {
       res.json({ success: true });
     } catch (err) {
       console.error('[Tasks:delete]', err);
-      res.status(500).json({ error: 'Erro ao excluir tarefa' });
+      res.status(500).json({ error: t(req.locale, 'errors.deleteTaskError') });
     }
   });
 

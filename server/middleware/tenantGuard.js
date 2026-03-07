@@ -1,3 +1,5 @@
+import { t } from '../lib/i18n.js';
+
 /**
  * Tenant Guard Middleware
  * Ensures a user can only access data within their active workspace.
@@ -16,7 +18,7 @@ export function tenantGuard(prisma) {
 
     if (!workspaceId) {
       console.warn(`[TenantGuard] Missing X-Workspace-Id header for user ${req.user?.id} on ${req.method} ${req.originalUrl}`);
-      return res.status(400).json({ error: 'X-Workspace-Id header obrigatório' });
+      return res.status(400).json({ error: t(req.locale, 'errors.workspaceIdRequired') });
     }
 
     try {
@@ -32,7 +34,7 @@ export function tenantGuard(prisma) {
 
       if (!membership || !membership.inviteAccepted || membership.paymentStatus !== 'PAID') {
         console.warn(`[TenantGuard] Access denied for user ${req.user.id} to workspace ${workspaceId} — membership: ${membership ? `accepted=${membership.inviteAccepted}, payment=${membership.paymentStatus}` : 'not found'}`);
-        return res.status(403).json({ error: 'Acesso negado a este workspace' });
+        return res.status(403).json({ error: t(req.locale, 'errors.workspaceAccessDenied') });
       }
 
       req.workspaceId = workspaceId;
@@ -40,7 +42,7 @@ export function tenantGuard(prisma) {
       next();
     } catch (err) {
       console.error('[TenantGuard]', err);
-      return res.status(500).json({ error: 'Erro ao verificar permissões' });
+      return res.status(500).json({ error: t(req.locale, 'errors.permissionCheckFailed') });
     }
   };
 }
