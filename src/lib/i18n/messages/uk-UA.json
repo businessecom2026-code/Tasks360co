@@ -1,0 +1,671 @@
+{
+  "common": {
+    "appName": "Task360",
+    "appSuffix": "Engine",
+    "appVersion": "Engine v1.0",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "close": "Закрити",
+    "delete": "Видалити",
+    "add": "Додати",
+    "edit": "Редагувати",
+    "confirm": "Підтвердити",
+    "back": "Назад",
+    "loading": "Завантаження...",
+    "error": "Помилка",
+    "yes": "Так",
+    "no": "Ні",
+    "search": "Шукати...",
+    "remove": "Прибрати",
+    "copy": "Копіювати",
+    "move": "Перемістити",
+    "send": "Надіслати",
+    "process": "Обробити",
+    "retry": "Спробувати знову",
+    "total": "всього",
+    "logout": "Вийти",
+    "roles": {
+      "super_admin": "Суперадмін",
+      "gestor": "Менеджер",
+      "colaborador": "Співробітник",
+      "cliente": "Клієнт"
+    },
+    "statuses": {
+      "pending": "Очікує",
+      "in_progress": "В роботі",
+      "review": "На перевірці",
+      "done": "Завершено"
+    },
+    "priorities": {
+      "urgent": "Терміново",
+      "high": "Високий",
+      "medium": "Середній",
+      "low": "Низький"
+    },
+    "priorityIcons": {
+      "urgent": "🔴",
+      "high": "🟠",
+      "medium": "🟡",
+      "low": "🟢"
+    },
+    "copyright": "Task360 Engine © {{year}} — Усі права захищено",
+    "copyrightShort": "Task360 Engine © {{year}}",
+    "madeWith": "Створено з React + TypeScript + Prisma"
+  },
+
+  "auth": {
+    "tagline": "Розумне управління завданнями",
+    "login": {
+      "title": "Увійти",
+      "emailLabel": "Електронна пошта",
+      "emailPlaceholder": "ваша@пошта.com",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "••••••••",
+      "submitButton": "Увійти",
+      "submitting": "Вхід...",
+      "noAccount": "Немає облікового запису?",
+      "createAccount": "Створити обліковий запис"
+    },
+    "register": {
+      "subtitle": "Створити новий обліковий запис",
+      "nameLabel": "Ім'я",
+      "namePlaceholder": "Ваше повне ім'я",
+      "emailLabel": "Електронна пошта",
+      "emailPlaceholder": "ваша@пошта.com",
+      "passwordLabel": "Пароль",
+      "passwordPlaceholder": "Мінімум 6 символів",
+      "confirmPasswordLabel": "Підтвердити пароль",
+      "confirmPasswordPlaceholder": "Повторіть пароль",
+      "submitButton": "Створити обліковий запис",
+      "submitting": "Створення облікового запису...",
+      "hasAccount": "Вже маю обліковий запис",
+      "success": {
+        "title": "Обліковий запис створено!",
+        "message": "Перенаправлення на Dashboard..."
+      },
+      "errors": {
+        "passwordMin": "Пароль має містити щонайменше 6 символів",
+        "passwordMismatch": "Паролі не збігаються",
+        "generic": "Помилка при реєстрації"
+      }
+    }
+  },
+
+  "landing": {
+    "nav": {
+      "login": "Увійти",
+      "loginMobile": "Вхід",
+      "register": "Почати безкоштовно"
+    },
+    "hero": {
+      "badge": "Управління завданнями зі штучним інтелектом",
+      "title1": "Керуйте завданнями.",
+      "title2": "Автоматизуйте наради.",
+      "title3": "Масштабуйте команди.",
+      "description": "Багатокористувацька B2B-платформа з Kanban, синхронізацією Google Tasks, протоколами нарад з ШІ та динамічною тарифікацією за місце. Все в одному місці.",
+      "cta": "Почати зараз",
+      "secondaryCta": "Переглянути функції"
+    },
+    "stats": {
+      "roles": "Ролі",
+      "basePlan": "Базовий план",
+      "googleTasks": "Google Tasks"
+    },
+    "features": {
+      "sectionTitle": "Все, що вам потрібно",
+      "sectionDescription": "Повноцінна платформа для управління командами, завданнями та нарадами з інтелектуальною автоматизацією.",
+      "kanban": {
+        "title": "Розумний Kanban",
+        "description": "Перетягуйте завдання між колонками з синхронізацією в реальному часі та оптимістичним блокуванням."
+      },
+      "ai": {
+        "title": "Протоколи нарад з ШІ",
+        "description": "Завантажуйте записи та отримуйте автоматичні резюме із запропонованими завданнями від Gemini."
+      },
+      "googleSync": {
+        "title": "Google Tasks Sync",
+        "description": "Двонаправлена синхронізація з Google Tasks. Автоматичне вирішення конфліктів."
+      },
+      "billing": {
+        "title": "Тарифікація Revolut",
+        "description": "Динамічна тарифікація за місце з інтегрованою оплатою через Revolut."
+      },
+      "multiTenant": {
+        "title": "Multi-Tenant",
+        "description": "Ізольовані робочі простори з управлінням учасниками та ролями (Менеджер, Співробітник, Клієнт)."
+      },
+      "security": {
+        "title": "Безпека",
+        "description": "JWT-автентифікація, bcrypt, ізоляція за tenant та рольовий контроль доступу."
+      }
+    },
+    "pricing": {
+      "title": "Проста та прозора ціна",
+      "description_prefix": "Базовий план від",
+      "basePriceMonthly": "5.00 EUR/місяць",
+      "plus": "+",
+      "seatPrice": "3.00 EUR",
+      "description_suffix": "за запрошеного учасника. Власник не платить за місце.",
+      "cta": "Спробувати безкоштовно"
+    },
+    "cta": {
+      "noCreditCard": "Кредитна картка не потрібна для початку",
+      "title": "Готові трансформувати управління вашою командою?",
+      "button": "Створити безкоштовний обліковий запис"
+    }
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "stats": {
+      "pending": "Очікують",
+      "inProgress": "В роботі",
+      "inReview": "На перевірці",
+      "done": "Завершені"
+    },
+    "meetings": {
+      "title": "Найближчі наради",
+      "empty": "Немає запланованих нарад",
+      "dateTime": "{{date}} о {{time}}"
+    },
+    "subscription": {
+      "title": "Підписка",
+      "basePlan": "Базовий план",
+      "activeSeats": "Активні місця",
+      "monthlyTotal": "Місячна сума",
+      "autoRenew": "Автоматичне поновлення",
+      "autoRenewActive": "Активне",
+      "autoRenewDisabled": "Вимкнене",
+      "status": "Статус",
+      "empty": "Немає активної підписки"
+    }
+  },
+
+  "kanban": {
+    "title": "Kanban",
+    "columns": {
+      "pending": "Очікує",
+      "inProgress": "В роботі",
+      "review": "На перевірці",
+      "done": "Завершено"
+    },
+    "viewToggle": {
+      "kanban": "Kanban",
+      "list": "Список"
+    },
+    "taskCount": "{{count}} завдання",
+    "taskCount_plural": "{{count}} завдань",
+    "search": "Шукати завдання...",
+    "filters": "Фільтри",
+    "clearFilters": "Очистити фільтри",
+    "priorityLabel": "Пріоритет:",
+    "priorityAll": "Усі",
+    "newTask": "Нове завдання",
+    "loading": "Завантаження завдань...",
+    "column": {
+      "addTask": "Додати завдання",
+      "addTaskTitle": "Додати",
+      "quickAddPlaceholder": "Назва завдання...",
+      "emptyDrop": "Перетягніть завдання сюди",
+      "emptyAdd": "Нове завдання"
+    },
+    "card": {
+      "syncTooltip": "Синхронізовано з Google Tasks",
+      "deleteTooltip": "Видалити"
+    }
+  },
+
+  "task": {
+    "titlePlaceholder": "Назва завдання...",
+    "titleRequired": "Назва є обов'язковою",
+    "descriptionPlaceholder": "Додайте більш детальний опис...",
+    "description": "Опис",
+    "labels": "Мітки",
+    "dates": "Дати",
+    "checklist": "Checklist",
+    "priority": "Пріоритет",
+    "cover": "Обкладинка",
+    "member": "Учасник",
+    "attachments": "Вкладення",
+    "attachmentCount": "{{count}} файл",
+    "attachmentCount_plural": "{{count}} файлів",
+    "assignTo": "Призначити",
+    "assignee": "Відповідальний",
+    "dueDate": "Термін виконання",
+    "activity": "Активність",
+    "actions": "Дії",
+    "removeCover": "Видалити обкладинку",
+    "changeCover": "Змінити обкладинку",
+    "removeDate": "Видалити дату",
+    "removePriority": "Видалити пріоритет",
+    "removeAssignee": "Зняти призначення",
+    "noMembersInWorkspace": "Немає учасників у робочому просторі",
+    "addCheckItem": "Додати елемент...",
+    "addFirstCheckItem": "Додати перший елемент...",
+    "addSubItem": "Додати підпункт",
+    "subItemPlaceholder": "Підпункт...",
+    "showCompleted": "Показати завершені",
+    "hideCompleted": "Приховати завершені",
+    "commentPlaceholder": "Напишіть коментар...",
+    "systemActivityAdd": "додав цю картку до {{column}}",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "move": "Перемістити",
+    "copy": "Копіювати",
+    "delete": "Видалити",
+    "saveError": "Помилка при створенні завдання: {{error}}",
+    "unknownError": "Невідома помилка",
+    "dropFilesHere": "Перетягніть сюди!",
+    "dragOrClick": "Перетягніть файли або натисніть для завантаження",
+    "uploadHint": "Зображення, PDFs, Docs, Відео (макс. 50MB)",
+    "uploading": "Завантаження...",
+    "downloadFile": "Завантажити",
+    "previewFile": "Попередній перегляд",
+    "labelPresets": {
+      "bug": "Bug",
+      "feature": "Feature",
+      "improvement": "Покращення",
+      "urgent": "Терміново",
+      "design": "Design",
+      "backend": "Backend",
+      "frontend": "Frontend",
+      "docs": "Docs"
+    },
+    "statusOptions": {
+      "pending": "Очікує",
+      "inProgress": "В роботі",
+      "review": "На перевірці",
+      "done": "Завершено"
+    },
+    "priorityOptions": {
+      "urgent": "Терміново",
+      "high": "Високий",
+      "medium": "Середній",
+      "low": "Низький"
+    }
+  },
+
+  "meetings": {
+    "title": "Наради",
+    "newMeeting": "Нова нарада",
+    "processWithAi": "Обробити запис за допомогою ШІ",
+    "createTitle": "Створити нараду",
+    "form": {
+      "title": "Назва",
+      "platform": "Платформа",
+      "date": "Дата",
+      "time": "Час"
+    },
+    "recordWithAi": "Записати з ШІ",
+    "recordWithAiHint": "Відкриває елементи керування записом при створенні",
+    "createButton": "Створити нараду",
+    "loading": "Завантаження...",
+    "list": {
+      "empty": "Нарад не знайдено",
+      "emptyHint": "Створіть нараду або завантажте запис",
+      "participants": "{{count}} учасник(ів)",
+      "aiSummaryLabel": "Резюме ШІ:",
+      "suggestedTasks": "{{count}} завдань запропоновано ШІ",
+      "downloadPdf": "Завантажити PDF"
+    },
+    "upload": {
+      "limitTitle": "Ліміт обробки",
+      "limitDescription": "Наради обмежені 60 хвилинами для обробки ШІ (Gemini 1.5 Flash). Довші файли будуть обрізані.",
+      "dropTitle": "Завантаження запису або транскрипції",
+      "dropHint": "MP3, WAV, WebM, MP4 або TXT (макс. 60 хв.)",
+      "changeFile": "Змінити файл",
+      "processButton": "Обробити з Gemini",
+      "processing": "Обробка ШІ...",
+      "invalidFormat": "Непідтримуваний формат. Використовуйте MP3, WAV, WebM, MP4 або TXT.",
+      "processError": "Помилка при обробці файлу",
+      "resultTitle": "Обробку завершено",
+      "summaryTitle": "Резюме наради",
+      "suggestedTasksTitle": "Запропоновані завдання ({{count}})",
+      "approveButton": "Затвердити та додати до Kanban",
+      "deadlinePrefix": "до"
+    }
+  },
+
+  "admin": {
+    "title": "Адміністрування",
+    "tabs": {
+      "billing": "Виставлення рахунків",
+      "members": "Учасники"
+    },
+    "invite": "Запросити",
+    "addGuest": "Додати гостя",
+    "clienteHint": "Додайте гостя до робочого простору для співпраці.",
+    "billing": {
+      "loading": "Завантаження рахунків...",
+      "monthlyRevenue": "Загальний місячний дохід",
+      "activeSeats": "Активні місця",
+      "activeWorkspaces": "Активні робочі простори",
+      "tableTitle": "Рахунки за менеджерами",
+      "headers": {
+        "workspace": "Робочий простір",
+        "gestor": "Менеджер",
+        "base": "База",
+        "seats": "Місця",
+        "seatCost": "Вартість місця",
+        "totalMonth": "Всього/Місяць",
+        "autoRenew": "Автоподовження",
+        "actions": "Дії"
+      },
+      "charge": "Виставити рахунок",
+      "emptyTable": "Немає робочих просторів з активною підпискою",
+      "formula": "Формула:",
+      "formulaText": "Всього = Базовий план (5,00 EUR) + (Активні запрошення × 3,00 EUR)"
+    },
+    "members": {
+      "loading": "Завантаження учасників...",
+      "title": "Учасники робочого простору",
+      "statusActive": "Активний",
+      "statusPending": "Очікує",
+      "costPerSeat": "{{cost}} EUR/місяць",
+      "removeTooltip": "Видалити учасника",
+      "empty": "Учасників не знайдено",
+      "pendingLabel": "Очікує"
+    }
+  },
+
+  "settings": {
+    "title": "Налаштування",
+    "profile": {
+      "title": "Профіль",
+      "nameLabel": "Ім'я",
+      "emailLabel": "Електронна пошта",
+      "roleLabel": "Роль",
+      "saveButton": "Зберегти профіль",
+      "saving": "Збереження...",
+      "saved": "Збережено!"
+    },
+    "subscription": {
+      "title": "Підписка",
+      "autoRenew": "Автоматичне поновлення",
+      "autoRenewOnDesc": "Ваша підписка буде автоматично поновлена в кінці циклу",
+      "autoRenewOffDesc": "Ваша підписка закінчиться в кінці поточного циклу",
+      "monthlyTotal": "Місячна сума",
+      "status": "Статус",
+      "nextCharge": "Наступне списання",
+      "payPlan": "Оплатити план",
+      "renew": "Поновити",
+      "checkoutSandbox": "Режим sandbox: оплата {{amount}} EUR успішно симульована.",
+      "checkoutOpened": "Оплата Revolut відкрита в новій вкладці. Завершіть оплату.",
+      "checkoutError": "Помилка при створенні оплати",
+      "paymentNote": "Оплата обробляється через Revolut Business. Безпечна оплата з HMAC-SHA256."
+    },
+    "googleTasks": {
+      "title": "Google Tasks Sync",
+      "connected": "Google Tasks підключено",
+      "connectedSuccess": "Google Tasks успішно підключено!",
+      "connectedError": "Помилка при підключенні Google Tasks. Спробуйте ще раз.",
+      "disconnected": "Google Tasks відключено",
+      "syncNow": "Синхронізувати зараз",
+      "syncing": "Синхронізація...",
+      "syncResult": "Синхронізовано! {{synced}} оброблено, {{created}} створено, {{updated}} оновлено",
+      "syncError": "Помилка синхронізації",
+      "disconnect": "Відключити",
+      "description": "Підключіть свій обліковий запис Google для двонаправленої синхронізації завдань з Google Tasks.",
+      "connectButton": "Підключити обліковий запис Google",
+      "oauthNotAvailable": "Google OAuth недоступний",
+      "oauthNote": "Інтеграція через OAuth 2.0 з вирішенням конфліктів «Last Write Wins»."
+    },
+    "googleCalendar": {
+      "title": "Google Calendar",
+      "connected": "Google Calendar підключено",
+      "connectedSuccess": "Google Calendar успішно підключено!",
+      "connectedError": "Помилка при підключенні Google Calendar. Спробуйте ще раз.",
+      "disconnected": "Google Calendar відключено",
+      "syncNow": "Синхронізувати календар",
+      "syncing": "Синхронізація...",
+      "syncResult": "Синхронізовано! {{synced}} оброблено, {{created}} створено, {{updated}} оновлено, {{deleted}} видалено",
+      "syncError": "Помилка синхронізації",
+      "activatePush": "Активувати Push",
+      "pushSuccess": "Push-сповіщення активовано. Події синхронізуватимуться автоматично.",
+      "pushError": "Помилка при активації push",
+      "disconnect": "Відключити",
+      "description": "Підключіть Google Calendar для перегляду та створення подій безпосередньо з Task360.",
+      "connectButton": "Підключити Google Calendar",
+      "oauthNotAvailable": "Google OAuth недоступний",
+      "scopeNote": "Scopes: calendar.events (читання/створення) + calendar.readonly. Токени зашифровані за допомогою AES-256-GCM."
+    }
+  },
+
+  "notifications": {
+    "title": "Сповіщення",
+    "markAllRead": "Позначити всі як прочитані",
+    "empty": "Немає сповіщень",
+    "markAsRead": "Позначити як прочитане",
+    "deleteTooltip": "Видалити",
+    "timeAgo": {
+      "now": "зараз",
+      "minutes": "{{count}}хв",
+      "hours": "{{count}}год",
+      "days": "{{count}}д"
+    }
+  },
+
+  "workspace": {
+    "switcher": {
+      "loading": "Завантаження робочих просторів...",
+      "empty": "Немає доступних робочих просторів"
+    },
+    "invite": {
+      "title": "Запросити учасника",
+      "emailLabel": "Електронна пошта",
+      "emailPlaceholder": "співробітник@компанія.com",
+      "roleLabel": "Роль",
+      "roleColaborador": "Співробітник",
+      "roleCliente": "Клієнт",
+      "costInfo": "Вартість: 3,00 EUR/місяць за місце",
+      "costDescription": "Буде створено оплату Revolut. Запрошення активується лише після підтвердження оплати.",
+      "emailRequired": "Електронна пошта обов'язкова",
+      "submitButton": "Створити оплату та запросити",
+      "submitting": "Обробка...",
+      "inviteError": "Помилка при надсиланні запрошення",
+      "checkout": {
+        "title": "Оплата Revolut відкрита",
+        "description": "Завершіть оплату у відкритому вікні. Після підтвердження запрошення буде активовано автоматично.",
+        "reopenLink": "Відкрити оплату знову",
+        "verifyButton": "Я оплатив — перевірити статус"
+      },
+      "polling": {
+        "title": "Очікування підтвердження",
+        "description": "Перевірка оплати у Revolut... Це може зайняти кілька секунд.",
+        "reopenLink": "Відкрити оплату знову",
+        "timeout": "Час очікування вичерпано. Оплата може бути ще оброблена через webhook."
+      },
+      "success": {
+        "title": "Запрошення активовано!",
+        "description": "Оплату підтверджено. Учасник {{email}} тепер має доступ до робочого простору.",
+        "closeButton": "Закрити"
+      },
+      "failed": {
+        "title": "Оплату не підтверджено",
+        "defaultError": "Не вдалося підтвердити оплату. Спробуйте ще раз.",
+        "paymentFailed": "Оплата не вдалася. Спробуйте ще раз.",
+        "retryButton": "Спробувати знову",
+        "closeButton": "Закрити"
+      }
+    }
+  },
+
+  "checkout": {
+    "loading": {
+      "title": "Перевірка оплати...",
+      "description": "Зачекайте, поки ми підтвердимо вашу оплату з Revolut."
+    },
+    "paid": {
+      "title": "Оплату підтверджено!",
+      "description": "Місце успішно активовано. Запрошений учасник тепер може отримати доступ до робочого простору."
+    },
+    "pending": {
+      "title": "Оплата обробляється",
+      "description": "Ваша оплата обробляється. Запрошення буде активовано автоматично після підтвердження."
+    },
+    "failed": {
+      "title": "Оплата не вдалася",
+      "description": "Не вдалося обробити оплату. Спробуйте ще раз через панель адміністрування."
+    },
+    "cancelled": {
+      "title": "Оплату скасовано",
+      "description": "Процес оплати було скасовано. Запрошення залишається в очікуванні та може бути повторно оброблене."
+    },
+    "backButton": "Повернутися до панелі"
+  },
+
+  "offline": {
+    "banner": "Немає з'єднання з інтернетом — офлайн-режим активний"
+  },
+
+  "theme": {
+    "lightMode": "Увімкнути світлу тему",
+    "darkMode": "Увімкнути темну тему"
+  },
+
+  "layout": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "kanban": "Kanban",
+      "meetings": "Наради",
+      "admin": "Admin",
+      "settings": "Налаштування",
+      "logoutTooltip": "Вийти"
+    },
+    "mobileNav": {
+      "dashboard": "Dashboard",
+      "kanban": "Kanban",
+      "meetings": "Наради",
+      "config": "Налашт.",
+      "admin": "Admin",
+      "openKanban": "Відкрити Kanban",
+      "manageTasks": "Керувати завданнями",
+      "meetingsAction": "Наради",
+      "meetingsHint": "Планувати & ШІ"
+    }
+  },
+
+  "listView": {
+    "groupBy": "Групувати за:",
+    "groupByStatus": "Статус",
+    "groupByPriority": "Пріоритет",
+    "groupByNone": "Без групування",
+    "allTasks": "Усі завдання",
+    "noPriority": "Без пріоритету",
+    "headers": {
+      "title": "Назва",
+      "status": "Статус",
+      "priority": "Пріоритет",
+      "assignee": "Відповідальний",
+      "date": "Дата",
+      "labels": "Мітки"
+    },
+    "quickAddPlaceholder": "Назва нового завдання...",
+    "quickAddButton": "Додати",
+    "quickAddCancel": "Скасувати",
+    "newTask": "Нове завдання",
+    "empty": "Завдань не знайдено",
+    "dueDate": {
+      "overdue": "{{days}}д прострочено",
+      "today": "Сьогодні",
+      "tomorrow": "Завтра"
+    },
+    "statusLabels": {
+      "pending": "Очікує",
+      "inProgress": "В роботі",
+      "review": "На перевірці",
+      "done": "Завершено"
+    }
+  },
+
+  "chart": {
+    "title": "Огляд",
+    "taskCount": "{{count}} завдання",
+    "taskCount_plural": "{{count}} завдань",
+    "segments": {
+      "pending": "Очікують",
+      "inProgress": "В роботі",
+      "review": "На перевірці",
+      "done": "Завершені"
+    },
+    "tooltipSuffix": "завдань"
+  },
+
+  "toast": {
+    "taskCreated": "Завдання успішно створено",
+    "taskUpdated": "Завдання оновлено",
+    "taskDeleted": "Завдання видалено",
+    "taskMoved": "Завдання переміщено до {{status}}",
+    "workspaceCreated": "Робочий простір створено",
+    "inviteSent": "Запрошення надіслано",
+    "profileUpdated": "Профіль оновлено",
+    "genericError": "Сталася помилка. Спробуйте ще раз.",
+    "networkError": "Помилка з'єднання. Перевірте інтернет.",
+    "rateLimited": "Забагато запитів. Зачекайте хвилинку."
+  },
+
+  "errors": {
+    "loadWorkspaces": "Помилка при завантаженні робочих просторів",
+    "createWorkspace": "Помилка при створенні робочого простору",
+    "sendInvite": "Помилка при надсиланні запрошення",
+    "unknownError": "Невідома помилка",
+    "tokenNotProvided": "Токен не надано",
+    "tokenInvalid": "Токен недійсний або прострочений",
+    "workspaceIdRequired": "Заголовок X-Workspace-Id обов'язковий",
+    "workspaceAccessDenied": "Доступ до цього робочого простору заборонено",
+    "permissionCheckFailed": "Помилка при перевірці дозволів",
+    "emailPasswordRequired": "Електронна пошта та пароль обов'язкові",
+    "invalidCredentials": "Невірні облікові дані",
+    "emailAlreadyRegistered": "Електронна пошта вже зареєстрована",
+    "nameRequired": "Ім'я обов'язкове",
+    "titleRequired": "Назва обов'язкова",
+    "taskNotFound": "Завдання не знайдено",
+    "taskAccessDenied": "Доступ до цього завдання заборонено",
+    "versionConflict": "Конфлікт версій. Завдання було змінено іншим користувачем.",
+    "workspaceIdEmailRequired": "workspaceId та email обов'язкові",
+    "onlyGestorsCanInvite": "Тільки Менеджери та Клієнти можуть запрошувати учасників",
+    "alreadyMember": "Користувач вже є учасником цього робочого простору",
+    "subscriptionNotFound": "Підписку не знайдено",
+    "orderNotFound": "Замовлення не знайдено",
+    "onlyGestorsCanToggle": "Тільки менеджери можуть змінювати автоматичне поновлення",
+    "meetingNotFound": "Нараду не знайдено",
+    "noFileUploaded": "Файл не завантажено",
+    "fileTooLarge": "Файл занадто великий. Максимум: 50MB",
+    "processingError": "Помилка при обробці файлу",
+    "registrationFieldsRequired": "Ім'я, електронна пошта та пароль обов'язкові",
+    "passwordMinLength": "Пароль повинен містити щонайменше 6 символів",
+    "internalError": "Внутрішня помилка сервера",
+    "userNotFound": "Користувача не знайдено",
+    "googleOAuthNotConfigured": "Google OAuth не налаштовано (GOOGLE_CLIENT_ID відсутній)",
+    "googleDisconnectError": "Помилка при відключенні Google",
+    "googleNotConnected": "Обліковий запис Google не підключено",
+    "googleSyncError": "Помилка при синхронізації з Google Tasks",
+    "listTasksError": "Помилка при завантаженні завдань",
+    "createTaskError": "Помилка при створенні завдання",
+    "updateTaskError": "Помилка при оновленні завдання",
+    "deleteTaskError": "Помилка при видаленні завдання",
+    "listWorkspacesError": "Помилка при завантаженні робочих просторів",
+    "createWorkspaceError": "Помилка при створенні робочого простору",
+    "processInviteError": "Помилка при обробці запрошення",
+    "pendingInviteExists": "Запрошення в очікуванні вже існує для цієї електронної пошти",
+    "listMembersError": "Помилка при завантаженні учасників",
+    "memberNotFound": "Учасника не знайдено",
+    "onlyGestorsCanRemove": "Тільки Менеджери можуть видаляти учасників",
+    "removeMemberError": "Помилка при видаленні учасника",
+    "fetchSubscriptionError": "Помилка при отриманні підписки",
+    "updateSubscriptionError": "Помилка при оновленні підписки",
+    "createCheckoutError": "Помилка при створенні оплати",
+    "renewSubscriptionError": "Помилка при поновленні підписки",
+    "checkPaymentStatusError": "Помилка при перевірці статусу оплати",
+    "fetchBillingError": "Помилка при отриманні рахунків",
+    "createChargeError": "Помилка при створенні рахунку",
+    "listMeetingsError": "Помилка при завантаженні нарад",
+    "createMeetingError": "Помилка при створенні наради",
+    "meetingAccessDenied": "Доступ до цієї наради заборонено",
+    "sendFileOrMeetingId": "Надішліть файл або вкажіть meetingId",
+    "processMeetingError": "Помилка при обробці наради за допомогою ШІ",
+    "deleteMeetingError": "Помилка при видаленні наради",
+    "fileTooLargeMeetings": "Файл занадто великий. Ліміт: 200MB.",
+    "unsupportedFormat": "Непідтримуваний формат. Використовуйте MP3, WAV, WebM, MP4 або TXT."
+  }
+}

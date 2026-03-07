@@ -1,0 +1,671 @@
+{
+  "common": {
+    "appName": "Task360",
+    "appSuffix": "Engine",
+    "appVersion": "Engine v1.0",
+    "save": "保存",
+    "cancel": "取消",
+    "close": "关闭",
+    "delete": "删除",
+    "add": "添加",
+    "edit": "编辑",
+    "confirm": "确认",
+    "back": "返回",
+    "loading": "加载中...",
+    "error": "错误",
+    "yes": "是",
+    "no": "否",
+    "search": "搜索...",
+    "remove": "移除",
+    "copy": "复制",
+    "move": "移动",
+    "send": "发送",
+    "process": "处理",
+    "retry": "重试",
+    "total": "合计",
+    "logout": "退出登录",
+    "roles": {
+      "super_admin": "超级管理员",
+      "gestor": "管理员",
+      "colaborador": "协作者",
+      "cliente": "客户"
+    },
+    "statuses": {
+      "pending": "待处理",
+      "in_progress": "进行中",
+      "review": "审核中",
+      "done": "已完成"
+    },
+    "priorities": {
+      "urgent": "紧急",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "priorityIcons": {
+      "urgent": "🔴",
+      "high": "🟠",
+      "medium": "🟡",
+      "low": "🟢"
+    },
+    "copyright": "Task360 Engine © {{year}} — 保留所有权利",
+    "copyrightShort": "Task360 Engine © {{year}}",
+    "madeWith": "使用 React + TypeScript + Prisma 构建"
+  },
+
+  "auth": {
+    "tagline": "智能任务管理",
+    "login": {
+      "title": "登录",
+      "emailLabel": "电子邮箱",
+      "emailPlaceholder": "you@email.com",
+      "passwordLabel": "密码",
+      "passwordPlaceholder": "••••••••",
+      "submitButton": "登录",
+      "submitting": "登录中...",
+      "noAccount": "还没有账户？",
+      "createAccount": "创建账户"
+    },
+    "register": {
+      "subtitle": "创建新账户",
+      "nameLabel": "姓名",
+      "namePlaceholder": "您的全名",
+      "emailLabel": "电子邮箱",
+      "emailPlaceholder": "you@email.com",
+      "passwordLabel": "密码",
+      "passwordPlaceholder": "至少6个字符",
+      "confirmPasswordLabel": "确认密码",
+      "confirmPasswordPlaceholder": "重复输入密码",
+      "submitButton": "创建账户",
+      "submitting": "正在创建账户...",
+      "hasAccount": "已有账户",
+      "success": {
+        "title": "账户创建成功！",
+        "message": "正在跳转到 Dashboard..."
+      },
+      "errors": {
+        "passwordMin": "密码至少需要6个字符",
+        "passwordMismatch": "两次输入的密码不一致",
+        "generic": "注册出错"
+      }
+    }
+  },
+
+  "landing": {
+    "nav": {
+      "login": "登录",
+      "loginMobile": "登录",
+      "register": "免费开始"
+    },
+    "hero": {
+      "badge": "人工智能驱动的任务管理",
+      "title1": "管理任务。",
+      "title2": "自动化会议。",
+      "title3": "扩展团队。",
+      "description": "多租户 B2B 平台，集成 Kanban、Google Tasks 同步、AI 会议纪要和动态按席位计费。一站式解决方案。",
+      "cta": "立即开始",
+      "secondaryCta": "查看功能"
+    },
+    "stats": {
+      "roles": "角色",
+      "basePlan": "基础套餐",
+      "googleTasks": "Google Tasks"
+    },
+    "features": {
+      "sectionTitle": "您所需的一切",
+      "sectionDescription": "一个完整的平台，通过智能自动化管理团队、任务和会议。",
+      "kanban": {
+        "title": "智能 Kanban",
+        "description": "在列之间拖放任务，支持实时同步和乐观锁定。"
+      },
+      "ai": {
+        "title": "AI 会议纪要",
+        "description": "上传录音，自动获取由 Gemini 生成的摘要和建议任务。"
+      },
+      "googleSync": {
+        "title": "Google Tasks 同步",
+        "description": "与 Google Tasks 双向同步，自动解决冲突。"
+      },
+      "billing": {
+        "title": "Revolut 计费",
+        "description": "动态按席位计费，集成 Revolut 结账。"
+      },
+      "multiTenant": {
+        "title": "多租户",
+        "description": "独立的工作空间，支持成员管理和角色分配（管理员、协作者、客户）。"
+      },
+      "security": {
+        "title": "安全性",
+        "description": "JWT 认证、bcrypt 加密、租户隔离和基于角色的访问控制。"
+      }
+    },
+    "pricing": {
+      "title": "简单透明的定价",
+      "description_prefix": "基础套餐",
+      "basePriceMonthly": "5.00 EUR/月",
+      "plus": "+",
+      "seatPrice": "3.00 EUR",
+      "description_suffix": "每位受邀成员。所有者席位免费。",
+      "cta": "免费试用"
+    },
+    "cta": {
+      "noCreditCard": "无需信用卡即可开始",
+      "title": "准备好转变您的团队管理方式了吗？",
+      "button": "创建免费账户"
+    }
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "stats": {
+      "pending": "待处理",
+      "inProgress": "进行中",
+      "inReview": "审核中",
+      "done": "已完成"
+    },
+    "meetings": {
+      "title": "即将到来的会议",
+      "empty": "暂无计划的会议",
+      "dateTime": "{{date}} {{time}}"
+    },
+    "subscription": {
+      "title": "订阅",
+      "basePlan": "基础套餐",
+      "activeSeats": "活跃席位",
+      "monthlyTotal": "每月总计",
+      "autoRenew": "自动续费",
+      "autoRenewActive": "已启用",
+      "autoRenewDisabled": "已停用",
+      "status": "状态",
+      "empty": "暂无活跃订阅"
+    }
+  },
+
+  "kanban": {
+    "title": "Kanban",
+    "columns": {
+      "pending": "待处理",
+      "inProgress": "进行中",
+      "review": "审核中",
+      "done": "已完成"
+    },
+    "viewToggle": {
+      "kanban": "Kanban",
+      "list": "列表"
+    },
+    "taskCount": "{{count}} 个任务",
+    "taskCount_plural": "{{count}} 个任务",
+    "search": "搜索任务...",
+    "filters": "筛选",
+    "clearFilters": "清除筛选",
+    "priorityLabel": "优先级：",
+    "priorityAll": "全部",
+    "newTask": "新建任务",
+    "loading": "加载任务中...",
+    "column": {
+      "addTask": "添加任务",
+      "addTaskTitle": "添加",
+      "quickAddPlaceholder": "任务标题...",
+      "emptyDrop": "将任务拖到此处",
+      "emptyAdd": "新建任务"
+    },
+    "card": {
+      "syncTooltip": "已与 Google Tasks 同步",
+      "deleteTooltip": "删除"
+    }
+  },
+
+  "task": {
+    "titlePlaceholder": "任务标题...",
+    "titleRequired": "标题为必填项",
+    "descriptionPlaceholder": "添加更详细的描述...",
+    "description": "描述",
+    "labels": "标签",
+    "dates": "日期",
+    "checklist": "检查清单",
+    "priority": "优先级",
+    "cover": "封面",
+    "member": "成员",
+    "attachments": "附件",
+    "attachmentCount": "{{count}} 个文件",
+    "attachmentCount_plural": "{{count}} 个文件",
+    "assignTo": "分配给",
+    "assignee": "负责人",
+    "dueDate": "截止日期",
+    "activity": "活动",
+    "actions": "操作",
+    "removeCover": "移除封面",
+    "changeCover": "更换封面",
+    "removeDate": "移除日期",
+    "removePriority": "移除优先级",
+    "removeAssignee": "取消分配",
+    "noMembersInWorkspace": "工作空间中暂无成员",
+    "addCheckItem": "添加项目...",
+    "addFirstCheckItem": "添加第一个项目...",
+    "addSubItem": "添加子项目",
+    "subItemPlaceholder": "子项目...",
+    "showCompleted": "显示已完成",
+    "hideCompleted": "隐藏已完成",
+    "commentPlaceholder": "写评论...",
+    "systemActivityAdd": "将此卡片添加到 {{column}}",
+    "save": "保存",
+    "cancel": "取消",
+    "move": "移动",
+    "copy": "复制",
+    "delete": "删除",
+    "saveError": "创建任务出错：{{error}}",
+    "unknownError": "未知错误",
+    "dropFilesHere": "拖放到此处！",
+    "dragOrClick": "拖放文件或点击上传",
+    "uploadHint": "图片、PDF、文档、视频（最大 50MB）",
+    "uploading": "上传中...",
+    "downloadFile": "下载",
+    "previewFile": "预览",
+    "labelPresets": {
+      "bug": "Bug",
+      "feature": "Feature",
+      "improvement": "改进",
+      "urgent": "紧急",
+      "design": "Design",
+      "backend": "Backend",
+      "frontend": "Frontend",
+      "docs": "Docs"
+    },
+    "statusOptions": {
+      "pending": "待处理",
+      "inProgress": "进行中",
+      "review": "审核中",
+      "done": "已完成"
+    },
+    "priorityOptions": {
+      "urgent": "紧急",
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    }
+  },
+
+  "meetings": {
+    "title": "会议",
+    "newMeeting": "新建会议",
+    "processWithAi": "用 AI 处理录音",
+    "createTitle": "创建会议",
+    "form": {
+      "title": "标题",
+      "platform": "平台",
+      "date": "日期",
+      "time": "时间"
+    },
+    "recordWithAi": "用 AI 录制",
+    "recordWithAiHint": "创建时打开录制控件",
+    "createButton": "创建会议",
+    "loading": "加载中...",
+    "list": {
+      "empty": "未找到会议",
+      "emptyHint": "创建会议或上传录音",
+      "participants": "{{count}} 位参与者",
+      "aiSummaryLabel": "AI 摘要：",
+      "suggestedTasks": "AI 建议 {{count}} 个任务",
+      "downloadPdf": "下载 PDF"
+    },
+    "upload": {
+      "limitTitle": "处理限制",
+      "limitDescription": "AI 处理（Gemini 1.5 Flash）的会议限制为 60 分钟。超长文件将被截断。",
+      "dropTitle": "上传录音或文字记录",
+      "dropHint": "MP3、WAV、WebM、MP4 或 TXT（最长 60 分钟）",
+      "changeFile": "更换文件",
+      "processButton": "使用 Gemini 处理",
+      "processing": "AI 处理中...",
+      "invalidFormat": "不支持的格式。请使用 MP3、WAV、WebM、MP4 或 TXT。",
+      "processError": "处理文件出错",
+      "resultTitle": "处理完成",
+      "summaryTitle": "会议摘要",
+      "suggestedTasksTitle": "建议任务（{{count}}）",
+      "approveButton": "批准并注入 Kanban",
+      "deadlinePrefix": "截止"
+    }
+  },
+
+  "admin": {
+    "title": "管理",
+    "tabs": {
+      "billing": "计费",
+      "members": "成员"
+    },
+    "invite": "邀请",
+    "addGuest": "添加访客",
+    "clienteHint": "添加访客到工作空间以进行协作。",
+    "billing": {
+      "loading": "加载计费信息...",
+      "monthlyRevenue": "每月总收入",
+      "activeSeats": "活跃席位",
+      "activeWorkspaces": "活跃工作空间",
+      "tableTitle": "按管理员计费",
+      "headers": {
+        "workspace": "工作空间",
+        "gestor": "管理员",
+        "base": "基础",
+        "seats": "席位",
+        "seatCost": "席位费用",
+        "totalMonth": "月总计",
+        "autoRenew": "自动续费",
+        "actions": "操作"
+      },
+      "charge": "收费",
+      "emptyTable": "没有活跃订阅的工作空间",
+      "formula": "计算公式：",
+      "formulaText": "总计 = 基础套餐 (5.00 EUR) + (活跃邀请数 × 3.00 EUR)"
+    },
+    "members": {
+      "loading": "加载成员...",
+      "title": "工作空间成员",
+      "statusActive": "活跃",
+      "statusPending": "待定",
+      "costPerSeat": "{{cost}} EUR/月",
+      "removeTooltip": "移除成员",
+      "empty": "未找到成员",
+      "pendingLabel": "待定"
+    }
+  },
+
+  "settings": {
+    "title": "设置",
+    "profile": {
+      "title": "个人资料",
+      "nameLabel": "姓名",
+      "emailLabel": "电子邮箱",
+      "roleLabel": "角色",
+      "saveButton": "保存资料",
+      "saving": "保存中...",
+      "saved": "已保存！"
+    },
+    "subscription": {
+      "title": "订阅",
+      "autoRenew": "自动续费",
+      "autoRenewOnDesc": "您的订阅将在周期结束时自动续费",
+      "autoRenewOffDesc": "您的订阅将在当前周期结束时到期",
+      "monthlyTotal": "每月总计",
+      "status": "状态",
+      "nextCharge": "下次收费",
+      "payPlan": "支付套餐",
+      "renew": "续费",
+      "checkoutSandbox": "沙盒模式：{{amount}} EUR 支付模拟成功。",
+      "checkoutOpened": "Revolut 结账已在新标签页中打开。请完成支付。",
+      "checkoutError": "创建结账时出错",
+      "paymentNote": "支付通过 Revolut Business 处理。使用 HMAC-SHA256 安全结账。"
+    },
+    "googleTasks": {
+      "title": "Google Tasks 同步",
+      "connected": "Google Tasks 已连接",
+      "connectedSuccess": "Google Tasks 连接成功！",
+      "connectedError": "连接 Google Tasks 出错。请重试。",
+      "disconnected": "Google Tasks 已断开",
+      "syncNow": "立即同步",
+      "syncing": "同步中...",
+      "syncResult": "同步完成！{{synced}} 已处理，{{created}} 已创建，{{updated}} 已更新",
+      "syncError": "同步出错",
+      "disconnect": "断开连接",
+      "description": "连接您的 Google 账户，与 Google Tasks 进行双向任务同步。",
+      "connectButton": "连接 Google 账户",
+      "oauthNotAvailable": "Google OAuth 不可用",
+      "oauthNote": "通过 OAuth 2.0 集成，采用「最后写入优先」冲突解决策略。"
+    },
+    "googleCalendar": {
+      "title": "Google Calendar",
+      "connected": "Google Calendar 已连接",
+      "connectedSuccess": "Google Calendar 连接成功！",
+      "connectedError": "连接 Google Calendar 出错。请重试。",
+      "disconnected": "Google Calendar 已断开",
+      "syncNow": "同步日历",
+      "syncing": "同步中...",
+      "syncResult": "同步完成！{{synced}} 已处理，{{created}} 已创建，{{updated}} 已更新，{{deleted}} 已移除",
+      "syncError": "同步出错",
+      "activatePush": "启用推送",
+      "pushSuccess": "推送通知已启用。事件将自动同步。",
+      "pushError": "启用推送出错",
+      "disconnect": "断开连接",
+      "description": "连接 Google Calendar，直接从 Task360 查看和创建日历事件。",
+      "connectButton": "连接 Google Calendar",
+      "oauthNotAvailable": "Google OAuth 不可用",
+      "scopeNote": "权限范围：calendar.events（读取/创建）+ calendar.readonly。令牌使用 AES-256-GCM 加密。"
+    }
+  },
+
+  "notifications": {
+    "title": "通知",
+    "markAllRead": "全部已读",
+    "empty": "暂无通知",
+    "markAsRead": "标记为已读",
+    "deleteTooltip": "删除",
+    "timeAgo": {
+      "now": "刚刚",
+      "minutes": "{{count}}分钟前",
+      "hours": "{{count}}小时前",
+      "days": "{{count}}天前"
+    }
+  },
+
+  "workspace": {
+    "switcher": {
+      "loading": "加载工作空间...",
+      "empty": "暂无可用工作空间"
+    },
+    "invite": {
+      "title": "邀请成员",
+      "emailLabel": "电子邮箱",
+      "emailPlaceholder": "collaborator@company.com",
+      "roleLabel": "角色",
+      "roleColaborador": "协作者",
+      "roleCliente": "客户",
+      "costInfo": "费用：每席位 3.00 EUR/月",
+      "costDescription": "将生成 Revolut 结账。邀请仅在付款确认后激活。",
+      "emailRequired": "电子邮箱为必填项",
+      "submitButton": "生成结账并邀请",
+      "submitting": "处理中...",
+      "inviteError": "发送邀请出错",
+      "checkout": {
+        "title": "Revolut 结账已打开",
+        "description": "请在打开的窗口中完成支付。确认后，邀请将自动激活。",
+        "reopenLink": "重新打开结账",
+        "verifyButton": "我已支付 — 验证状态"
+      },
+      "polling": {
+        "title": "等待确认",
+        "description": "正在向 Revolut 验证付款...这可能需要几秒钟。",
+        "reopenLink": "重新打开结账",
+        "timeout": "等待超时。付款仍可能通过 webhook 处理。"
+      },
+      "success": {
+        "title": "邀请已激活！",
+        "description": "付款已确认。成员 {{email}} 现在可以访问工作空间。",
+        "closeButton": "关闭"
+      },
+      "failed": {
+        "title": "付款未确认",
+        "defaultError": "无法确认付款。请重试。",
+        "paymentFailed": "付款失败。请重试。",
+        "retryButton": "重试",
+        "closeButton": "关闭"
+      }
+    }
+  },
+
+  "checkout": {
+    "loading": {
+      "title": "验证付款中...",
+      "description": "请稍候，正在通过 Revolut 确认您的付款。"
+    },
+    "paid": {
+      "title": "付款已确认！",
+      "description": "席位已成功激活。受邀成员现在可以访问工作空间。"
+    },
+    "pending": {
+      "title": "付款处理中",
+      "description": "您的付款正在处理中。邀请将在确认后自动激活。"
+    },
+    "failed": {
+      "title": "付款失败",
+      "description": "无法处理付款。请从管理面板重试。"
+    },
+    "cancelled": {
+      "title": "结账已取消",
+      "description": "付款流程已取消。邀请仍处于待定状态，可重新处理。"
+    },
+    "backButton": "返回面板"
+  },
+
+  "offline": {
+    "banner": "无网络连接 — 离线模式已启用"
+  },
+
+  "theme": {
+    "lightMode": "切换到浅色模式",
+    "darkMode": "切换到深色模式"
+  },
+
+  "layout": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "kanban": "Kanban",
+      "meetings": "会议",
+      "admin": "管理",
+      "settings": "设置",
+      "logoutTooltip": "退出登录"
+    },
+    "mobileNav": {
+      "dashboard": "Dashboard",
+      "kanban": "Kanban",
+      "meetings": "会议",
+      "config": "设置",
+      "admin": "管理",
+      "openKanban": "打开 Kanban",
+      "manageTasks": "管理任务",
+      "meetingsAction": "会议",
+      "meetingsHint": "日程与 AI"
+    }
+  },
+
+  "listView": {
+    "groupBy": "分组方式：",
+    "groupByStatus": "状态",
+    "groupByPriority": "优先级",
+    "groupByNone": "无",
+    "allTasks": "所有任务",
+    "noPriority": "无优先级",
+    "headers": {
+      "title": "标题",
+      "status": "状态",
+      "priority": "优先级",
+      "assignee": "负责人",
+      "date": "日期",
+      "labels": "标签"
+    },
+    "quickAddPlaceholder": "新任务标题...",
+    "quickAddButton": "添加",
+    "quickAddCancel": "取消",
+    "newTask": "新建任务",
+    "empty": "未找到任务",
+    "dueDate": {
+      "overdue": "逾期 {{days}} 天",
+      "today": "今天",
+      "tomorrow": "明天"
+    },
+    "statusLabels": {
+      "pending": "待处理",
+      "inProgress": "进行中",
+      "review": "审核中",
+      "done": "已完成"
+    }
+  },
+
+  "chart": {
+    "title": "概览",
+    "taskCount": "{{count}} 个任务",
+    "taskCount_plural": "{{count}} 个任务",
+    "segments": {
+      "pending": "待处理",
+      "inProgress": "进行中",
+      "review": "审核中",
+      "done": "已完成"
+    },
+    "tooltipSuffix": "个任务"
+  },
+
+  "toast": {
+    "taskCreated": "任务创建成功",
+    "taskUpdated": "任务已更新",
+    "taskDeleted": "任务已删除",
+    "taskMoved": "任务已移至{{status}}",
+    "workspaceCreated": "工作区已创建",
+    "inviteSent": "邀请已发送",
+    "profileUpdated": "个人资料已更新",
+    "genericError": "发生错误，请重试。",
+    "networkError": "连接错误，请检查网络。",
+    "rateLimited": "请求过多，请稍后再试。"
+  },
+
+  "errors": {
+    "loadWorkspaces": "加载工作空间出错",
+    "createWorkspace": "创建工作空间出错",
+    "sendInvite": "发送邀请出错",
+    "unknownError": "未知错误",
+    "tokenNotProvided": "未提供令牌",
+    "tokenInvalid": "令牌无效或已过期",
+    "workspaceIdRequired": "X-Workspace-Id 请求头为必填项",
+    "workspaceAccessDenied": "无权访问此工作空间",
+    "permissionCheckFailed": "检查权限时出错",
+    "emailPasswordRequired": "电子邮箱和密码为必填项",
+    "invalidCredentials": "凭据无效",
+    "emailAlreadyRegistered": "该电子邮箱已注册",
+    "nameRequired": "姓名为必填项",
+    "titleRequired": "标题为必填项",
+    "taskNotFound": "未找到任务",
+    "taskAccessDenied": "无权访问此任务",
+    "versionConflict": "版本冲突。该任务已被其他用户修改。",
+    "workspaceIdEmailRequired": "workspaceId 和 email 为必填项",
+    "onlyGestorsCanInvite": "仅管理员和客户可以邀请成员",
+    "alreadyMember": "该用户已是此工作空间的成员",
+    "subscriptionNotFound": "未找到订阅",
+    "orderNotFound": "未找到订单",
+    "onlyGestorsCanToggle": "仅管理员可以更改自动续费设置",
+    "meetingNotFound": "未找到会议",
+    "noFileUploaded": "未上传文件",
+    "fileTooLarge": "文件过大。最大限制：50MB",
+    "processingError": "处理文件时出错",
+    "registrationFieldsRequired": "姓名、电子邮箱和密码为必填项",
+    "passwordMinLength": "密码至少需要6个字符",
+    "internalError": "服务器内部错误",
+    "userNotFound": "未找到用户",
+    "googleOAuthNotConfigured": "Google OAuth 未配置（缺少 GOOGLE_CLIENT_ID）",
+    "googleDisconnectError": "断开 Google 连接时出错",
+    "googleNotConnected": "Google 账户未连接",
+    "googleSyncError": "与 Google Tasks 同步时出错",
+    "listTasksError": "列出任务时出错",
+    "createTaskError": "创建任务时出错",
+    "updateTaskError": "更新任务时出错",
+    "deleteTaskError": "删除任务时出错",
+    "listWorkspacesError": "列出工作空间时出错",
+    "createWorkspaceError": "创建工作空间时出错",
+    "processInviteError": "处理邀请时出错",
+    "pendingInviteExists": "该电子邮箱已存在待处理的邀请",
+    "listMembersError": "列出成员时出错",
+    "memberNotFound": "未找到成员",
+    "onlyGestorsCanRemove": "仅管理员可以移除成员",
+    "removeMemberError": "移除成员时出错",
+    "fetchSubscriptionError": "获取订阅信息时出错",
+    "updateSubscriptionError": "更新订阅时出错",
+    "createCheckoutError": "创建结账时出错",
+    "renewSubscriptionError": "续费订阅时出错",
+    "checkPaymentStatusError": "检查付款状态时出错",
+    "fetchBillingError": "获取计费信息时出错",
+    "createChargeError": "生成收费时出错",
+    "listMeetingsError": "列出会议时出错",
+    "createMeetingError": "创建会议时出错",
+    "meetingAccessDenied": "无权访问此会议",
+    "sendFileOrMeetingId": "请发送文件或提供 meetingId",
+    "processMeetingError": "使用 AI 处理会议时出错",
+    "deleteMeetingError": "删除会议时出错",
+    "fileTooLargeMeetings": "文件过大。限制：200MB。",
+    "unsupportedFormat": "不支持的格式。请使用 MP3、WAV、WebM、MP4 或 TXT。"
+  }
+}

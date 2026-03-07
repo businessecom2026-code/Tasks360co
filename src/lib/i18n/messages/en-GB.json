@@ -1,0 +1,671 @@
+{
+  "common": {
+    "appName": "Task360",
+    "appSuffix": "Engine",
+    "appVersion": "Engine v1.0",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "add": "Add",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Error",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search...",
+    "remove": "Remove",
+    "copy": "Copy",
+    "move": "Move",
+    "send": "Send",
+    "process": "Process",
+    "retry": "Try Again",
+    "total": "total",
+    "logout": "Log Out",
+    "roles": {
+      "super_admin": "Super Admin",
+      "gestor": "Manager",
+      "colaborador": "Collaborator",
+      "cliente": "Client"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "review": "Review",
+      "done": "Done"
+    },
+    "priorities": {
+      "urgent": "Urgent",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "priorityIcons": {
+      "urgent": "🔴",
+      "high": "🟠",
+      "medium": "🟡",
+      "low": "🟢"
+    },
+    "copyright": "Task360 Engine © {{year}} — All rights reserved",
+    "copyrightShort": "Task360 Engine © {{year}}",
+    "madeWith": "Built with React + TypeScript + Prisma"
+  },
+
+  "auth": {
+    "tagline": "Intelligent task management",
+    "login": {
+      "title": "Sign In",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@email.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submitButton": "Sign In",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create account"
+    },
+    "register": {
+      "subtitle": "Create new account",
+      "nameLabel": "Name",
+      "namePlaceholder": "Your full name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@email.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Minimum 6 characters",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Repeat password",
+      "submitButton": "Create Account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account",
+      "success": {
+        "title": "Account created!",
+        "message": "Redirecting to the dashboard..."
+      },
+      "errors": {
+        "passwordMin": "Password must be at least 6 characters",
+        "passwordMismatch": "Passwords do not match",
+        "generic": "Registration error"
+      }
+    }
+  },
+
+  "landing": {
+    "nav": {
+      "login": "Sign In",
+      "loginMobile": "Login",
+      "register": "Start Free"
+    },
+    "hero": {
+      "badge": "Task management with artificial intelligence",
+      "title1": "Manage tasks.",
+      "title2": "Automate meetings.",
+      "title3": "Scale teams.",
+      "description": "Multi-tenant B2B platform with Kanban, Google Tasks sync, AI meeting minutes, and dynamic per-seat billing. All in one place.",
+      "cta": "Get Started",
+      "secondaryCta": "View features"
+    },
+    "stats": {
+      "roles": "Roles",
+      "basePlan": "Base Plan",
+      "googleTasks": "Google Tasks"
+    },
+    "features": {
+      "sectionTitle": "Everything you need",
+      "sectionDescription": "A complete platform to manage teams, tasks, and meetings with intelligent automation.",
+      "kanban": {
+        "title": "Smart Kanban",
+        "description": "Drag and drop tasks between columns with real-time sync and optimistic locking."
+      },
+      "ai": {
+        "title": "AI Meeting Minutes",
+        "description": "Upload recordings and receive automatic summaries with tasks suggested by Gemini."
+      },
+      "googleSync": {
+        "title": "Google Tasks Sync",
+        "description": "Bidirectional sync with Google Tasks. Automatic conflict resolution."
+      },
+      "billing": {
+        "title": "Revolut Billing",
+        "description": "Dynamic per-seat billing with integrated checkout via Revolut."
+      },
+      "multiTenant": {
+        "title": "Multi-Tenant",
+        "description": "Isolated workspaces with member management and roles (Manager, Collaborator, Client)."
+      },
+      "security": {
+        "title": "Security",
+        "description": "JWT auth, bcrypt, tenant isolation, and role-based access control."
+      }
+    },
+    "pricing": {
+      "title": "Simple and transparent pricing",
+      "description_prefix": "Base plan at",
+      "basePriceMonthly": "5.00 EUR/month",
+      "plus": "+",
+      "seatPrice": "3.00 EUR",
+      "description_suffix": "per invited member. The owner seat is free.",
+      "cta": "Try for Free"
+    },
+    "cta": {
+      "noCreditCard": "No credit card required to start",
+      "title": "Ready to transform your team management?",
+      "button": "Create Free Account"
+    }
+  },
+
+  "dashboard": {
+    "title": "Dashboard",
+    "stats": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "inReview": "In Review",
+      "done": "Done"
+    },
+    "meetings": {
+      "title": "Upcoming Meetings",
+      "empty": "No scheduled meetings",
+      "dateTime": "{{date}} at {{time}}"
+    },
+    "subscription": {
+      "title": "Subscription",
+      "basePlan": "Base Plan",
+      "activeSeats": "Active Seats",
+      "monthlyTotal": "Monthly Total",
+      "autoRenew": "Auto-renewal",
+      "autoRenewActive": "Active",
+      "autoRenewDisabled": "Disabled",
+      "status": "Status",
+      "empty": "No active subscription"
+    }
+  },
+
+  "kanban": {
+    "title": "Kanban",
+    "columns": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "review": "Review",
+      "done": "Done"
+    },
+    "viewToggle": {
+      "kanban": "Kanban",
+      "list": "List"
+    },
+    "taskCount": "{{count}} task",
+    "taskCount_plural": "{{count}} tasks",
+    "search": "Search tasks...",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "priorityLabel": "Priority:",
+    "priorityAll": "All",
+    "newTask": "New Task",
+    "loading": "Loading tasks...",
+    "column": {
+      "addTask": "Add task",
+      "addTaskTitle": "Add",
+      "quickAddPlaceholder": "Task title...",
+      "emptyDrop": "Drag tasks here",
+      "emptyAdd": "New task"
+    },
+    "card": {
+      "syncTooltip": "Synchronised with Google Tasks",
+      "deleteTooltip": "Delete"
+    }
+  },
+
+  "task": {
+    "titlePlaceholder": "Task title...",
+    "titleRequired": "Title is required",
+    "descriptionPlaceholder": "Add a more detailed description...",
+    "description": "Description",
+    "labels": "Labels",
+    "dates": "Dates",
+    "checklist": "Checklist",
+    "priority": "Priority",
+    "cover": "Cover",
+    "member": "Member",
+    "attachments": "Attachments",
+    "attachmentCount": "{{count}} file",
+    "attachmentCount_plural": "{{count}} files",
+    "assignTo": "Assign to",
+    "assignee": "Assignee",
+    "dueDate": "Due Date",
+    "activity": "Activity",
+    "actions": "Actions",
+    "removeCover": "Remove cover",
+    "changeCover": "Change cover",
+    "removeDate": "Remove date",
+    "removePriority": "Remove priority",
+    "removeAssignee": "Remove assignee",
+    "noMembersInWorkspace": "No members in workspace",
+    "addCheckItem": "Add item...",
+    "addFirstCheckItem": "Add first item...",
+    "addSubItem": "Add sub-item",
+    "subItemPlaceholder": "Sub-item...",
+    "showCompleted": "Show completed",
+    "hideCompleted": "Hide completed",
+    "commentPlaceholder": "Write a comment...",
+    "systemActivityAdd": "added this card to {{column}}",
+    "save": "Save",
+    "cancel": "Cancel",
+    "move": "Move",
+    "copy": "Copy",
+    "delete": "Delete",
+    "saveError": "Error creating task: {{error}}",
+    "unknownError": "Unknown error",
+    "dropFilesHere": "Drop here!",
+    "dragOrClick": "Drag files or click to upload",
+    "uploadHint": "Images, PDFs, Docs, Videos (max 50MB)",
+    "uploading": "Uploading...",
+    "downloadFile": "Download",
+    "previewFile": "Preview",
+    "labelPresets": {
+      "bug": "Bug",
+      "feature": "Feature",
+      "improvement": "Improvement",
+      "urgent": "Urgent",
+      "design": "Design",
+      "backend": "Backend",
+      "frontend": "Frontend",
+      "docs": "Docs"
+    },
+    "statusOptions": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "review": "Review",
+      "done": "Done"
+    },
+    "priorityOptions": {
+      "urgent": "Urgent",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    }
+  },
+
+  "meetings": {
+    "title": "Meetings",
+    "newMeeting": "New Meeting",
+    "processWithAi": "Process Recording with AI",
+    "createTitle": "Create Meeting",
+    "form": {
+      "title": "Title",
+      "platform": "Platform",
+      "date": "Date",
+      "time": "Time"
+    },
+    "recordWithAi": "Record with AI",
+    "recordWithAiHint": "Opens recording controls upon creation",
+    "createButton": "Create Meeting",
+    "loading": "Loading...",
+    "list": {
+      "empty": "No meetings found",
+      "emptyHint": "Create a meeting or upload a recording",
+      "participants": "{{count}} participant(s)",
+      "aiSummaryLabel": "AI Summary:",
+      "suggestedTasks": "{{count}} task(s) suggested by AI",
+      "downloadPdf": "Download PDF"
+    },
+    "upload": {
+      "limitTitle": "Processing limit",
+      "limitDescription": "Meetings limited to 60 minutes for AI processing (Gemini 1.5 Flash). Longer files will be truncated.",
+      "dropTitle": "Upload recording or transcript",
+      "dropHint": "MP3, WAV, WebM, MP4 or TXT (max 60 min)",
+      "changeFile": "Change file",
+      "processButton": "Process with Gemini",
+      "processing": "Processing with AI...",
+      "invalidFormat": "Unsupported format. Use MP3, WAV, WebM, MP4 or TXT.",
+      "processError": "Error processing file",
+      "resultTitle": "Processing complete",
+      "summaryTitle": "Meeting Summary",
+      "suggestedTasksTitle": "Suggested Tasks ({{count}})",
+      "approveButton": "Approve and Inject into Kanban",
+      "deadlinePrefix": "by"
+    }
+  },
+
+  "admin": {
+    "title": "Administration",
+    "tabs": {
+      "billing": "Billing",
+      "members": "Members"
+    },
+    "invite": "Invite",
+    "addGuest": "Add Guest",
+    "clienteHint": "Add a guest to the workspace to collaborate.",
+    "billing": {
+      "loading": "Loading billing...",
+      "monthlyRevenue": "Total Monthly Revenue",
+      "activeSeats": "Active Seats",
+      "activeWorkspaces": "Active Workspaces",
+      "tableTitle": "Billing by Manager",
+      "headers": {
+        "workspace": "Workspace",
+        "gestor": "Manager",
+        "base": "Base",
+        "seats": "Seats",
+        "seatCost": "Seat Cost",
+        "totalMonth": "Total/Month",
+        "autoRenew": "Auto-Renew",
+        "actions": "Actions"
+      },
+      "charge": "Charge",
+      "emptyTable": "No workspaces with active subscriptions",
+      "formula": "Formula:",
+      "formulaText": "Total = Base Plan (5.00 EUR) + (Active Invites × 3.00 EUR)"
+    },
+    "members": {
+      "loading": "Loading members...",
+      "title": "Workspace Members",
+      "statusActive": "Active",
+      "statusPending": "Pending",
+      "costPerSeat": "{{cost}} EUR/month",
+      "removeTooltip": "Remove member",
+      "empty": "No members found",
+      "pendingLabel": "Pending"
+    }
+  },
+
+  "settings": {
+    "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "roleLabel": "Role",
+      "saveButton": "Save Profile",
+      "saving": "Saving...",
+      "saved": "Saved!"
+    },
+    "subscription": {
+      "title": "Subscription",
+      "autoRenew": "Auto-Renewal",
+      "autoRenewOnDesc": "Your subscription will be automatically renewed at the end of the cycle",
+      "autoRenewOffDesc": "Your subscription will expire at the end of the current cycle",
+      "monthlyTotal": "Monthly Total",
+      "status": "Status",
+      "nextCharge": "Next charge",
+      "payPlan": "Pay Plan",
+      "renew": "Renew",
+      "checkoutSandbox": "Sandbox mode: payment of {{amount}} EUR simulated successfully.",
+      "checkoutOpened": "Revolut checkout opened in a new tab. Complete the payment.",
+      "checkoutError": "Error creating checkout",
+      "paymentNote": "Payment processed via Revolut Business. Secure checkout with HMAC-SHA256."
+    },
+    "googleTasks": {
+      "title": "Google Tasks Sync",
+      "connected": "Google Tasks connected",
+      "connectedSuccess": "Google Tasks connected successfully!",
+      "connectedError": "Error connecting Google Tasks. Please try again.",
+      "disconnected": "Google Tasks disconnected",
+      "syncNow": "Sync Now",
+      "syncing": "Syncing...",
+      "syncResult": "Synchronised! {{synced}} processed, {{created}} created, {{updated}} updated",
+      "syncError": "Error syncing",
+      "disconnect": "Disconnect",
+      "description": "Connect your Google account to bidirectionally synchronise tasks with Google Tasks.",
+      "connectButton": "Connect Google Account",
+      "oauthNotAvailable": "Google OAuth not available",
+      "oauthNote": "Integration via OAuth 2.0 with \"Last Write Wins\" conflict resolution."
+    },
+    "googleCalendar": {
+      "title": "Google Calendar",
+      "connected": "Google Calendar connected",
+      "connectedSuccess": "Google Calendar connected successfully!",
+      "connectedError": "Error connecting Google Calendar. Please try again.",
+      "disconnected": "Google Calendar disconnected",
+      "syncNow": "Sync Diary",
+      "syncing": "Syncing...",
+      "syncResult": "Synchronised! {{synced}} processed, {{created}} created, {{updated}} updated, {{deleted}} removed",
+      "syncError": "Error syncing",
+      "activatePush": "Activate Push",
+      "pushSuccess": "Push notifications activated. Events will be synchronised automatically.",
+      "pushError": "Error activating push",
+      "disconnect": "Disconnect",
+      "description": "Connect Google Calendar to view and create events directly from Task360.",
+      "connectButton": "Connect Google Calendar",
+      "oauthNotAvailable": "Google OAuth not available",
+      "scopeNote": "Scopes: calendar.events (read/create) + calendar.readonly. Tokens encrypted with AES-256-GCM."
+    }
+  },
+
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Read all",
+    "empty": "No notifications",
+    "markAsRead": "Mark as read",
+    "deleteTooltip": "Delete",
+    "timeAgo": {
+      "now": "now",
+      "minutes": "{{count}}m",
+      "hours": "{{count}}h",
+      "days": "{{count}}d"
+    }
+  },
+
+  "workspace": {
+    "switcher": {
+      "loading": "Loading workspaces...",
+      "empty": "No workspaces available"
+    },
+    "invite": {
+      "title": "Invite Member",
+      "emailLabel": "Email",
+      "emailPlaceholder": "collaborator@company.com",
+      "roleLabel": "Role",
+      "roleColaborador": "Collaborator",
+      "roleCliente": "Client",
+      "costInfo": "Cost: 3.00 EUR/month per seat",
+      "costDescription": "A Revolut checkout will be generated. The invite is only activated after payment confirmation.",
+      "emailRequired": "Email is required",
+      "submitButton": "Generate Checkout and Invite",
+      "submitting": "Processing...",
+      "inviteError": "Error sending invite",
+      "checkout": {
+        "title": "Revolut Checkout Opened",
+        "description": "Complete the payment in the opened window. After confirmation, the invite will be activated automatically.",
+        "reopenLink": "Reopen checkout",
+        "verifyButton": "I already paid — verify status"
+      },
+      "polling": {
+        "title": "Awaiting Confirmation",
+        "description": "Verifying payment with Revolut... This may take a few seconds.",
+        "reopenLink": "Reopen checkout",
+        "timeout": "Timeout reached. The payment may still be processed via webhook."
+      },
+      "success": {
+        "title": "Invite Activated!",
+        "description": "Payment confirmed. Member {{email}} now has access to the workspace.",
+        "closeButton": "Close"
+      },
+      "failed": {
+        "title": "Payment Not Confirmed",
+        "defaultError": "Could not confirm payment. Please try again.",
+        "paymentFailed": "Payment failed. Please try again.",
+        "retryButton": "Try Again",
+        "closeButton": "Close"
+      }
+    }
+  },
+
+  "checkout": {
+    "loading": {
+      "title": "Verifying Payment...",
+      "description": "Please wait whilst we confirm your payment with Revolut."
+    },
+    "paid": {
+      "title": "Payment Confirmed!",
+      "description": "The seat has been activated successfully. The invited member can now access the workspace."
+    },
+    "pending": {
+      "title": "Payment Processing",
+      "description": "Your payment is being processed. The invite will be activated automatically after confirmation."
+    },
+    "failed": {
+      "title": "Payment Failed",
+      "description": "Could not process the payment. Please try again from the admin panel."
+    },
+    "cancelled": {
+      "title": "Checkout Cancelled",
+      "description": "The payment process was cancelled. The invite remains pending and can be reprocessed."
+    },
+    "backButton": "Back to Panel"
+  },
+
+  "offline": {
+    "banner": "No internet connection — offline mode active"
+  },
+
+  "theme": {
+    "lightMode": "Activate light mode",
+    "darkMode": "Activate dark mode"
+  },
+
+  "layout": {
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "kanban": "Kanban",
+      "meetings": "Meetings",
+      "admin": "Admin",
+      "settings": "Settings",
+      "logoutTooltip": "Log Out"
+    },
+    "mobileNav": {
+      "dashboard": "Dashboard",
+      "kanban": "Kanban",
+      "meetings": "Meetings",
+      "config": "Settings",
+      "admin": "Admin",
+      "openKanban": "Open Kanban",
+      "manageTasks": "Manage tasks",
+      "meetingsAction": "Meetings",
+      "meetingsHint": "Schedule & AI"
+    }
+  },
+
+  "listView": {
+    "groupBy": "Group by:",
+    "groupByStatus": "Status",
+    "groupByPriority": "Priority",
+    "groupByNone": "None",
+    "allTasks": "All tasks",
+    "noPriority": "No priority",
+    "headers": {
+      "title": "Title",
+      "status": "Status",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "date": "Date",
+      "labels": "Labels"
+    },
+    "quickAddPlaceholder": "New task title...",
+    "quickAddButton": "Add",
+    "quickAddCancel": "Cancel",
+    "newTask": "New task",
+    "empty": "No tasks found",
+    "dueDate": {
+      "overdue": "{{days}}d overdue",
+      "today": "Today",
+      "tomorrow": "Tomorrow"
+    },
+    "statusLabels": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "review": "Review",
+      "done": "Done"
+    }
+  },
+
+  "chart": {
+    "title": "Overview",
+    "taskCount": "{{count}} task",
+    "taskCount_plural": "{{count}} tasks",
+    "segments": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "review": "In Review",
+      "done": "Done"
+    },
+    "tooltipSuffix": "tasks"
+  },
+
+  "toast": {
+    "taskCreated": "Task created successfully",
+    "taskUpdated": "Task updated",
+    "taskDeleted": "Task deleted",
+    "taskMoved": "Task moved to {{status}}",
+    "workspaceCreated": "Workspace created",
+    "inviteSent": "Invite sent",
+    "profileUpdated": "Profile updated",
+    "genericError": "An error occurred. Please try again.",
+    "networkError": "Connection error. Check your internet.",
+    "rateLimited": "Too many requests. Please wait a moment."
+  },
+
+  "errors": {
+    "loadWorkspaces": "Error loading workspaces",
+    "createWorkspace": "Error creating workspace",
+    "sendInvite": "Error sending invite",
+    "unknownError": "Unknown error",
+    "tokenNotProvided": "Token not provided",
+    "tokenInvalid": "Invalid or expired token",
+    "workspaceIdRequired": "X-Workspace-Id header is required",
+    "workspaceAccessDenied": "Access denied to this workspace",
+    "permissionCheckFailed": "Error checking permissions",
+    "emailPasswordRequired": "Email and password are required",
+    "invalidCredentials": "Invalid credentials",
+    "emailAlreadyRegistered": "Email already registered",
+    "nameRequired": "Name is required",
+    "titleRequired": "Title is required",
+    "taskNotFound": "Task not found",
+    "taskAccessDenied": "Access denied to this task",
+    "versionConflict": "Version conflict. The task was modified by another user.",
+    "workspaceIdEmailRequired": "workspaceId and email are required",
+    "onlyGestorsCanInvite": "Only Managers and Clients can invite members",
+    "alreadyMember": "User is already a member of this workspace",
+    "subscriptionNotFound": "Subscription not found",
+    "orderNotFound": "Order not found",
+    "onlyGestorsCanToggle": "Only Managers can change auto-renewal",
+    "meetingNotFound": "Meeting not found",
+    "noFileUploaded": "No file uploaded",
+    "fileTooLarge": "File too large. Maximum: 50MB",
+    "processingError": "Error processing file",
+    "registrationFieldsRequired": "Name, email, and password are required",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "internalError": "Internal server error",
+    "userNotFound": "User not found",
+    "googleOAuthNotConfigured": "Google OAuth not configured (GOOGLE_CLIENT_ID missing)",
+    "googleDisconnectError": "Error disconnecting Google",
+    "googleNotConnected": "Google account not connected",
+    "googleSyncError": "Error syncing with Google Tasks",
+    "listTasksError": "Error listing tasks",
+    "createTaskError": "Error creating task",
+    "updateTaskError": "Error updating task",
+    "deleteTaskError": "Error deleting task",
+    "listWorkspacesError": "Error listing workspaces",
+    "createWorkspaceError": "Error creating workspace",
+    "processInviteError": "Error processing invite",
+    "pendingInviteExists": "A pending invite already exists for this email",
+    "listMembersError": "Error listing members",
+    "memberNotFound": "Member not found",
+    "onlyGestorsCanRemove": "Only Managers can remove members",
+    "removeMemberError": "Error removing member",
+    "fetchSubscriptionError": "Error fetching subscription",
+    "updateSubscriptionError": "Error updating subscription",
+    "createCheckoutError": "Error creating checkout",
+    "renewSubscriptionError": "Error renewing subscription",
+    "checkPaymentStatusError": "Error checking payment status",
+    "fetchBillingError": "Error fetching billing",
+    "createChargeError": "Error generating charge",
+    "listMeetingsError": "Error listing meetings",
+    "createMeetingError": "Error creating meeting",
+    "meetingAccessDenied": "Access denied to this meeting",
+    "sendFileOrMeetingId": "Send a file or provide the meetingId",
+    "processMeetingError": "Error processing meeting with AI",
+    "deleteMeetingError": "Error deleting meeting",
+    "fileTooLargeMeetings": "File too large. Limit: 200MB.",
+    "unsupportedFormat": "Unsupported format. Use MP3, WAV, WebM, MP4 or TXT."
+  }
+}
